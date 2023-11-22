@@ -1,0 +1,736 @@
+var bodyParser = require('body-parser');
+var jwt = require('jsonwebtoken');
+var express = require('express');
+var crypto = require('crypto');
+var mysql = require('mysql');
+var cors = require('cors');
+const excel = require('excel4node');
+
+var port = 9095;
+
+var corsOptions = { origin: true, optionsSuccessStatus: 200 };
+
+var app = express();
+app.use(cors(corsOptions));
+app.use(bodyParser.json({ limit: '10mb', extended: true }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+app.listen(port);
+
+console.log('Listening on port', port);
+
+var connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '1234',
+  database: 'dbinventario',
+  port: 3306
+});
+
+function encriptar(texto) {
+  const hash = crypto.createHash('sha256');
+  hash.update(texto);
+
+  return hash.digest('hex');
+}
+
+function getToken(datos) {
+  return jwt.sign(datos, 'HoySiSale', {expiresIn : '60m'});
+}
+
+function verToken(token) {
+  return jwt.verify(token, 'HoySiSale');
+}
+
+//--------------------------------------------------Pruebas---------------------------------------
+
+app.get('/', function (req, res) {
+    res.send("Hola mundo!");
+});
+
+app.get('/pruebaToken', function (req, res) {
+  var token =  req.body.token;
+
+  try {
+    var data = verToken(token);
+    res.json(data);
+  } catch (error) {
+    res.status(400).json(error);
+  }
+});
+
+//------------------------------Funcion para comunicacion con la base de datos-----------------------
+function query(sql) {
+  return new Promise((resolve, reject) => {
+      connection.query(sql, function(error, result) {
+          if (error) {
+              reject(error);
+          } else {
+              resolve(result);
+          }
+      });
+  });
+}
+
+//--------------------------------------------------Endpoints---------------------------------------
+
+
+//----------------INICIAR SESION----------------
+
+app.post('/Login', function (req, res) {
+    let correo = req.body.correo;
+    let pass = req.body.pass;
+    let sql = "SELECT * FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "';";
+    
+    connection.query(sql, async function(error,result){
+      if(error){
+        console.log("Error al conectar");
+        res.status(400).json({success: false, message: "El usuario no existe"});
+      }else{
+        if (result.length == 1) {
+          var respuesta = { success: true,
+                            message: {
+                              Id : "",
+                              Nombre : "",
+                            }
+                          }
+
+          respuesta.message.Id = result[0].id;
+          respuesta.message.Nombre = result[0].nombres;
+        
+          res.json(respuesta);
+        } else {
+          res.status(400).json({success: false, message: "El usuario no existe"});;
+        }
+      }
+    });
+});
+
+
+//------------------------------------- INGRESAR BIENES--------------------------------------
+app.post('/InBien', async function (req, res) {
+
+  //fecha actual
+  const fecha = new Date();
+  const añoActual = fecha.getFullYear();
+  const hoy = fecha.getDate();
+  const mes = fecha.getMonth() + 1; 
+  let fechaActual= hoy+"/"+mes+"/"+ añoActual
+
+  //inicializar variables
+
+  let fcompra="";
+  let ingresar=false;
+  //Obtener datos
+  
+  let fechaco = req.body.fechaco;
+  let cuenta = req.body.cuenta;
+  let codigo = req.body.codigo;
+  let marca = req.body.marca;
+  let cantidad = req.body.cantidad;
+  let modelo = req.body.modelo;
+  let serie = req.body.serie;
+  let imagen = req.body.imagen;
+  let precio = req.body.precio;
+  let descripcion = req.body.descripcion;
+  let categoria = req.body.categoria;
+  let tarjeta = req.body.tarjeta;
+  let ubicacion = req.body.ubicacion;
+
+  //Convertir fecha de compra
+  if (fechaco!=null){
+    fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+  }else{
+    fcompra= null;
+  }
+
+  //Consultar bienes repetidos en base de datos 
+  try{
+      
+      if (codigo!=""){
+        let sql =`SELECT * FROM bien WHERE codigo="`+codigo+`";`;
+        const result = await query(sql);
+        
+        if (result.length > 0) {
+           res.status(400).json({success: false, message:"No se puede ingresar un bien repetido"});
+          return
+        } else {
+            ingresar=true;
+        }
+      }else{
+        ingresar=true;
+      }
+  }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+  }
+
+  //Verificar Marca
+  let idmarca=null;
+  try{
+      
+    if (marca!=''){
+      marca = marca.toUpperCase();
+      let sql =`SELECT id FROM marca WHERE nombre="`+marca+`";`;
+      const result = await query(sql);
+      
+      if (result.length > 0) {
+         
+        idmarca=result[0].id;
+
+      } else {
+        let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
+        VALUES (STR_TO_DATE("`+fechaActual+`", "%d/%m/%Y"),"`+marca+`",activo);`;
+        const result1 = await query(sql);
+
+        sql =`SELECT id FROM marca WHERE nombre="`+marca+`";`;
+        const result2 = await query(sql);
+
+        idmarca=result2[0].id;
+      
+      }
+    }
+}catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    return;
+}
+
+  //Ingresar bien a la base de datos  
+  try{
+    
+      if (ingresar==true){
+        let sql =  `INSERT INTO bien(fecha_mod,fechaco,cuenta,codigo,marca,cantidad,modelo,serie,imagen,precio,activo,descripcion,categoria,tarjeta,ubicacion)
+        VALUES(STR_TO_DATE("`+fechaActual+`", "%d/%m/%Y"),`+fcompra+`,"`+cuenta+`","`+codigo+`",`+idmarca+`,`+cantidad+`,
+        "`+modelo+`","`+serie+`","`+imagen+`",`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
+        
+        const result2 = await query(sql);
+
+        res.json({success: true, message: "Bien ingresado"});
+        
+      }else{
+        res.status(400).json({success: false, message: "Error al ingresar"});
+      }
+  }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al ingresar los datos"});
+  }
+
+});
+
+//------------------------------------- OBTENER LISTA DE USUARIOS --------------------------------------
+
+app.get('/listaUsuarios', function (req, res) {
+  let sql = "SELECT id,  CONCAT_WS(' ', nombres, apellidos) as nombre FROM usuario;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }else{
+      if (result.length > 0) {
+      
+        res.json({success: true, message:result});
+      } else {
+        res.status(400).json({success: false, message: "No hay nombres ingresados"});;
+      }
+    }
+  });
+});
+
+//------------------------------------- OBTENER LISTA DE CATEGORIAS --------------------------------------
+
+app.get('/tipo', function (req, res) {
+  let sql = "SELECT id, nombre FROM categoria;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }else{
+      if (result.length > 0) {
+      
+        res.json({success: true, message:result});
+      } else {
+        res.status(400).json({success: false, message: "No hay categorias ingresadas"});;
+      }
+    }
+  });
+});
+
+//------------------------------------- OBTENER UBICACIONES --------------------------------------
+
+app.get('/ubicacion', function (req, res) {
+  let sql = "SELECT id, nombre FROM ubicacion;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }else{
+      if (result.length > 0) {
+      
+        res.json({success: true, message:result});
+      } else {
+        res.status(400).json({success: false, message: "No hay ubicaciones ingresadas"});;
+      }
+    }
+  });
+});
+
+//------------------------------------- OBTENER BIENES NO ASIGNADOS --------------------------------------
+
+app.get('/bienes', function (req, res) {
+  let sql = `SELECT bien.id,codigo, marca.nombre as marca, descripcion,precio FROM bien 
+  LEFT JOIN marca ON marca.id=bien.marca WHERE tarjeta IS NULL;`;
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }else{
+      if (result.length > 0) {
+      
+        res.json({success: true, message:result});
+      } else {
+        res.status(400).json({success: false, message: "No hay bienes ingresados"});;
+      }
+    }
+  });
+});
+
+
+//------------------------------------- OBTENER BIENES ASIGNADOS (TARJETA DE RESPONSABILIDAD)--------------------------------------
+
+app.post('/bienAsignado', async function (req, res) {
+  try{
+    let usuario= req.body.usuario;
+    let sql = `SELECT bien.id ,codigo, marca.nombre as marca, descripcion,precio FROM bien
+    LEFT JOIN marca ON marca.id=bien.marca 
+    INNER JOIN tarjeta_responsabilidad ON tarjeta_responsabilidad.id= bien.tarjeta
+    WHERE tarjeta_responsabilidad.usuario = `+usuario+` ;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al crear la tarjeta"});
+    return;
+  }
+  
+});
+
+
+
+//------------------------------------- OBTENER BIENES ASIGNADOS (Bienes po usuario)--------------------------------------
+
+app.post('/bienAsignado2', async function (req, res) {
+  try{
+    let usuario= req.body.usuario;
+    let sql = `SELECT fechaco,cuenta,codigo,cantidad,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+    INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.usuario=`+usuario+`
+    LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al crear la tarjeta"});
+    return;
+  }
+  
+});
+
+//------------------------------------- ASIGNAR BIENES --------------------------------------
+
+app.post('/AsBien', async function (req, res) {
+
+  //fecha actual
+  const fecha = new Date();
+  const añoActual = fecha.getFullYear();
+  const hoy = fecha.getDate();
+  const mes = fecha.getMonth() + 1; 
+  let fechaActual= hoy+"/"+mes+"/"+ añoActual
+
+  //Obtener datos
+
+  let op = req.body.op;
+  let tarjeta = req.body.tarjeta;
+  let categoria = req.body.categoria;
+  let usuario = req.body.usuario;
+  let saldo = req.body.saldo;
+  let asignar = req.body.asignar;
+  let quitar = req.body.quitar;
+
+
+
+  //Asignar nueva tarjeta
+  if(op==true){
+  //Crear tarjeta de responsabilidad
+    try{
+      //Verificar numero de tarjeta
+      let sql =  `SELECT numero_tarjeta from tarjeta_responsabilidad
+      WHERE numero_tarjeta=`+tarjeta+`;`;
+
+      const result1 = await query(sql);
+
+      if (result1.length==0){
+        console.log("no hubo repetido")
+      //Crear tarjeta
+        sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,usuario,categoria)
+        VALUES(`+tarjeta+`,`+saldo+`,`+usuario+`,`+categoria+`);`;
+          
+        const result2 = await query(sql);
+      }else{
+        res.json({success: false, message: "Numero de tarjeta repetido"});
+        return;
+      }
+    
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear la tarjeta"});
+      return;
+    }
+
+    //Registrar bienes desasignados
+    
+    if (quitar.length>0){  //Verificar si hay bienes para desasignar
+      
+      try{
+        //recuperar id de la tarjeta
+        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+        const result2 = await query(sql);
+
+        let idtarjeta = result2[0].tarjeta;
+        
+        //Quitar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        console.log("si pudo quitar referencia")
+        //Registrar bienes desasignados
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+          VALUES(STR_TO_DATE("`+fechaActual+`", "%d/%m/%Y"),`+idtarjeta+`,`+quitar[i]+`,False);`;
+          const result4 = await query(sql);
+        }
+        console.log("si pudo registrar desasignados")
+
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+        return;
+      }
+    }
+  //asignar bienes la tarjeta
+    if (asignar.length>0){ //Verificar si hay bienes por asignar
+      try{
+        //recuperar id de la tarjeta
+        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+        const result2 = await query(sql);
+
+        let idtarjeta = result2[0].tarjeta;
+
+         //Agregar referencia de la tarjeta a la tabla bienes
+
+         for (var i = 0; i < asignar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        console.log("si pudo agregar referencia")
+        //asignar bienes
+        
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+            VALUES(STR_TO_DATE("`+fechaActual+`", "%d/%m/%Y"),`+idtarjeta+`,`+asignar[i]+`,True);`;
+            const result4 = await query(sql);
+          }
+          console.log("si pudo registrar asignaciones")
+        
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+        return;
+      }
+    }
+  }else{
+
+    //ACTUALIZAR TARJETA
+
+    //Actualizar datos de la tarjeta
+    let tarjetaid=0;
+    try{
+      //Verificar existencia de numero de tarjeta
+      let sql =  `SELECT id from tarjeta_responsabilidad
+      WHERE numero_tarjeta=`+tarjeta+` and usuario=`+usuario+`;`;
+
+      const result1 = await query(sql);
+
+      if (result1.length==1){
+
+        tarjetaid= result1[0].id;
+        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
+        const result2 = await query(sql);
+
+      }else{
+        res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
+        return;
+      }
+    
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al verificar tarjeta"});
+      return;
+    }
+
+    
+    //Registrar bienes desasignados
+    
+    if (quitar.length>0){  //Verificar si hay bienes para desasignar
+      
+      try{
+        
+        //Quitar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+          const result3 = await query(sql);
+        }
+
+        //Registrar bienes desasignados
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+          VALUES(STR_TO_DATE("`+fechaActual+`", "%d/%m/%Y"),`+tarjetaid+`,`+quitar[i]+`,False);`;
+          const result4 = await query(sql);
+        }
+        console.log("si pudo registrar desasignados")
+
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+        return;
+      }
+    }
+
+    if (asignar.length>0){ //Verificar si hay bienes por asignar
+      try{
+         //Agregar referencia de la tarjeta a la tabla bienes
+
+         for (var i = 0; i < asignar.length; i++) {
+          let sql =   `UPDATE bien SET tarjeta = NULL WHERE id =`+asignar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //asignar bienes
+        
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+            VALUES(STR_TO_DATE("`+fechaActual+`", "%d/%m/%Y"),`+tarjetaid+`,`+asignar[i]+`,True);`;
+            const result4 = await query(sql);
+          }
+          console.log("si pudo registrar asignaciones")
+        
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+        return;
+      }
+    }
+
+  }
+
+  res.json({success: true, message: "Operacion exitosa"});
+  
+});
+
+
+app.get('/DescargarReporteUsuario', async function (req, res) {
+
+  try{
+    let usuario= req.query.usuario;
+
+    let sql = `SELECT fechaco,cuenta,codigo,cantidad,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+    INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.usuario=`+usuario+`
+    LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id;`;
+    
+    const result = await query(sql);
+
+    sql=`SELECT id,  CONCAT_WS(' ', nombres, apellidos) as nombre FROM usuario WHERE id=`+usuario+`;`;
+
+    const result2 = await query(sql);
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Users');
+
+    // titulo
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true
+      }
+    });
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 16
+      }
+    });
+
+    worksheet.cell(2, 1).string("Reporte de bienes por usuario").style(myStyle2);
+    worksheet.cell(4, 1).string("Usuario:").style(myStyle);
+    worksheet.cell(4, 2).string(result2[0].nombre);
+    worksheet.cell(6, 1).string("fecha de compra").style(myStyle);
+    worksheet.cell(6, 2).string("No. cuenta").style(myStyle);
+    worksheet.cell(6, 3).string("Codigo de inventario").style(myStyle);
+    worksheet.cell(6, 4).string("Cantidad").style(myStyle);
+    worksheet.cell(6, 5).string("Descripcion").style(myStyle);
+    worksheet.cell(6, 6).string("Ubicacion").style(myStyle);
+    worksheet.cell(6, 7).string("Precio").style(myStyle);
+
+    result.forEach((row, index) => {
+      let cast=""+row.fechaco+""
+      worksheet.cell(index + 8, 1).string(cast);
+      cast=""+row.cuenta+""
+      worksheet.cell(index + 8, 2).string(cast);
+      cast=""+row.codigo+""
+      worksheet.cell(index + 8, 3).string(cast);
+      cast=""+row.cantidad+""
+      worksheet.cell(index + 8, 4).string(cast);
+      cast=""+row.descripcion+""
+      worksheet.cell(index + 8, 5).string(cast);
+      cast=""+row.ubicacion+""
+      worksheet.cell(index + 8, 6).string(cast);
+      cast=""+row.precio+""
+      worksheet.cell(index + 8, 7).string(cast);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al crear la tarjeta"});
+    return;
+  }
+});
+
+//------------------------------------Endpoint para retornar Saldo total del usuario----------------------------------
+app.get('/saldoUsuario', async function (req, res) {
+  try{
+    let usuario= req.query.usuario;
+    
+    let sql = `SELECT saldo FROM tarjeta_responsabilidad WHERE usuario=`+usuario+` ORDER BY id DESC LIMIT 1;`;
+   
+    const result = await query(sql);
+    
+    let saldo=result[0].saldo;
+
+    res.json({success: true, message: saldo});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error"});
+    return;
+  }
+});
+//------------------------------------Endpoint para Buscar bienes----------------------------------
+app.get('/BuscarBienes', async function (req, res) {
+
+  //Extraer datos
+
+  let buscar = req.query.buscar;
+  let opcion = req.query.opcion;
+  
+  let sql=""
+  switch (opcion) {
+    case  "1":
+      sql = `SELECT bien.id, codigo,marca.nombre as marca,modelo,serie,imagen,descripcion,precio FROM bien
+      LEFT JOIN marca ON marca.id=bien.marca WHERE bien.activo=True and codigo="`+buscar+`";`;
+     
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "2":
+      buscar=buscar.toUpperCase()
+      sql = `SELECT bien.id,codigo,marca.nombre as marca,modelo,serie,descripcion,precio FROM bien
+      LEFT JOIN marca ON marca.id=bien.marca WHERE bien.activo=True and marca.nombre="`+buscar+`";`;
+
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "3":
+      sql = `SELECT bien.id,codigo,marca.nombre as marca,modelo,serie,descripcion,precio FROM bien
+      LEFT JOIN marca ON marca.id=bien.marca WHERE bien.activo=True and modelo="`+buscar+`";`;
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "4":
+      sql = `SELECT bien.id,codigo,marca.nombre as marca,modelo,serie,descripcion,precio FROM bien
+      LEFT JOIN marca ON marca.id=bien.marca WHERE bien.activo=True and serie="`+buscar+`";`;
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "5":
+      sql = `SELECT bien.id,codigo,marca.nombre as marca,modelo,serie,descripcion,precio,imagen FROM bien
+      LEFT JOIN marca ON marca.id=bien.marca WHERE bien.activo=True and descripcion LIKE '%`+buscar+`%';`;
+    
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+  }
+    
+});
+
+
+
+

@@ -1,0 +1,24 @@
+{
+  "name": "proyecto-1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "tst": "mocha ./test/indexTest.js --timeout 10000 --exit || true",
+    "test": "nyc --reporter=text mocha ./test/indexTest.js --timeout 10000 --exit",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "excel4node": "^1.8.2",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

@@ -73,13 +73,15 @@ function App() {
       <span className=" text-3xl">Buscar Activos</span>
       </button>
       </Link>
-      <button className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
+      <Link to="/SinAsignar" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
       text-black font-bold py-2 px-4 border border-gray-400 rounded-xl">
+      <button className=" flex flex-col items-center ">
       
       <FiTrash2  className="text-9xl"/>
       
       <span className=" text-3xl">Activos de baja</span>
       </button>
+      </Link>
       <Link to="/Bitacora" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
       text-black font-bold py-2 px-4 border border-gray-400 rounded-xl">
       <button className=" flex flex-col items-center">

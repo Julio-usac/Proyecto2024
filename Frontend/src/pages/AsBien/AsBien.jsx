@@ -32,8 +32,29 @@ function AsBien() {
   const fagregar = (id) => {
     setAgregar([...agregar,id]);
   };
+
+  const fagregar2 = (id) => {
+    const agregarid= [...agregar];
+    let indice = agregarid.indexOf(id);
+
+    if(indice !== -1){
+      agregarid.splice(indice, 1);
+    }
+    setAgregar(agregarid);
+  };
+
   const fquitar = (id) => {
     setQuitar([...quitar,id]);
+  };
+
+  const fquitar2 = (id) => {
+    const quitarid= [...quitar];
+    let indice = quitarid.indexOf(id);
+
+    if(indice !== -1){
+      quitarid.splice(indice, 1);
+    }
+    setQuitar(quitarid);
   };
   const toggleButton = (id) => {
     const updatedVisibility = [...showButton];
@@ -114,7 +135,8 @@ function AsBien() {
   };
 
   const onSubmit = async (data) => {
-
+    console.log(quitar);
+    console.log(agregar);
     if (data.categoria!=null && data.categoria!="Seleccionar" && opcion!="" && opcion!="Seleccionar" ){
       if (agregar.length!=0 || quitar.length!=0){
         try {
@@ -202,7 +224,7 @@ function AsBien() {
                           <option value={null}> Seleccionar </option>
                           {
                             tipo.map((item)=>
-                              <option key={item.id} value={item.id}>{item.nombre}</option>
+                              <option key={item.catId} value={item.catId}>{item.nombre}</option>
                             )
                           }
                           </select>
@@ -215,7 +237,7 @@ function AsBien() {
                         <option>Seleccionar</option>
                           {
                             usuario.map((item)=>
-                              <option key={item.id} value={item.id} >{item.nombre}</option>
+                              <option key={item.userId} value={item.userId} >{item.nombre}</option>
                             )
                           }
                           </select>  
@@ -285,6 +307,7 @@ function AsBien() {
                                         {!showButton[item.id] && (
                                           <button  key={item.id} className="btn bg-red-500 text-white w-fit"
                                           onClick={() => {
+                                            fagregar2(item.id);
                                             toggleButton(item.id);
                                           }}>
                                             Quitar
@@ -340,6 +363,7 @@ function AsBien() {
                                         {!showButton[item.id] && (
                                           <button  key={item.id} className="btn bg-green-500 text-white w-fit"
                                           onClick={() => {
+                                            fquitar2(item.id);
                                             toggleButton(item.id);
                                           }}>
                                             Agregar

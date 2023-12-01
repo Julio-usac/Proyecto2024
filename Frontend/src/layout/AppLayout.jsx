@@ -26,20 +26,13 @@ const AppLayout = ({ children }) => {
           <div className="flex-none">
             <div className="navbar-center flex">
               <ul className="menu menu-horizontal px-1">
-                <li>
-                  <Link to="/Subastas">Subastas</Link>
-                </li>
-                <li>
-                  <Link to="/">Cátalogo de productos</Link>
-                </li>
-                <li>
-                  <Link to="/editar_catalogo">Editar cátalogo</Link>
-                </li>
+                
               </ul>
             </div>
-
+          {/*
             <Favorito />
-            <Carrito />
+            <Carrito />*/
+          }
             <div className="dropdown dropdown-end z-50">
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
@@ -56,16 +49,7 @@ const AppLayout = ({ children }) => {
                       Perfil
                     </Link>
                   </li>
-                  <li>
-                    <Link className="justify-between" to="/reportes">
-                      Reporte de ventas
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="justify-between" to="/compras">
-                      Compras realizadas
-                    </Link>
-                  </li>
+                  
                   <li>
                     <a onClick={handleLogout}>Cerrar sesión</a>
                   </li>

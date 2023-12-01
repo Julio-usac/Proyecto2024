@@ -1,42 +1,34 @@
-import { useAsync, useMountEffect } from "@react-hookz/web";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
-import AppLayout from "../../layout/AppLayout";
+import useEditar from '../store/editarStore';
 import axios from "axios";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
 import { useState } from "react";
 import { useEffect } from "react";
-import useAuth from "../../auth/authStore";
 
-function InBien() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
+const ModelEditar = () => {
+    const mid = useEditar((state) => state.id);
+    const mfecha = useEditar((state) => state.fecha);
+    const mcodigo = useEditar((state) => state.codigo);
+    const mcuenta = useEditar((state) => state.cuenta);
+    const mmarca = useEditar((state) => state.marca);
+    const mmodelo = useEditar((state) => state.modelo);
+    const mserie = useEditar((state) => state.serie);
+    const mprecio = useEditar((state) => state.precio);
+    const mcantidad= useEditar((state) => state.cantidad);
+    const mubicacion= useEditar((state) => state.ubicacion);
+    const mcategoria= useEditar((state) => state.tipo);
+    const mimage= useEditar((state) => state.imagen);
+    const mdescripcion = useEditar((state) => state.descripcion);
 
 
-  const [state, actions] = useAsync(() => {
-    return axios({
-      url: "http://localhost:9095/BienUsuario/Tabla",
-      method: "get",
-    });
+    const [tipo, setTipo] = useState([]);
+    const [ub, setUb] = useState([]);
+    const [image, setImage] = useState(null);
+    const [imageData, setImageData] = useState(null);
+
     
-  });
-
-  useMountEffect(actions.execute);
-
-  const [tipo, setTipo] = useState([]);
-  const [ub, setUb] = useState([]);
-
-  const [image, setImage] = useState(null);
-
-  const [imageData, setImageData] = useState(null);
-
-  
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      tipoCuenta: false,
       fechaco: null,
       cuenta: "",
       codigo: "",
@@ -48,9 +40,8 @@ function InBien() {
       precio: null,
       descripcion: "",
       categoria: null,
-      tarjeta: null,
       ubicacion: null,
-      url: "http://localhost:9095/InBien",
+      url: "http://localhost:9095/EditarBien",
     },
   });
 
@@ -71,8 +62,8 @@ function InBien() {
     };
     load();
   },[]);
-  
 
+  
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setImage(URL.createObjectURL(file));
@@ -87,54 +78,54 @@ function InBien() {
   };
 
   const onSubmit = async (data) => {
-    if (data.categoria!=null){
+
+    if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || data.categoria || data.ubicacion){
       try {
         const resp = await axios({
-          url: "http://localhost:9095/InBien",
+          url: "http://localhost:9095/EditarBien",
           method: "post",
           data: {
-            fechaco: data.fechaco,
-            cuenta:  data.cuenta,
-            codigo:  data.codigo,
-            marca:  data.marca,
-            cantidad:  data.cantidad,
-            modelo:  data.modelo,
-            serie:  data.serie,
-            imagen:  imageData,
-            precio:  data.precio,
-            descripcion:  data.descripcion,
-            categoria:  data.categoria,
-            tarjeta:  data.tarjeta,
-            ubicacion:  data.ubicacion,
+            id: mid,
+            fechaco: (data.fechaco!=null)?data.fechaco:mfecha,
+            cuenta:  (data.cuenta!="")?data.cuenta:mcuenta,
+            codigo: (data.codigo!="")? data.codigo:mcodigo,
+            marca:  (data.marca!="")? data.marca:mmarca,
+            cantidad: (data.cantidad!=null)? data.cantidad:mcantidad,
+            modelo:  (data.modelo!="")? data.modelo:mmodelo,
+            serie:  (data.serie!="")? data.serie:mserie,
+            imagen:   (imageData!=null)? imageData:mimage,
+            precio:  (data.precio!=null)? data.precio:mprecio,
+            descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
+            categoria:  (data.categoria!=null)? data.categoria:mcategoria,
+            ubicacion:  (data.ubicacion=="Seleccionar")?null:((data.ubicacion!=null)? data.ubicacion:mubicacion),
           },
         });
         
         if (resp.data.success === true) {
           toast.success("Ingreso exitoso!")
+          window.my_modal_2.close();
           setTimeout(function(){ window.location.reload(); }, 1000);
         }else{
           toast.error(resp.data.message)
         }
       } catch (error) {
-
-        toast.error(error.response.data.message)
+        console.log(error)
+        toast.error("error")
       }
     }else{
-      toast.error("Debe seleccionar un tipo de bien");
+      toast.error("No se han ingresado nuevos datos")
     }
+    
   };
-
-  return (
-    <AppLayout>
-      
-      <div className="bg-base-300 w-full h-[100vh] flex justify-center items-center">
-        <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
-          
-          <div className="card-body p-6 w-full flex flex-col justify-between">
+    
+    return (
+        <dialog id="my_modal_2" className="modal">
+             <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
+             <div className="card-body p-6 w-full flex flex-col justify-between">
             <div>
               <h2 className="card-title font-semibold text-4xl text-blue-600 justify-center">
           
-                Ingresar Bienes
+                Editar bienes
               </h2>
               <div className="divider my-1 mt-2"></div>
             </div>
@@ -149,37 +140,37 @@ function InBien() {
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Codigo de inventario</h3>
                       <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
-                      type="text" {...register("codigo", { required: false })}/>
+                      type="text" {...register("codigo", { required: false })} placeholder={mcodigo}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>No.cuenta</h3>
                       <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
-                      type="text" {...register("cuenta", { required: false })}/>
+                      type="text" {...register("cuenta", { required: false })} placeholder={mcuenta}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Fecha de compra</h3>
                       <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
-                      type="date" placeholder="dd/mm/yyyy" {...register("fechaco", { required: false })}/>
+                      type="date"  {...register("fechaco", { required: false })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Marca</h3>
-                      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" type="text" placeholder=""
-                      {...register("marca", { required: false })}/>
+                      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" type="text" 
+                       placeholder={mmarca} {...register("marca", { required: false })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Modelo</h3>
-                      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" type="text" placeholder=""
-                      {...register("modelo", { required: false })}/>
+                      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" type="text" 
+                      placeholder={mmodelo}  {...register("modelo", { required: false })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Serie</h3>
-                      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" type="text" placeholder=""
-                      {...register("serie", { required: false })}/>
+                      <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" type="text" 
+                      placeholder={mserie} {...register("serie", { required: false })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Precio</h3>
-                      <input type="number" step="0.01" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" placeholder=""
-                      {...register("precio", { required: false })}/>
+                      <input type="number" step="0.01" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
+                      placeholder={mprecio} {...register("precio", { required: false })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Ubicacion</h3>
@@ -196,8 +187,8 @@ function InBien() {
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Tipo</h3>
-                      <select required id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                       defaultValue={null} {...register("categoria", { required: false })}>
+                      <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       defaultValue={mcategoria} {...register("categoria", { required: false })}>
                          <option value={null} >Seleccionar</option>
                         {
                           tipo.map((item)=>
@@ -208,13 +199,13 @@ function InBien() {
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Cantidad</h3>
-                      <input required type="number" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"  placeholder=""
-                      {...register("cantidad", { required: true })}/>
+                      <input  type="number" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
+                      placeholder={mcantidad} {...register("cantidad", { required: false })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Descripcion</h3>
-                      <textarea required className="resize border w-full rounded-md focus:outline-none focus:shadow-outline py-2 px-3 text-gray-700 leading-tight" id="textarea" rows="4" placeholder="Descripcion..."
-                       {...register("descripcion", { required: true })}></textarea>
+                      <textarea  className="resize border w-full rounded-md focus:outline-none focus:shadow-outline py-2 px-3 text-gray-700 leading-tight" id="textarea" rows="4"
+                       placeholder={mdescripcion} {...register("descripcion", { required: false })}></textarea>
                     </div>
                   </div>
     
@@ -234,15 +225,23 @@ function InBien() {
                     >
                     Ingresar activo
                 </button>
+                <button
+                        className="btn btn-primary w-fit"
+                        onClick={(e) => {
+                          e.preventDefault()
+                            window.my_modal_2.close();
+                        }}
+                    >
+                        Salir
+                    </button>
               </form>
             </div>
 
         </div>
-      </div>
-    </div>
-    <Toaster />
-    </AppLayout>
-  );
-}
+        </div>
+        <Toaster />
+        </dialog>
+    );
+};
 
-export default InBien;
+export default ModelEditar;

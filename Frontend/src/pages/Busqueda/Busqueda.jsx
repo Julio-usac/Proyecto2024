@@ -2,10 +2,12 @@ import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import ModalImagen from "../../components/ModalImagen";
+import ModalEditar from "../../components/ModalEditar";
 import toast, { Toaster } from 'react-hot-toast';
 import useCarrito from "../../store/carritoStore";
 import useFav from "../../store/favStore";
 import useImagen from '../../store/imgStore';
+import useEditar from '../../store/editarStore';
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
@@ -13,19 +15,15 @@ import useAuth from "../../auth/authStore";
 function Busqueda() {
   const setimag = useImagen((state) => state.setImagen);
   const ima= useImagen((state) => state.imagen);
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
-  const url = useAuth((state) => state.url);
-
-  const agregarFav = useFav((state) => state.agregar);
-  const setFav = useFav((state) => state.setProductoSeleccionado);
-
+  const seteditar = useEditar((state) => state.setEditar);
+ 
   //Inicilizar variables
 
   const [Opcion, setOpcion] = useState(0);
   const [Buscar, setBuscar] = useState('');
   const [im,setim] = useState(null);
+  
+  const [ed,seted] = useState(null);
   const [Tabla, setTabla] = useState([]);
   const [PageData, setPageData] = useState([]);
 
@@ -70,12 +68,43 @@ function Busqueda() {
     }
   }, [im]);
 
+  useEffect(() => {
+    if(ed!=null){
+        window.my_modal_2.showModal();
+        seted(null);
+    }
+  }, [ed]);
+
   const FImagen = (e) => {
     
     setimag(e)
     setim("e")
 
   }
+
+  const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+    
+    seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+    seted("e");
+
+  }
+
+
+  const Descargar = async() => {
+    try {
+      const response = await axios.get('http://localhost:9095/DescargarReporteTotal/', { responseType: 'blob'  });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.error('Hubo un error al descargar el archivo: ', error);
+    }
+  };
+
+
   const Busqueda = async() => {
     if (Opcion!=0 && Buscar!=''){
         try {
@@ -98,12 +127,14 @@ function Busqueda() {
   return (
     <AppLayout>
         <ModalImagen />
+        <ModalEditar />
         <h1 className="text-5xl mt-6">Buscar bienes</h1>
         
         <div className="w-full max-w-screen-xl px-4 xl:p-0 flex flex-col justify-center mt-6">
         <div className="flex justify-end">
             <button
                     className="btn btn-success w-fit "
+                    onClick={ Descargar}
                     >
                     Descargar reporte
             </button>
@@ -178,8 +209,8 @@ function Busqueda() {
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                                        </td>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, new Date(item.fechaco).toLocaleDateString(),item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                  </td>
                                         <td className="px-6 py-4 text-right">
                                         
                                             <button  onClick={() => {FImagen(item.imagen);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Imagen</button>

@@ -144,10 +144,7 @@ const Login = () => {
             </div>
           */}
           <div style={{ height: '100px' }} />
-            <div className="card-actions items-center justify-between">
-              <Link className="link link-secondary" to="/signup">
-                Crear cuenta
-              </Link>
+            <div className="card-actions items-center justify-center">
               <button className="btn bg-blue-500 text-white"  type="submit">
                 Iniciar sesión
               </button>

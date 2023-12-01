@@ -17,6 +17,8 @@ import Busqueda from "./pages/Busqueda/Busqueda.jsx";
 import BienUsuario from "./pages/BienUsuario/BienUsuario.jsx";
 import InBien from "./pages/InBien/InBien.jsx";
 import AsBien from "./pages/AsBien/AsBien.jsx";
+import SinAsignar from "./pages/SinAsignar/SinAsignar.jsx";
+import DeBaja from "./pages/DeBaja/DeBaja.jsx";
 import Bitacora from "./pages/Bitacora/Bitacora.jsx";
 
 const router = createBrowserRouter([
@@ -51,6 +53,14 @@ const router = createBrowserRouter([
       {
         path: "/busqueda",
         element: <Busqueda />,
+      },
+      {
+        path: "/SinAsignar",
+        element: <SinAsignar/>,
+      },
+      {
+        path: "/DeBaja",
+        element: <DeBaja/>,
       },
       {
         path: "/Bitacora",

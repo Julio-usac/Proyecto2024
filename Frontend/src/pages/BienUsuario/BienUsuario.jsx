@@ -2,25 +2,27 @@ import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
+import ModalImagen from "../../components/ModalImagen";
+import ModalEditar from "../../components/ModalEditar";
 import ModalAgregar from "../../components/ModalAgregar";
 import useCarrito from "../../store/carritoStore";
 import useFav from "../../store/favStore";
+import useImagen from '../../store/imgStore';
+import useEditar from '../../store/editarStore';
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
 function BienUsuario() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
-  const url = useAuth((state) => state.url);
 
-  const agregarFav = useFav((state) => state.agregar);
-  const setFav = useFav((state) => state.setProductoSeleccionado);
+  const setimag = useImagen((state) => state.setImagen);
+  const seteditar = useEditar((state) => state.setEditar);
   const [usuarios, setUsuarios] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [bien, setBien] = useState([]);
   const [saldo, setSaldo] = useState(0);
+  const [im,setim] = useState(null);
+  const [ed,seted] = useState(null);
   /*
   const [state, actions] = useAsync(() => {
     return axios({
@@ -67,6 +69,34 @@ function BienUsuario() {
     setOpcion(event.target.value);
   };
 
+  useEffect(() => {
+    if(im!=null){
+        window.my_modal_1.showModal();
+        setim(null);
+    }
+  }, [im]);
+  
+  useEffect(() => {
+    if(ed!=null){
+        window.my_modal_2.showModal();
+        seted(null);
+    }
+  }, [ed]);
+
+  const FImagen = (e) => {
+    
+    setimag(e)
+    setim("e")
+
+  }
+
+  const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+    
+    seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+    seted("e");
+
+  }
+
 
   const Descargar = async() => {
     try {
@@ -93,7 +123,7 @@ function BienUsuario() {
       }  });
       setSaldo(response.data.message);
     } catch (error) {
-      console.error('Hubo un error al descargar el archivo: ', error);
+      console.error('Hubo un error al retornar el saldo: ', error);
     }
   };
 
@@ -115,7 +145,8 @@ function BienUsuario() {
 
   return (
     <AppLayout>
-
+      <ModalImagen />
+      <ModalEditar />
       <h1 className="text-5xl mt-6">Bienes por usuario</h1>
 
       <div className="w-full max-w-screen-xl px-4 xl:p-0 flex flex-col justify-center">
@@ -130,7 +161,7 @@ function BienUsuario() {
         <option>Seleccionar</option>
           {
             usuarios.map((item)=>
-              <option key={item.id} value={item.id} >{item.nombre}</option>
+              <option key={item.userId} value={item.userId} >{item.nombre}</option>
             )
           }
           </select> 
@@ -172,14 +203,17 @@ function BienUsuario() {
                           <th scope="col" className="px-6 py-3">
                               <span className="sr-only">Edit</span>
                           </th>
+                          <th scope="col" className="px-6 py-3">
+                              <span className="sr-only">imagen</span>
+                          </th>
                       </tr>
                   </thead>
                   <tbody>
                       {
                           bien.map((item)=>
-                              <tr className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
+                              <tr key={item.id} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
                                   <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
-                                      {item.fechaco}
+                                      { new Date(item.fechaco).toLocaleDateString()}
                                   </th>
                                   <td className="px-6 py-4"> {item.cuenta}</td>
                                   <td className="px-6 py-4"> {item.codigo}</td>
@@ -188,7 +222,11 @@ function BienUsuario() {
                                   <td className="px-6 py-4"> {item.ubicacion}</td>
                                   <td className="px-6 py-4"> {item.precio}</td>
                                   <td className="px-6 py-4 text-right">
-                                      <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, new Date(item.fechaco).toLocaleDateString(),item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                  </td>
+                                  <td className="px-6 py-4 text-right">
+                                        
+                                    <button  onClick={() => {FImagen(item.imagen);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Imagen</button>
                                   </td>
                               </tr>
                           )

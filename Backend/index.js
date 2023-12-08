@@ -79,27 +79,29 @@ function query(sql) {
 app.post('/Login', function (req, res) {
     let correo = req.body.correo;
     let pass = req.body.pass;
-    let sql = "SELECT * FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "';";
+    let sql = "SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, correo FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "';";
     
     connection.query(sql, async function(error,result){
       if(error){
         console.log("Error al conectar");
-        res.status(400).json({success: false, message: "El usuario no existe"});
+        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
       }else{
         if (result.length == 1) {
           var respuesta = { success: true,
                             message: {
                               Id : "",
                               Nombre : "",
+                              Correo : "",
                             }
                           }
 
           respuesta.message.Id = result[0].userId;
-          respuesta.message.Nombre = result[0].nombres;
+          respuesta.message.Nombre = result[0].nombre;
+          respuesta.message.Correo = result[0].correo;
         
           res.json(respuesta);
         } else {
-          res.status(400).json({success: false, message: "El usuario no existe"});;
+          res.status(400).json({success: false, message: "Contraseña incorrecta"});;
         }
       }
     });
@@ -219,22 +221,19 @@ app.post('/InBien', async function (req, res) {
 
 //------------------------------------- OBTENER LISTA DE USUARIOS --------------------------------------
 
-app.get('/listaUsuarios', function (req, res) {
-  let sql = "SELECT userId,  CONCAT_WS(' ', nombres, apellidos) as nombre FROM usuario;";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-    }else{
-      if (result.length > 0) {
-      
-        res.json({success: true, message:result});
-      } else {
-        res.status(400).json({success: false, message: "No hay nombres ingresados"});;
-      }
-    }
-  });
+app.get('/listaUsuarios', async function (req, res) {
+
+  try{
+    let sql =  `SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, correo, rol.rol, estado,rolId FROM usuario
+    INNER JOIN rol ON rol.rolId=usuario.rol 
+    WHERE estado!=3;`;
+    const result = await query(sql);
+    res.json({success: true, message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
+    return;
+  }
 });
 
 //------------------------------------- OBTENER LISTA DE CATEGORIAS --------------------------------------
@@ -279,7 +278,7 @@ app.get('/ubicacion', function (req, res) {
 
 //------------------------------------- OBTENER BIENES NO ASIGNADOS --------------------------------------
 
-app.get('/bienes', function (req, res) {
+app.get('/BienesNoAsignados', function (req, res) {
   let sql = `SELECT bien.id,codigo, marca.nombre as marca, descripcion,precio FROM bien 
   LEFT JOIN marca ON marca.marcaId=bien.marca WHERE tarjeta IS NULL;`;
   
@@ -315,7 +314,7 @@ app.post('/bienAsignado', async function (req, res) {
     return;
   }catch (error) {
     console.log(error);
-    res.json({success: false, message: "Error al crear la tarjeta"});
+    res.json({success: false, message: "Error al obtener los bienes asignados"});
     return;
   }
   
@@ -621,7 +620,7 @@ app.get('/DescargarReporteUsuario', async function (req, res) {
     return;
   }catch (error) {
     console.log(error);
-    res.json({success: false, message: "Error al crear la tarjeta"});
+    res.json({success: false, message: "Error al descargar"});
     return;
   }
 });
@@ -805,7 +804,7 @@ app.get('/DescargarReporteTotal', async function (req, res) {
     return;
   }catch (error) {
     console.log(error);
-    res.json({success: false, message: "Error al crear la tarjeta"});
+    res.json({success: false, message: "Error al Descargar"});
     return;
   }
 });
@@ -856,6 +855,53 @@ app.get('/DadosdeBaja', async function (req, res) {
     return;
   }
   
+});
+
+
+
+//------------------------------------- OBTENER Roles--------------------------------------
+
+app.get('/ObtenerRoles', async function (req, res) {
+  try{
+    
+    let sql = `SELECT rolId, rol from rol where activo = True;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los roles"});
+    return;
+  }
+  
+});
+
+
+
+//------------------------------------- Comparar contraseña --------------------------------------
+
+
+app.post('/VerificarPass', function (req, res) {
+  let correo = req.body.correo;
+  let pass = req.body.pass;
+  let sql = "SELECT pass FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "';";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+    }else{
+      if (result.length == 1) {
+      
+        res.json({success: true});
+
+      } else {
+        res.status(400).json({success: false, message: "Contraseña incorrecta"});
+      }
+    }
+  });
 });
 
 
@@ -926,7 +972,7 @@ app.post('/EditarBien', async function (req, res) {
     }
 }catch (error) {
     console.log(error);
-    res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
     return;
 }
 
@@ -938,7 +984,7 @@ app.post('/EditarBien', async function (req, res) {
     res.json({success: true, message: req.body.codigo});
   }catch (error) {
     console.log(error);
-    res.json({success: false, message: "Error al editar"});
+    res.status(400).json({success: false, message: "Error al editar",error:error});
     return;
   }
 });
@@ -959,3 +1005,155 @@ app.delete('/DardeBaja/:id', async function (req, res) {
   
 });
 
+
+//------------------------------------- DAR DE BAJA UN USUARIO--------------------------------------
+
+app.delete('/EliminarUsuario/:id', async function (req, res) {
+
+  try{
+    let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
+    const result = await query(sql);
+    res.json({success: true, message: "Usuario eliminado satisfactoriamente"});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+    return;
+  }
+  
+});
+
+
+//------------------------------------- Actualizar contraseña --------------------------------------
+
+
+app.put('/ActualizarPass', function (req, res) {
+  let nueva = req.body.nueva;
+  let correo = req.body.correo;
+  let sql = "UPDATE usuario SET pass='" + nueva + "' WHERE correo='" + correo + "' ;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+    }else{
+      
+      res.json({success: true});
+
+    }
+  });
+});
+
+//------------------------------------- Actualizar estado --------------------------------------
+
+app.put('/ActualizarEstado', function (req, res) {
+  let estado = req.body.estado;
+  let id = req.body.id;
+
+  let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+    }else{
+      
+      res.json({success: true});
+
+    }
+  });
+});
+
+
+
+//------------------------------------- CREAR/INGRESAR USUARIOS --------------------------------------
+
+app.post('/CrearUsuario', async function (req, res) {
+
+  try{
+    let correo= req.body.correo;
+
+    let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
+    
+    const result1 = await query(sql);
+    
+    if (result1.length>0){
+      res.status(400).json({success: false, message: "Correo repetido"});
+      return;
+    }
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al crear usuario"});
+    return;
+  }
+
+  try{
+    let nombres= req.body.nombres;
+    let apellidos= req.body.apellidos;
+    let correo= req.body.correo;
+    let rol= req.body.rol;
+
+    let sql = `INSERT INTO usuario(fecha_mod,nombres,apellidos,correo,rol,estado,pass)
+    VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`',`+rol+`,1,'MINECO') ;`;
+    
+    const result2 = await query(sql);
+    
+    res.json({success: true});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al crear usuario"});
+    return;
+  }
+  
+});
+
+
+
+//------------------------------------- Actualizar usuario --------------------------------------
+
+app.put('/EditarUsuario', async function (req, res) {
+
+
+  try{
+    let correo= req.body.correo;
+    
+    let id = req.body.id;
+
+    let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
+    
+    const result1 = await query(sql);
+    
+    if (result1.length>0){
+      if(result1[0].userId==id){
+        //El id no pertenece a otro usuario
+      }else{
+        
+        res.status(400).json({success: false, message: "Correo repetido"});
+        return;
+      }
+    }
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al editar usuario"});
+    return;
+  }
+ 
+  try{
+    let id = req.body.id;
+    let nombres = req.body.nombres;
+    let apellidos = req.body.apellidos;
+    let correo = req.body.correo;
+    let rol = req.body.rol;
+
+    let sql =  `UPDATE usuario SET nombres='` + nombres + `',apellidos='` + apellidos + `',
+    correo='` + correo + `',rol='`+rol+`' WHERE userId= ` + id +  ` ; `;
+    const result2 = await query(sql);
+    
+    res.json({success: true});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al editar usuario", error:error});
+    return;
+  }
+});

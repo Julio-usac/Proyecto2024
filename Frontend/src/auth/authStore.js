@@ -9,12 +9,14 @@ const useAuth = create(
       tipo: null,
       id: null,
       nombre: null,
+      correo: null,
       login: (tipo, message) => {
         set({
           isAuthenticated: true,
           tipo: tipo,
           id: message.Id,
           nombre: message.Nombre,
+          correo: message.Correo,
         });
       },
       logout: () => {

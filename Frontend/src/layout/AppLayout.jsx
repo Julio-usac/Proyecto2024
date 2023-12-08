@@ -6,7 +6,7 @@ import useCarrito from "../store/carritoStore";
 import Favorito from "../components/Favorito";
 // eslint-disable-next-line react/prop-types
 const AppLayout = ({ children }) => {
-  const { imagen, logout } = useAuth((state) => state);
+  const { nombre, logout } = useAuth((state) => state);
   const vaciar = useCarrito((state) => state.vaciar);
   const handleLogout = () => {
     logout();
@@ -20,7 +20,7 @@ const AppLayout = ({ children }) => {
         <div className="navbar bg-base-100 z-50">
           <div className="flex-1">
           
-          <Link to="/" className="btn btn-ghost normal-case text-3xl">Inventario</Link>
+          <Link to="/" className="btn btn-ghost normal-case text-4xl">Inventario</Link>
           
           </div>
           <div className="flex-none">
@@ -29,15 +29,17 @@ const AppLayout = ({ children }) => {
                 
               </ul>
             </div>
+           <h1 className="px-5 text-2xl">{nombre}</h1> 
           {/*
             <Favorito />
             <Carrito />*/
           }
+         
             <div className="dropdown dropdown-end z-50">
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-                  <div className="w-10 rounded-full">
-                    <img src={imagen} />
+                  <div className="w-12 rounded-full">
+                    <img src={'./src/assets/user.png'} />
                   </div>
                 </label>
                 <ul
@@ -46,7 +48,12 @@ const AppLayout = ({ children }) => {
                 >
                   <li>
                     <Link className="justify-between" to="/perfil">
-                      Perfil
+                      Editar contraseña
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="justify-between" to="/AdminUsuario">
+                      Administrar usuarios
                     </Link>
                   </li>
                   

@@ -1,26 +1,15 @@
-import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
 import { useState } from "react";
 import { useEffect } from "react";
-import useAuth from "../../auth/authStore";
 
 function AsBien() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
-  const url = useAuth((state) => state.url);
 
-  const agregarFav = useFav((state) => state.agregar);
-  const setFav = useFav((state) => state.setProductoSeleccionado);
 
-  const [showButton, setShowButton] = useState(Array(1000).fill(true));
-  const [showButton2, setShowButton2] = useState(Array(1000).fill(true));
+  const [showButton, setShowButton] = useState([]);
+  const [showButton2, setShowButton2] = useState([]);
   const [agregar, setAgregar] = useState([]);
   const [quitar, setQuitar] = useState([]);
   const [tipo, setTipo] = useState([]);
@@ -28,6 +17,24 @@ function AsBien() {
   const [bien, setBien] = useState([]);
   const [bien2, setBien2] = useState([]);
   const [opcion, setOpcion] = useState('');
+
+  //Variables utilizadas para la visibilidad de las tablas
+  const [Vagregar, setVagregar] = useState(true);
+  const [Vquitar, setVquitar] = useState(false);
+  
+  const [toggleTipo, setToggleTipo] = useState(true);
+
+  const fVagregar = (e) => {
+    setVagregar(true);
+    setVquitar(false);
+  };
+
+  const fVeliminar = (e) => {
+    setVquitar(true);
+    setVagregar(false);
+  };
+
+
 
   const fagregar = (id) => {
     setAgregar([...agregar,id]);
@@ -56,15 +63,19 @@ function AsBien() {
     }
     setQuitar(quitarid);
   };
+
   const toggleButton = (id) => {
     const updatedVisibility = [...showButton];
     updatedVisibility[id] =  !updatedVisibility[id] ;
     setShowButton(updatedVisibility);
   };
 
+  const toggleButton2 = (id) => {
+    const updatedVisibility = [...showButton2];
+    updatedVisibility[id] =  !updatedVisibility[id] ;
+    setShowButton2(updatedVisibility);
+  };
 
-  
-  const [toggleTipo, setToggleTipo] = useState(true);
 
 
   
@@ -99,25 +110,51 @@ function AsBien() {
   },[]);
 
   useEffect(() => {
-    const load = async () => {
+    /*const load = async () => {
       let result = await fetch("http://localhost:9095/bienes");
       result = await result.json();
       setBien(result.message)
     };
-    load();
+    load();*/
+
+    axios.get('http://localhost:9095/BienesNoAsignados')
+      .then((resp) => {
+
+      setBien(resp.data.message);
+
+      let bienarray =[];
+
+      for (let i = 0; i < resp.data.message.length; i++) {
+   
+        bienarray[resp.data.message[i].id]=true;
+        
+      }
+      setShowButton(bienarray);
+      })
+      .catch((error) => {
+        toast.error('Error al retornar los bienes no asignados')
+        console.error('Hubo un error al retornar los bienes: ', error);
+
+      });
   },[]);
 
   useEffect(() => {
     if (opcion) {
       axios.post("http://localhost:9095/bienAsignado", {
-        // Aquí van los datos que quieres enviar en la petición POST
-        
           usuario: opcion,
         
       })
         .then((resp) => {
           if (resp.data.success === true) {
             setBien2(resp.data.message);
+            let bienarray =[];
+
+            for (let i = 0; i < resp.data.message.length; i++) {
+        
+              bienarray[resp.data.message[i].id]=true;
+              
+            }
+            setShowButton2(bienarray);
           }else{
             toast.error(resp.data.message)
           }
@@ -178,7 +215,7 @@ function AsBien() {
    <div className="bg-base-300 w-full h-[100vh] flex justify-center items-center">
         <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
           
-          <div className="card-body p-6 w-full flex flex-col justify-between">
+          <div className="card-body p-16 w-full flex flex-col justify-between">
             <div>
               <h2 className="card-title font-semibold text-4xl text-black justify-center">
           
@@ -250,15 +287,36 @@ function AsBien() {
                       <button
                     className="btn bg-blue-500 text-white w-fit mt-6 "  type="submit"
                     >
-                    Ingresar activo
+                    Ingresar tarjeta
                 </button>
                     </div>
-                    <div className="flex flex-col justify-left -mx-1 mb-11">
-                    <h2 className="card-title font-semibold text-4xl text-black justify-center">
-          
-                      Asignar activos
-                    </h2>
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-64">
+                    
+                    <div className="flex flex-col justify-left items-center -mx-1 mb-11">
+                      <div>
+                    <button
+                        className="btn bg-blue-500 text-white w-fit"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          fVagregar();
+                        }}
+                    >
+                        AGREGAR
+                    </button>
+                    <button
+                        className="btn bg-red-500 text-white w-fit mx-6"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          fVeliminar();
+                        }}
+                    >
+                        Desasignar
+                    </button>
+                    </div>
+                {Vagregar&&<h2 className="card-title font-semibold text-4xl text-black justify-center mt-4">
+                          
+                  Asignar activos
+                </h2>}
+                {Vagregar&&<div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-96">
                     <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900 table-auto ">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
@@ -275,10 +333,7 @@ function AsBien() {
                                     Saldo
                                 </th>
                                 <th scope="col" className="px-6 py-3">
-                                    <span className="sr-only">Editar</span>
-                                </th>
-                                <th scope="col" className="px-6 py-3">
-                                    <span className="sr-only">Imagen</span>
+                                    <span className="sr-only">Accion</span>
                                 </th>
                             </tr>
                         </thead>
@@ -292,8 +347,8 @@ function AsBien() {
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
-                                        <td className="px-6 py-4 text-right">
-                                        {showButton[item.id] && (
+                                        {showButton[item.id] && (<td className="px-6 py-4 text-right">
+                                        
                                           <button  key={item.id} className="btn bg-green-500 text-white w-fit"
                                           onClick={() => {
                                             fagregar(item.id);
@@ -301,10 +356,10 @@ function AsBien() {
                                           }}>
                                             Agregar
                                           </button>
-                                        )}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                        {!showButton[item.id] && (
+                                        
+                                        </td>)}
+                                        {!showButton[item.id] && (<td className="px-6 py-4 text-right">
+                                        
                                           <button  key={item.id} className="btn bg-red-500 text-white w-fit"
                                           onClick={() => {
                                             fagregar2(item.id);
@@ -312,20 +367,20 @@ function AsBien() {
                                           }}>
                                             Quitar
                                           </button>
-                                        )}
-                                        </td>
+                                        
+                                        </td>)}
                                     </tr>
                                 )
                             }
                         </tbody>
                     </table>
                     
-                </div>
-                <h2 className="card-title font-semibold text-4xl text-black justify-center mt-4">
+                </div>}
+                {Vquitar&& <h2 className="card-title font-semibold text-4xl text-black justify-center mt-4">
           
                   Desasignar activos
-                </h2>
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-64">
+                </h2>}
+                {Vquitar&&<div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-96">
                     <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
@@ -342,10 +397,7 @@ function AsBien() {
                                     Saldo
                                 </th>
                                 <th scope="col" className="px-6 py-3">
-                                    <span className="sr-only">Editar</span>
-                                </th>
-                                <th scope="col" className="px-6 py-3">
-                                    <span className="sr-only">Imagen</span>
+                                    <span className="sr-only">Accion</span>
                                 </th>
                             </tr>
                         </thead>
@@ -359,35 +411,36 @@ function AsBien() {
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
-                                        <td className="px-6 py-4 text-right">
-                                        {!showButton[item.id] && (
+                                        {!showButton2[item.id] && (<td className="px-6 py-4 text-right">
+                                        
                                           <button  key={item.id} className="btn bg-green-500 text-white w-fit"
                                           onClick={() => {
                                             fquitar2(item.id);
-                                            toggleButton(item.id);
+                                            toggleButton2(item.id);
                                           }}>
                                             Agregar
                                           </button>
-                                        )}
+                                        
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                        {showButton[item.id] && (
+                                        )}
+                                         {showButton2[item.id] && (<td className="px-6 py-4 text-right">
+                                       
                                           <button  key={item.id} className="btn bg-red-500 text-white w-fit"
                                           onClick={() => {
                                             fquitar(item.id);
-                                            toggleButton(item.id);
+                                            toggleButton2(item.id);
                                           }}>
                                             Quitar
                                           </button>
-                                        )}
-                                        </td>
+                                        
+                                        </td>)}
                                     </tr>
                                 )
                             }
                         </tbody>
                     </table>
                     
-                </div>
+                </div>}
             </div>
                 </div>
                 

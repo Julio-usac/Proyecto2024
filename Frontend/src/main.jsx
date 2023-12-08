@@ -20,6 +20,7 @@ import AsBien from "./pages/AsBien/AsBien.jsx";
 import SinAsignar from "./pages/SinAsignar/SinAsignar.jsx";
 import DeBaja from "./pages/DeBaja/DeBaja.jsx";
 import Bitacora from "./pages/Bitacora/Bitacora.jsx";
+import AdminUsuario from "./pages/AdminUsuario/AdminUsuario.jsx";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <App />,
+      },
+      {
+        path: "/AdminUsuario",
+        element: <AdminUsuario/>,
       },
       {
         path: "/BienUsuario",

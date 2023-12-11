@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { useEffect } from "react";
 
+import useAuth from "../../auth/authStore";
+
 function AsBien() {
 
 
@@ -17,6 +19,9 @@ function AsBien() {
   const [bien, setBien] = useState([]);
   const [bien2, setBien2] = useState([]);
   const [opcion, setOpcion] = useState('');
+  
+
+  const  userid  = useAuth((state) => state.id);
 
   //Variables utilizadas para la visibilidad de las tablas
   const [Vagregar, setVagregar] = useState(true);
@@ -110,12 +115,7 @@ function AsBien() {
   },[]);
 
   useEffect(() => {
-    /*const load = async () => {
-      let result = await fetch("http://localhost:9095/bienes");
-      result = await result.json();
-      setBien(result.message)
-    };
-    load();*/
+ 
 
     axios.get('http://localhost:9095/BienesNoAsignados')
       .then((resp) => {
@@ -193,6 +193,22 @@ function AsBien() {
           
           if (resp.data.success === true) {
             toast.success("Ingreso exitoso!")
+
+            try {
+              const resp = await axios({
+                url: "http://localhost:9095/IngresarBitacora",
+                method: "post",
+                data: {
+                  usuario: userid,
+                  usuarioaf: data.usuario,
+                  bienaf: null,
+                  tipo: 4,
+                  afectado:false,
+                },
+              });
+            } catch (error) {
+              console.log(error)
+            }
             setTimeout(function(){ window.location.reload(); }, 1000);
           }else{
             toast.error(resp.data.message)

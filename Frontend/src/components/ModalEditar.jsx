@@ -4,6 +4,8 @@ import useEditar from '../store/editarStore';
 import axios from "axios";
 import { useState } from "react";
 import { useEffect } from "react";
+import useAuth from "../auth/authStore";
+
 
 const ModelEditar = () => {
     const mid = useEditar((state) => state.id);
@@ -19,6 +21,7 @@ const ModelEditar = () => {
     const mcategoria= useEditar((state) => state.tipo);
     const mimage= useEditar((state) => state.imagen);
     const mdescripcion = useEditar((state) => state.descripcion);
+    const { id } = useAuth((state) => state);
 
 
     const [tipo, setTipo] = useState([]);
@@ -96,13 +99,28 @@ const ModelEditar = () => {
             imagen:   (imageData!=null)? imageData:mimage,
             precio:  (data.precio!=null)? data.precio:mprecio,
             descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
-            categoria:  (data.categoria!=null)? data.categoria:mcategoria,
-            ubicacion:  (data.ubicacion=="Seleccionar")?null:((data.ubicacion!=null)? data.ubicacion:mubicacion),
+            categoria:  (data.categoria!=null && data.categoria!="Seleccionar")? data.categoria:mcategoria,
+            ubicacion:  (data.ubicacion!=null && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
           },
         });
         
         if (resp.data.success === true) {
           toast.success("Ingreso exitoso!")
+          try {
+            const resp = await axios({
+              url: "http://localhost:9095/IngresarBitacora",
+              method: "post",
+              data: {
+                usuario: id,
+                usuarioaf: null,
+                bienaf: mid,
+                tipo: 2,
+                afectado:true,
+              },
+            });
+          } catch (error) {
+            console.log(error)
+          }
           window.my_modal_2.close();
           setTimeout(function(){ window.location.reload(); }, 1000);
         }else{
@@ -121,6 +139,17 @@ const ModelEditar = () => {
     return (
         <dialog id="my_modal_2" className="modal">
              <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
+             <div className="flex justify-end mt-3 px-3">
+          <button
+                        className="flex bg-red-500 text-white px-4 py-2 rounded w-fit"
+                        onClick={(e) => {
+                          e.preventDefault()
+                            window.my_modal_2.close();
+                        }}
+                    >
+                        X
+                    </button>
+        </div>
              <div className="card-body p-6 w-full flex flex-col justify-between">
             <div>
               <h2 className="card-title font-semibold text-4xl text-blue-600 justify-center">
@@ -225,15 +254,7 @@ const ModelEditar = () => {
                     >
                     Ingresar activo
                 </button>
-                <button
-                        className="btn btn-primary w-fit"
-                        onClick={(e) => {
-                          e.preventDefault()
-                            window.my_modal_2.close();
-                        }}
-                    >
-                        Salir
-                    </button>
+                
               </form>
             </div>
 

@@ -1,150 +1,120 @@
 import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
+import toast, { Toaster } from 'react-hot-toast';
 import { useState } from "react";
-import { useEffect } from "react";
-import useAuth from "../../auth/authStore";
 
 function Bitacora() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
-  const url = useAuth((state) => state.url);
 
-  const agregarFav = useFav((state) => state.agregar);
-  const setFav = useFav((state) => state.setProductoSeleccionado);
+  //Declaracion de estados
 
-  const [showButton, setShowButton] = useState(Array(9999).fill(true));
+  const [usuarios, setUsuarios] = useState([]);
+  const [fecha, setFecha] = useState('');
 
-  const toggleButton = (id) => {
-    const updatedVisibility = [...showButton];
-    updatedVisibility[id] = false;
-    setShowButton(updatedVisibility);
-  };
 
-  const [state, actions] = useAsync(() => {
-    return axios({
-      url: "http://localhost:9095/BienUsuario/Tabla",
-      method: "get",
-    });
-  });
+  //-----------------------Funciones utilizadas--------------------------------
 
-  useMountEffect(actions.execute);
+  //Funcion utilizada para guardar la fecha en el estado fecha
 
-  const [Page, setPage] = useState(1);
-  const [PageData, setPageData] = useState([]);
+  const CambiarFecha = (evento) => {
+    setFecha(evento.target.value);
+  }
 
-  // set the page data when the number of page changes, from the state.result
-  useEffect(() => {
-    if (state.status === "success") {
-      setPageData(state.result.data.mensaje.slice((Page - 1) * 7, Page * 7));
-    }
-  }, [Page, state.result, state.status]);
+//Funcion utilizada para llamar al endpoint DescargarBitacora y descargar la bitacora
 
-  const Cambio = async (data) => {
-    
+  const Descargar = async() => {
     try {
-      const resp = await axios({
-        url: "http://localhost:9095/BienUsuario/Tabla",
-        method: "post",
-        data: {
-          inicio: Page,
-        },
-      });
-      console.log(data.mensaje);
-      
-      if (resp.data.success === true) {
-        setPageData(resp.data.mensaje);
-      }
+      const response = await axios.get('http://localhost:9095/DescargarBitacora/', { responseType: 'blob'});
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Descarga.xlsx'); 
+      document.body.appendChild(link);
+      link.click();
     } catch (error) {
-      console.log(error);
+      console.error('Hubo un error al descargar el archivo: ', error);
+    }
+  };
+  
 
-      alert("Ha ocurrido un error");
+  //Funcion utilizada para obtener la bitacora segun la fecha.
+
+  const ObtenerBitacora= async() => {
+    if(fecha){
+      try {
+        const response = await axios.get('http://localhost:9095/ObtenerBitacora/', { params: {
+          fecha: fecha
+        }  });
+        setUsuarios(response.data.message);
+      } catch (error) {
+        console.error('Hubo un error al retornar el saldo: ', error);
+      }
     }
   };
 
-
+  //HTML
 
   return (
     <AppLayout>
-
-      <h1 class="text-5xl mt-6">Bienes por usuario</h1>
+      <h1 className="text-5xl mt-6">Bitacora</h1>
 
       <div className="w-full max-w-screen-xl px-4 xl:p-0 flex flex-col justify-center">
 
         <div>
-        <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 text-xl dark:text-black">Seleccione un empleado</label>
+        <label className="block mb-2 text-sm font-medium text-gray-900 text-xl dark:text-black mt-6">Seleccione una fecha</label>
         <div className="py-4 pt-2 flex justify-between items-center">
-          <select id="countries" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-        
-          <option selected value="US">Julio Roberto Garcia Escalante</option>
-          <option value="CA">Canada</option>
-          <option value="FR">France</option>
-          <option value="DE">Germany</option>
-          <option value="US">United States</option>
-          <option value="CA">Canada</option>
-          <option value="FR">France</option>
-          <option value="DE">Germany</option>
-          </select>
-
+  
+        <div className="flex  items-center" >
+          <input className="appearance-none block w-fit bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" 
+            type="date" onChange={CambiarFecha} />
+           <button  className="text-white  bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            onClick={ObtenerBitacora}>Buscar</button>
+        </div>
           <button
                 className="btn btn-success w-fit"
-                onClick={() => window.modalSubasta.showModal()}
+                onClick={ Descargar}
               >
-                Descargar reporte
+                Descargar Bitacora
               </button>
           </div>
           <div style={{ height: '30px' }} />
 
-          <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-              <table class="w-full text-sm text-left text-gray-500 dark:text-gray-900">
-                  <thead class="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-4/6">
+              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                  <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
-                          <th scope="col" class="px-6 py-3">
-                              Fecha compra
+                          <th scope="col" className="px-6 py-3">
+                              Fecha
                           </th>
-                          <th scope="col" class="px-6 py-3">
-                              No.cuenta
+                          <th scope="col" className="px-6 py-3">
+                              Hora
                           </th>
-                          <th scope="col" class="px-6 py-3">
-                              Codigo
+                          <th scope="col" className="px-6 py-3">
+                              Usuario
                           </th>
-                          <th scope="col" class="px-6 py-3">
-                              Cantidad
+                          <th scope="col" className="px-6 py-3">
+                              Movimiento
                           </th>
-                          <th scope="col" class="px-6 py-3">
-                              Descripcion
+                          <th scope="col" className="px-6 py-3">
+                              Objetivo
                           </th>
-                          <th scope="col" class="px-6 py-3">
-                              Ubicacion
-                          </th>
-                          <th scope="col" class="px-6 py-3">
-                              saldo
-                          </th>
-                          <th scope="col" class="px-6 py-3">
-                              <span class="sr-only">Edit</span>
+                          <th scope="col" className="px-6 py-3">
+                              N.Usuario/B.Codigo
                           </th>
                       </tr>
                   </thead>
                   <tbody>
                       {
-                          PageData.map((item)=>
-                              <tr class="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
-                                  <th scope="row" class="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
-                                      {item.fecha_mod}
+                          usuarios.map((item)=>
+                              <tr key={item.id} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
+                                  <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
+                                      { new Date (item.fecha).toLocaleDateString()}
                                   </th>
-                                  <td class="px-6 py-4"> {item.nombres}</td>
-                                  <td class="px-6 py-4"> {item.apellidos}</td>
-                                  <td class="px-6 py-4"> {item.correo}</td>
-                                  <td class="px-6 py-4"> {item.pass}</td>
-                                  <td class="px-6 py-4"> {item.estado}</td>
-                                  <td class="px-6 py-4"> {item.rol}</td>
-                                  <td class="px-6 py-4 text-right">
-                                      <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                                  </td>
+                                  <td className="px-6 py-4"> {item.hora}</td>
+                                  <td className="px-6 py-4"> {item.usuario}</td>
+                                  <td className="px-6 py-4"> {item.movimiento}</td>
+                                  <td className="px-6 py-4"> {(item.objetivo==0)?"Usuario":"Bien"}</td>
+                                  <td className="px-6 py-4"> {(item.correo)?item.correo:item.bien}</td>
                               </tr>
                           )
                       }
@@ -152,29 +122,9 @@ function Bitacora() {
               </table>
               
           </div>
-          <button
-              className="join-item btn"
-              onClick={() => {
-                if (Page > 1) {
-                  setPage(Page - 1);
-                }
-              }}
-            >
-              «
-            </button>
-            <button className="join-item btn">Pagina {Page}</button>
-            <button
-              className="join-item btn"
-              onClick={() => {
-                if (Page >= 1 && Page < state.result.data.mensaje.length / 7) {
-                  setPage(Page + 1);
-                }
-              }}
-            >
-              »
-            </button>
         </div>
       </div>
+      <Toaster />
     </AppLayout>
   );
 }

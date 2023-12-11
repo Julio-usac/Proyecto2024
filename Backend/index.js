@@ -79,7 +79,8 @@ function query(sql) {
 app.post('/Login', function (req, res) {
     let correo = req.body.correo;
     let pass = req.body.pass;
-    let sql = "SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, correo FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "';";
+
+    let sql = "SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, correo, rol FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "' AND estado = 1;";
     
     connection.query(sql, async function(error,result){
       if(error){
@@ -92,16 +93,18 @@ app.post('/Login', function (req, res) {
                               Id : "",
                               Nombre : "",
                               Correo : "",
+                              Rol: "",
                             }
                           }
 
           respuesta.message.Id = result[0].userId;
           respuesta.message.Nombre = result[0].nombre;
           respuesta.message.Correo = result[0].correo;
+          respuesta.message.Rol = result[0].rol;
         
           res.json(respuesta);
         } else {
-          res.status(400).json({success: false, message: "Contraseña incorrecta"});;
+          res.status(400).json({success: false, message: "Credenciales incorrectas"});
         }
       }
     });
@@ -634,9 +637,15 @@ app.get('/saldoUsuario', async function (req, res) {
    
     const result = await query(sql);
     
-    let saldo=result[0].saldo;
+    if (result.length>0){
 
-    res.json({success: true, message: saldo});
+      let saldo=result[0].saldo;
+      res.json({success: true, message: saldo});
+      return;
+    }else{
+      res.json({success: true, message: "Saldo no disponible"});
+      return;
+    }
   }catch (error) {
     console.log(error);
     res.status(400).json({success: false, message: "Error"});
@@ -1154,6 +1163,133 @@ app.put('/EditarUsuario', async function (req, res) {
   }catch (error) {
     console.log(error);
     res.status(400).json({success: false, message: "Error al editar usuario", error:error});
+    return;
+  }
+});
+
+
+//------------------------------------- INGRESAR INFORMACION A BITACORA --------------------------------------
+
+app.post('/IngresarBitacora', async function (req, res) {
+
+  try{
+
+    let usuario= req.body.usuario;
+    let usuarioaf= req.body.usuarioaf;
+    let bienaf= req.body.bienaf;
+    let tipo= req.body.tipo;
+    let afectado= req.body.afectado;
+
+
+    let sql = `INSERT INTO movimiento_bien (fecha,usuario,usuario_afectado,bien_afectado,tipo_movimiento,afectado) 
+    VALUES(NOW(),`+usuario+`,`+usuarioaf+`,`+bienaf+`,`+tipo+`,`+afectado+`);`;
+    
+    const result = await query(sql);
+    res.json({success: true});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al registrar cambio en la bitacora",error:error});
+    return;
+  }
+  
+});
+
+//------------------------------------- OBTENER INFORMACION DE BICATORA SEGUN FECHA --------------------------------------
+
+app.get('/ObtenerBitacora', async function (req, res) {
+  
+  try{
+    let fecha= req.query.fecha;
+    let sql = `SELECT m.id, m.fecha, TIME(m.fecha) AS hora, u1.correo AS usuario, t.tipo AS movimiento, m.afectado AS objetivo, u2.correo, bien.codigo AS bien FROM movimiento_bien m
+    INNER JOIN usuario u1 ON u1.userId=m.usuario
+    LEFT JOIN usuario u2 ON u2.userId=m.usuario_afectado
+    LEFT JOIN bien ON bien.id=m.bien_afectado
+    INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento 
+    WHERE DATE(m.fecha)=STR_TO_DATE(DATE_FORMAT("`+fecha+`", "%d/%m/%Y"), '%d/%m/%Y');`;
+   
+    const result = await query(sql);
+    
+
+    res.json({success: true,message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error", error:error});
+    return;
+  }
+});
+
+
+
+//------------------------------------------------ DESCARGAR BITACORA -------------------------------------
+
+app.get('/DescargarBitacora', async function (req, res) {
+
+  try{
+
+    let sql = `SELECT m.id, DATE_FORMAT(m.fecha, '%d/%m/%Y') as fecha, TIME(m.fecha) as hora,u1.correo as usuario, t.tipo as movimiento, m.afectado as objetivo, COALESCE(u2.correo, bien.codigo) as identificador FROM movimiento_bien m
+    INNER JOIN usuario u1 ON u1.userId=m.usuario
+    LEFT JOIN usuario u2 ON u2.userId=m.usuario_afectado
+    LEFT JOIN bien ON bien.id=m.bien_afectado
+    INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento;`;
+    
+    const result = await query(sql);
+
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Total');
+
+    // titulo
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true
+      }
+    });
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 16
+      }
+    });
+
+    worksheet.cell(2, 1).string("Bitacora").style(myStyle2);
+    worksheet.cell(6, 1).string("Fecha").style(myStyle);
+    worksheet.cell(6, 2).string("Hora").style(myStyle);
+    worksheet.cell(6, 3).string("Usuario").style(myStyle);
+    worksheet.cell(6, 4).string("Movimiento").style(myStyle);
+    worksheet.cell(6, 5).string("Objeto").style(myStyle);
+    worksheet.cell(6, 6).string("N.Usuario/B.Codigo").style(myStyle);
+
+    result.forEach((row, index) => {
+      let cast=""+row.fecha+""
+      worksheet.cell(index + 7, 1).string(cast);
+      cast=""+row.hora+""
+      worksheet.cell(index + 7, 2).string(cast);
+      cast=""+row.usuario+""
+      worksheet.cell(index + 7, 3).string(cast);
+      cast=""+row.movimiento+""
+      worksheet.cell(index + 7, 4).string(cast);
+      if(row.objetivo==0){
+        cast="Usuario"
+      }else{
+        cast="Bien"
+      }
+      worksheet.cell(index + 7, 5).string(cast);
+      cast=""+row.identificador+""
+      worksheet.cell(index + 7, 6).string(cast);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al Descargar", error:error});
     return;
   }
 });

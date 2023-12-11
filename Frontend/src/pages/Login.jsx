@@ -1,12 +1,10 @@
-import { FiEye, FiEyeOff, FiShoppingCart, FiArchive } from "react-icons/fi";
+import { FiEye, FiEyeOff} from "react-icons/fi";
 import { MdStorage} from "react-icons/md";
 import { useForm } from "react-hook-form";
 import toast, { Toaster } from 'react-hot-toast';
 import axios from "axios";
 import useAuth from "../auth/authStore";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-
-import data from "../ips.json";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,19 +35,14 @@ const Login = () => {
           pass: data.password,
         },
       });
-      console.log(data.email);
+
       if (resp.data.success === true) {
-        
-        toast("Ingreso exitoso!")
         login(1, resp.data.message);
         navigate("/");
-      }else{
-        alert(resp.data.message)
       }
     } catch (error) {
-      console.log(error);
-
-      alert("Ha ocurrido un error");
+      toast.error(error.response.data.message);
+      
     }
   };
 
@@ -152,7 +145,9 @@ const Login = () => {
           </form>
         </div>
       </div>
+      <Toaster />
     </div>
+    
   );
 };
 

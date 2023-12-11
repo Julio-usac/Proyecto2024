@@ -4,8 +4,6 @@ import axios from "axios";
 import ModalImagen from "../../components/ModalImagen";
 import ModalEditar from "../../components/ModalEditar";
 import toast, { Toaster } from 'react-hot-toast';
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
 import useImagen from '../../store/imgStore';
 import useEditar from '../../store/editarStore';
 import { useState } from "react";
@@ -14,9 +12,9 @@ import useAuth from "../../auth/authStore";
 
 function Busqueda() {
   const setimag = useImagen((state) => state.setImagen);
-  const ima= useImagen((state) => state.imagen);
   const seteditar = useEditar((state) => state.setEditar);
- 
+  const {rol } = useAuth((state) => state);
+
   //Inicilizar variables
 
   const [Opcion, setOpcion] = useState(0);
@@ -25,7 +23,6 @@ function Busqueda() {
   
   const [ed,seted] = useState(null);
   const [Tabla, setTabla] = useState([]);
-  const [PageData, setPageData] = useState([]);
 
   //----------------------------Funciones para manejar cambios de estado -------------------------
 
@@ -42,7 +39,6 @@ function Busqueda() {
   useEffect(() => {
     if (Opcion==10) {
       axios.get("http://localhost:9095/bienAsignado", {
-        // Aquí van los datos que quieres enviar en la petición POST
         
           usuario: Opcion,
         
@@ -83,9 +79,12 @@ function Busqueda() {
   }
 
   const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
-    
-    seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
-    seted("e");
+    if (rol!=3){
+      seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      seted("e");
+    }else{
+      toast.error("No cuenta con los permisos para realizar esta operacion")
+    }
 
   }
 
@@ -96,7 +95,7 @@ function Busqueda() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
+      link.setAttribute('download', 'Descarga.xlsx'); 
       document.body.appendChild(link);
       link.click();
     } catch (error) {

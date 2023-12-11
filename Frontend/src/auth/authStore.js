@@ -10,6 +10,8 @@ const useAuth = create(
       id: null,
       nombre: null,
       correo: null,
+      rol: null,
+
       login: (tipo, message) => {
         set({
           isAuthenticated: true,
@@ -17,6 +19,7 @@ const useAuth = create(
           id: message.Id,
           nombre: message.Nombre,
           correo: message.Correo,
+          rol:message.Rol,
         });
       },
       logout: () => {
@@ -25,6 +28,7 @@ const useAuth = create(
           tipo: null,
           id: null,
           nombre: null,
+          correo:null,
         });
       },
       setUrl: (url) => {

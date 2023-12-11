@@ -4,11 +4,13 @@ import toast, { Toaster } from 'react-hot-toast';
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useEffect } from "react";
+import useAuth from "../../auth/authStore";
 
 function SinAsignar() {
 
   const [bien, setBien] = useState([]);
 
+  const  userid  = useAuth((state) => state.id);
 
   //Obtener bienes sin asignar
   useEffect(() => {
@@ -35,7 +37,22 @@ function SinAsignar() {
     const confirmacion = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
     if (confirmacion) {
       axios.delete('http://localhost:9095/DardeBaja/'+e)
-      .then(response => {
+      .then(async response => {
+        try {
+          const resp = await axios({
+            url: "http://localhost:9095/IngresarBitacora",
+            method: "post",
+            data: {
+              usuario: userid,
+              usuarioaf: null,
+              bienaf: e,
+              tipo: 3,
+              afectado: true,
+            },
+          });
+        } catch (error) {
+          console.log(error)
+        }
         toast.success(response.data.message);
         setTimeout(function(){ window.location.reload(); }, 1000);
       })

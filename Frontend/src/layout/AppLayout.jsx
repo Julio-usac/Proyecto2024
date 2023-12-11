@@ -1,17 +1,32 @@
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import useAuth from "../auth/authStore";
 import Carrito from "../components/Carrito";
 import useCarrito from "../store/carritoStore";
 
+import toast, { Toaster } from 'react-hot-toast';
+
 import Favorito from "../components/Favorito";
 // eslint-disable-next-line react/prop-types
 const AppLayout = ({ children }) => {
-  const { nombre, logout } = useAuth((state) => state);
+  const { nombre,rol,logout } = useAuth((state) => state);
   const vaciar = useCarrito((state) => state.vaciar);
+
+  const navigate = useNavigate();
+
   const handleLogout = () => {
     logout();
     vaciar();
   };
+
+  const VerificarRol= () => {
+    if (rol == 1){
+      navigate("/AdminUsuario");
+    }else{
+      toast.error("Necesita permisos de Administrador")
+    }
+    
+  }
+
 
   // console.log('usuario', usuario);
   return (
@@ -52,9 +67,10 @@ const AppLayout = ({ children }) => {
                     </Link>
                   </li>
                   <li>
-                    <Link className="justify-between" to="/AdminUsuario">
+                    <a className="justify-between" onClick={VerificarRol}>
+                      
                       Administrar usuarios
-                    </Link>
+                    </a>
                   </li>
                   
                   <li>
@@ -64,6 +80,7 @@ const AppLayout = ({ children }) => {
               </div>
             </div>
           </div>
+          <Toaster/>
         </div>
       </header>
 

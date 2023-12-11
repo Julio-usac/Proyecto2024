@@ -1,6 +1,6 @@
 import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "./layout/AppLayout";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import axios from "axios";
 import ModalAgregar from "./components/ModalAgregar";
 import useCarrito from "./store/carritoStore";
@@ -9,26 +9,35 @@ import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "./auth/authStore";
 import { FiUserCheck,FiShoppingBag, FiUsers,FiTrash2,FiSearch,FiInfo } from "react-icons/fi";
+import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
-  const url = useAuth((state) => state.url);
 
-  const agregarFav = useFav((state) => state.agregar);
-  const setFav = useFav((state) => state.setProductoSeleccionado);
+  const { rol } = useAuth((state) => state);
+  const navigate = useNavigate();
 
-  const [showButton, setShowButton] = useState(Array(9999).fill(true));
+ 
 
-  const toggleButton = (id) => {
-    const updatedVisibility = [...showButton];
-    updatedVisibility[id] = false;
-    setShowButton(updatedVisibility);
-  };
+  const VerificarRol1= () => {
+    if (rol != 3){
+      navigate("/Asbien");
+    }else{
+      toast.error("No cuenta con los permisos para esta operacion")
+    }
+    
+  }
+
+  const VerificarRol2= () => {
+    if (rol != 3){
+      navigate("/InBien");
+    }else{
+      toast.error("No cuenta con los permisos para ingresar a este modulo")
+    }
+    
+  }
 
 
-  // set the page data when the number of page changes, from the state.result
+
 
   return (
     <AppLayout>
@@ -46,24 +55,24 @@ function App() {
         <span className=" text-3xl">Activos por usuario</span>
         </button>
       </Link>
-      <Link to="/InBien" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
-      text-black font-bold py-2 px-4 border border-gray-400 rounded-xl">
+      <a  className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
+      text-black font-bold py-2 px-4 border border-gray-400 rounded-xl" onClick={VerificarRol2}>
         <button className=" flex flex-col items-center">
         
         <FiShoppingBag  className="text-9xl"/>
         
         <span className=" text-3xl">Ingresar Activos</span>
         </button>
-      </Link>
-      <Link to="/Asbien" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
-      text-black font-bold py-2 px-4 border border-gray-400 rounded-xl">
+      </a>
+      <a className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
+      text-black font-bold py-2 px-4 border border-gray-400 rounded-xl" onClick={VerificarRol1}>
         <button className=" flex flex-col items-center">
         
         <FiUserCheck className="text-9xl"/>
         
         <span className=" text-3xl">Asignar activos</span>
         </button>
-      </Link>
+      </a>
       <Link to="/busqueda" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
       text-black font-bold py-2 px-4 border border-gray-400 rounded-xl">
       <button className=" flex flex-col items-center ">
@@ -94,6 +103,7 @@ function App() {
 
 
 </div>
+    <Toaster/>
     </AppLayout>
   );
 }

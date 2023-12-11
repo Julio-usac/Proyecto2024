@@ -8,6 +8,8 @@ import ModalCrearUsuario from "../../components/ModalCrearUsuario";
 import ModalEditarUsuario from "../../components/ModalEditarUsuario";
 import useUsuario from '../../store/usuarioStore';
 
+import useAuth from "../../auth/authStore";
+
 function AdminUsuario() {
 
   const [usuario, setUsuario] = useState([]);
@@ -17,6 +19,7 @@ function AdminUsuario() {
   const [ed,seted] = useState(null);
   const seteditar = useUsuario((state) => state.setEditarUser);
 
+  const  userid  = useAuth((state) => state.id);
   
 
   //Obtener usuarios
@@ -89,7 +92,22 @@ function AdminUsuario() {
     const confirmacion = window.confirm('¿Estás seguro de eliminar este usuario?');
     if (confirmacion) {
       axios.delete('http://localhost:9095/EliminarUsuario/'+e)
-      .then(response => {
+      .then( async response => {
+        try {
+          const resp = await axios({
+            url: "http://localhost:9095/IngresarBitacora",
+            method: "post",
+            data: {
+              usuario:  userid,
+              usuarioaf: e,
+              bienaf: null,
+              tipo: 3,
+              afectado:false,
+            },
+          });
+        } catch (error) {
+          console.log(error)
+        }
         toast.success(response.data.message);
         setactualizar('a');
         //setTimeout(function(){ window.location.reload(); }, 1000);

@@ -45,8 +45,7 @@ const ModelCrearUsuario = () => {
         });
         
         if (resp.data.success === true) {
-          toast.success("Actualizacion exitosa")
-          
+          toast.success("Registro exitoso")
           
           window.my_modal_3.close();
           setTimeout(function(){ window.location.reload(); }, 1000);

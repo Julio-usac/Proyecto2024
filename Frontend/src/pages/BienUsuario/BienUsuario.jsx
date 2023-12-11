@@ -4,9 +4,6 @@ import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import ModalImagen from "../../components/ModalImagen";
 import ModalEditar from "../../components/ModalEditar";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
 import useImagen from '../../store/imgStore';
 import useEditar from '../../store/editarStore';
 import { useState } from "react";
@@ -17,21 +14,14 @@ function BienUsuario() {
 
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
+  const {rol } = useAuth((state) => state);
   const [usuarios, setUsuarios] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [bien, setBien] = useState([]);
   const [saldo, setSaldo] = useState(0);
   const [im,setim] = useState(null);
   const [ed,seted] = useState(null);
-  /*
-  const [state, actions] = useAsync(() => {
-    return axios({
-      url: "http://localhost:9095/BienUsuario/Tabla",
-      method: "get",
-    });
-  });
 
-  useMountEffect(actions.execute);*/
 
   useEffect(() => {
     const load = async () => {
@@ -91,9 +81,12 @@ function BienUsuario() {
   }
 
   const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
-    
-    seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
-    seted("e");
+    if (rol!=3){
+      seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      seted("e");
+    }else{
+      toast.error("No cuenta con los permisos para realizar esta operacion")
+    }
 
   }
 
@@ -126,21 +119,6 @@ function BienUsuario() {
       console.error('Hubo un error al retornar el saldo: ', error);
     }
   };
-
-
-  /*
-
-  const [Page, setPage] = useState(1);
-  const [PageData, setPageData] = useState([]);
-
-  // set the page data when the number of page changes, from the state.result
-  useEffect(() => {
-    if (state.status === "success") {
-      setPageData(state.result.data.mensaje.slice((Page - 1) * 7, Page * 7));
-    }
-  }, [Page, state.result, state.status]);*/
-
-
 
 
   return (

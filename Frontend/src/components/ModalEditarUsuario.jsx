@@ -4,6 +4,7 @@ import axios from "axios";
 import { useState } from "react";
 import { useEffect } from "react";
 import useUsuario from '../store/usuarioStore';
+import useAuth from "../auth/authStore";
 
 
 const ModelEditarUsuario = () => {
@@ -15,6 +16,7 @@ const ModelEditarUsuario = () => {
   const userapellido = useUsuario((state) => state.apellidos);
   const usercorreo = useUsuario((state) => state.correo);
   const userrol = useUsuario((state) => state.rol);
+  const { id } = useAuth((state) => state);
 
   const { register, handleSubmit} = useForm({
     defaultValues: {
@@ -54,7 +56,21 @@ const ModelEditarUsuario = () => {
         
         if (resp.data.success === true) {
           toast.success("Actualizacion exitosa")
-          
+          try {
+            const resp = await axios({
+              url: "http://localhost:9095/IngresarBitacora",
+              method: "post",
+              data: {
+                usuario: id,
+                usuarioaf: userid,
+                bienaf: null,
+                tipo: 2,
+                afectado:false,
+              },
+            });
+          } catch (error) {
+            console.log(error)
+          }
           
           window.my_modal_4.close();
           setTimeout(function(){ window.location.reload(); }, 1000);

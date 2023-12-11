@@ -7,12 +7,8 @@ import Login from "./pages/Login.jsx";
 import SignUp from "./pages/SignUp/SignUp.jsx";
 import ProtectedRoute from "./pages/ProtectedRoute.jsx";
 import Perfil from "./pages/Perfil/Perfil.jsx";
-import Pago from "./pages/Pago/Pago.jsx";
-import Subastas from "./pages/Subasta/Subastas.jsx";
-import EditarCatalogo from "./pages/EditarCatalogo/EditarCatalogo.jsx";
 import Reportes from "./pages/Reportes/Reportes.jsx";
 import Token from "./pages/Token.jsx";
-import Compras from "./pages/Compras/Compras.jsx";
 import Busqueda from "./pages/Busqueda/Busqueda.jsx";
 import BienUsuario from "./pages/BienUsuario/BienUsuario.jsx";
 import InBien from "./pages/InBien/InBien.jsx";
@@ -76,24 +72,8 @@ const router = createBrowserRouter([
         element: <Perfil />,
       },
       {
-        path: "/pago",
-        element: <Pago />,
-      },
-      {
-        path: "/editar_catalogo",
-        element: <EditarCatalogo />,
-      },
-      {
         path: "/reportes",
         element: <Reportes />,
-      },
-      {
-        path: "/subastas",
-        element: <Subastas />,
-      },
-      {
-        path: "/compras",
-        element: <Compras />,
       },
       {
         path: "/token",

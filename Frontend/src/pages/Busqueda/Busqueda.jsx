@@ -121,7 +121,7 @@ function Busqueda() {
         console.error('Error en el endpoint de busqueda', error);
         }
     }
-}
+  }
 
   return (
     <AppLayout>
@@ -165,12 +165,16 @@ function Busqueda() {
             </div>
             
             <div>
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6  overflow-y-auto  h-[560px]">
+                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
+                               
                                 <th scope="col" className="px-6 py-3">
                                     Codigo
+                                </th>
+                                <th scope="col" className="px-6 py-3">
+                                    Usuario
                                 </th>
                                 <th scope="col" className="px-6 py-3">
                                     Marca
@@ -202,13 +206,14 @@ function Busqueda() {
                                         <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
                                             {item.codigo}
                                         </th>
+                                        <td className="px-6 py-4"> {(item.correo)?item.correo:"No asignado"}</td>
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.modelo}</td>
                                         <td className="px-6 py-4"> {item.serie}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
                                         <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, new Date(item.fechaco).toLocaleDateString(),item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                         <td className="px-6 py-4 text-right">
                                         

@@ -83,7 +83,7 @@ function SinAsignar() {
           </div>
           <div style={{ height: '30px' }} />
 
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-screen">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-[560px]">
               <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
                   <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
@@ -118,7 +118,7 @@ function SinAsignar() {
                           bien.map((item)=>
                               <tr key={item.id} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
                                   <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
-                                      { new Date(item.fechaco).toLocaleDateString()}
+                                      {(item.fechaco)?new Date(item.fechaco).toLocaleDateString():"No ingresado"}
                                   </th>
                                   <td className="px-6 py-4"> {item.codigo}</td>
                                   <td className="px-6 py-4"> {item.marca}</td>

@@ -191,7 +191,7 @@ function BienUsuario() {
                           bien.map((item)=>
                               <tr key={item.id} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
                                   <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
-                                      { new Date(item.fechaco).toLocaleDateString()}
+                                      { (item.fechaco)?new Date(item.fechaco).toLocaleDateString():"No ingresado"}
                                   </th>
                                   <td className="px-6 py-4"> {item.cuenta}</td>
                                   <td className="px-6 py-4"> {item.codigo}</td>
@@ -200,7 +200,7 @@ function BienUsuario() {
                                   <td className="px-6 py-4"> {item.ubicacion}</td>
                                   <td className="px-6 py-4"> {item.precio}</td>
                                   <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, new Date(item.fechaco).toLocaleDateString(),item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, item.fechaco,item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                   <td className="px-6 py-4 text-right">
                                         

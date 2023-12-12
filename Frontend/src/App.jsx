@@ -37,8 +37,6 @@ function App() {
   }
 
 
-
-
   return (
     <AppLayout>
       <div style={{ height: '50px' }} />

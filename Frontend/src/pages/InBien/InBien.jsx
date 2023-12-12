@@ -36,7 +36,6 @@ function InBien() {
   
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      tipoCuenta: false,
       fechaco: null,
       cuenta: "",
       codigo: "",

@@ -124,7 +124,7 @@ app.post('/InBien', async function (req, res) {
   //inicializar variables
 
   let fcompra="";
-  let ingresar=false;
+  let ingresar=true;
   //Obtener datos
   
   let fechaco = req.body.fechaco;
@@ -142,13 +142,72 @@ app.post('/InBien', async function (req, res) {
   let ubicacion = req.body.ubicacion;
 
   //Convertir fecha de compra
-  if (fechaco!=null){
+  console.log(fechaco,"1")
+  if (fechaco){
     fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
   }else{
     fcompra= null;
   }
 
+  //Convertir cuenta
+
+  if (cuenta){
+    cuenta=`'`+cuenta+`'`;
+  }else{
+    cuenta= null;
+  }
+
+  //Convertir codigo
+
+  if (codigo){
+    codigo=`'`+codigo+`'`;
+  }else{
+    codigo= null;
+  }
+
+  //Convertir modelo
+
+  if (modelo){
+    modelo=`'`+modelo+`'`;
+  }else{
+    modelo= null;
+  }
+
+  //Convertir serie
+
+  if (serie){
+    serie=`'`+serie+`'`;
+  }else{
+    serie= null;
+  }
+
+  //Convertir imagen
+
+  if (imagen){
+    imagen=`'`+imagen+`'`;
+  }else{
+    imagen= null;
+  }
+
+   //Convertir imagen
+
+   if (ubicacion && ubicacion!="Seleccionar"){
+    ubicacion=`'`+ubicacion+`'`;
+  }else{
+    ubicacion= null;
+  }
+
+  //Convertir precio
+
+  if (precio){
+    precio=`'`+precio+`'`;
+  }else{
+    precio= null;
+  }
+
   //Consultar bienes repetidos en base de datos 
+
+  /*
   try{
       
       if (codigo!=""){
@@ -167,7 +226,7 @@ app.post('/InBien', async function (req, res) {
   }catch (error) {
       console.log(error);
       res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-  }
+  }*/
 
   //Verificar Marca
   let idmarca=null;
@@ -205,8 +264,8 @@ app.post('/InBien', async function (req, res) {
     
       if (ingresar==true){
         let sql =  `INSERT INTO bien(fecha_mod,fechaco,cuenta,codigo,marca,cantidad,modelo,serie,imagen,precio,activo,descripcion,categoria,tarjeta,ubicacion)
-        VALUES(NOW(),`+fcompra+`,"`+cuenta+`","`+codigo+`",`+idmarca+`,`+cantidad+`,
-        "`+modelo+`","`+serie+`","`+imagen+`",`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
+        VALUES(NOW(),`+fcompra+`,`+cuenta+`,`+codigo+`,`+idmarca+`,`+cantidad+`,
+        `+modelo+`,`+serie+`,`+imagen+`,`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
         
         const result2 = await query(sql);
 
@@ -559,13 +618,13 @@ app.get('/DescargarReporteUsuario', async function (req, res) {
   try{
     let usuario= req.query.usuario;
 
-    let sql = `SELECT fechaco,cuenta,codigo,cantidad,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+    let sql = `SELECT IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco, IFNULL(cuenta,'No ingresado') AS cuenta,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(ubicacion.nombre,'No ingresado') AS ubicacion,IFNULL(bien.precio,'No ingresado') AS precio FROM bien
     INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.usuario=`+usuario+`
     LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id;`;
     
     const result = await query(sql);
 
-    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) as nombre FROM usuario WHERE id=`+usuario+`;`;
+    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM usuario WHERE userId=`+usuario+`;`;
 
     const result2 = await query(sql);
     const workbook = new excel.Workbook();
@@ -666,9 +725,11 @@ app.get('/BuscarBienes', async function (req, res) {
   switch (opcion) {
     case  "1":
 
-      sql = `SELECT bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo, bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
+      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+      LEFT JOIN usuario ON t.usuario=usuario.userId
       WHERE bien.activo=True and codigo="`+buscar+`";`;
      
       try{
@@ -684,9 +745,11 @@ app.get('/BuscarBienes', async function (req, res) {
       break;
     case "2":
       buscar=buscar.toUpperCase()
-      sql = `SELECT bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
+      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+      LEFT JOIN usuario ON t.usuario=usuario.userId
       WHERE bien.activo=True and marca.nombre="`+buscar+`";`;
 
       try{
@@ -701,9 +764,11 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "3":
-      sql = `SELECT bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
+      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+      LEFT JOIN usuario ON t.usuario=usuario.userId
       WHERE bien.activo=True and modelo="`+buscar+`";`;
       try{
        
@@ -717,9 +782,11 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "4":
-      sql = `SELECT bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
+      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+      LEFT JOIN usuario ON t.usuario=usuario.userId
       WHERE bien.activo=True and serie="`+buscar+`";`;
       try{
        
@@ -733,9 +800,11 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "5":
-      sql = `SELECT bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
+      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+      LEFT JOIN usuario ON t.usuario=usuario.userId
       WHERE bien.activo=True and descripcion LIKE '%`+buscar+`%';`;
     
       try{
@@ -758,8 +827,11 @@ app.get('/DescargarReporteTotal', async function (req, res) {
 
   try{
 
-    let sql = `SELECT codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien
-    LEFT JOIN marca ON marca.marcaId=bien.marca WHERE bien.activo=True;`;
+    let sql = `SELECT usuario.correo,codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien 
+    LEFT JOIN marca ON marca.marcaId=bien.marca 
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+    LEFT JOIN usuario ON t.usuario=usuario.userId
+    WHERE bien.activo=True;`;
     
     const result = await query(sql);
 
@@ -782,26 +854,38 @@ app.get('/DescargarReporteTotal', async function (req, res) {
     });
 
     worksheet.cell(2, 1).string("Reporte total de Bienes").style(myStyle2);
-    worksheet.cell(6, 1).string("Codigo").style(myStyle);
-    worksheet.cell(6, 2).string("Marca").style(myStyle);
-    worksheet.cell(6, 3).string("Modelo").style(myStyle);
-    worksheet.cell(6, 4).string("Serie").style(myStyle);
-    worksheet.cell(6, 5).string("Descripcion").style(myStyle);
-    worksheet.cell(6, 6).string("Precio").style(myStyle);
+    worksheet.cell(6, 1).string("Usuario").style(myStyle);
+    worksheet.cell(6, 2).string("Codigo").style(myStyle);
+    worksheet.cell(6, 3).string("Marca").style(myStyle);
+    worksheet.cell(6, 4).string("Modelo").style(myStyle);
+    worksheet.cell(6, 5).string("Serie").style(myStyle);
+    worksheet.cell(6, 6).string("Descripcion").style(myStyle);
+    worksheet.cell(6, 7).string("Precio").style(myStyle);
 
     result.forEach((row, index) => {
-      let cast=""+row.codigo+""
-      worksheet.cell(index + 8, 1).string(cast);
+      let cast="";
+      if(row.correo){
+        cast=""+row.correo+"";
+      }else{
+        cast="No asignado";
+      }
+      worksheet.cell(index + 7, 1).string(cast);
+      cast=""+row.codigo+""
+      worksheet.cell(index + 7, 2).string(cast);
       cast=""+row.marca+""
-      worksheet.cell(index + 8, 2).string(cast);
+      worksheet.cell(index + 7, 3).string(cast);
       cast=""+row.modelo+""
-      worksheet.cell(index + 8, 3).string(cast);
+      worksheet.cell(index + 7, 4).string(cast);
       cast=""+row.serie+""
-      worksheet.cell(index + 8, 4).string(cast);
+      worksheet.cell(index + 7, 5).string(cast);
       cast=""+row.descripcion+""
-      worksheet.cell(index + 8, 5).string(cast);
-      cast=""+row.precio+""
-      worksheet.cell(index + 8, 6).string(cast);
+      worksheet.cell(index + 7, 6).string(cast);
+      if(row.precio){
+        cast=""+row.precio+"";
+      }else{
+        cast="No ingresado";
+      }
+      worksheet.cell(index + 7, 7).string(cast);
     });
 
 
@@ -847,21 +931,153 @@ app.get('/SinAsignar', async function (req, res) {
 
 app.get('/DadosdeBaja', async function (req, res) {
 
-  try{
-    let sql =  `SELECT bien.id,r.fecha,concat_ws(' ', u.nombres,u.apellidos) as usuario,codigo,marca.nombre as marca,modelo,serie,descripcion,bien.precio FROM responsable_activo r
-    INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
-    INNER JOIN bien ON bien.id = r.bien
-    INNER JOIN usuario u ON u.userId = t.usuario
-    LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
-    WHERE r.activo=0 and bien.activo=0
-    GROUP BY r.bien);`;
-    const result = await query(sql);
-    res.json({success: true, message: result});
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
-    return;
+  //Extraer datos
+
+  let buscar = req.query.buscar;
+  let opcion = req.query.opcion;
+  
+  let sql=""
+  switch (opcion) {
+    case  "1":
+
+      sql = `SELECT * FROM(
+        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+            INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+            INNER JOIN bien ON bien.id = r.bien
+            INNER JOIN usuario u ON u.userId = t.usuario
+            LEFT JOIN marca ON bien.marca = marca.marcaId
+            WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+            WHERE r.activo=0 and bien.activo=0
+            GROUP BY r.bien)
+        UNION
+        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        LEFT JOIN marca ON bien.marca = marca.marcaId
+        WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+            WHERE r.activo=0)) grupo
+      WHERE codigo="`+buscar+`";`;
+     
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "2":
+      buscar=buscar.toUpperCase()
+      sql = `SELECT * FROM(
+        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+            INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+            INNER JOIN bien ON bien.id = r.bien
+            INNER JOIN usuario u ON u.userId = t.usuario
+            LEFT JOIN marca ON bien.marca = marca.marcaId
+            WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+            WHERE r.activo=0 and bien.activo=0
+            GROUP BY r.bien)
+        UNION
+        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        LEFT JOIN marca ON bien.marca = marca.marcaId
+        WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+            WHERE r.activo=0)) grupo
+      WHERE marca="`+buscar+`";`;
+
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "3":
+      sql = `SELECT * FROM(
+        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+            INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+            INNER JOIN bien ON bien.id = r.bien
+            INNER JOIN usuario u ON u.userId = t.usuario
+            LEFT JOIN marca ON bien.marca = marca.marcaId
+            WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+            WHERE r.activo=0 and bien.activo=0
+            GROUP BY r.bien)
+        UNION
+        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        LEFT JOIN marca ON bien.marca = marca.marcaId
+        WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+            WHERE r.activo=0)) grupo
+      WHERE  modelo="`+buscar+`";`;
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "4":
+      sql = `SELECT * FROM(
+        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+            INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+            INNER JOIN bien ON bien.id = r.bien
+            INNER JOIN usuario u ON u.userId = t.usuario
+            LEFT JOIN marca ON bien.marca = marca.marcaId
+            WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+            WHERE r.activo=0 and bien.activo=0
+            GROUP BY r.bien)
+        UNION
+        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        LEFT JOIN marca ON bien.marca = marca.marcaId
+        WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+            WHERE r.activo=0)) grupo
+      WHERE serie="`+buscar+`";`;
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
+    case "5":
+      sql = `SELECT * FROM(
+        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+            INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+            INNER JOIN bien ON bien.id = r.bien
+            INNER JOIN usuario u ON u.userId = t.usuario
+            LEFT JOIN marca ON bien.marca = marca.marcaId
+            WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+            WHERE r.activo=0 and bien.activo=0
+            GROUP BY r.bien)
+        UNION
+        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        LEFT JOIN marca ON bien.marca = marca.marcaId
+        WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+            WHERE r.activo=0)) grupo
+      WHERE descripcion LIKE '%`+buscar+`%';`;
+    
+      try{
+       
+        const result = await query(sql);
+        
+        res.json({success: true, message: result});
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: error});
+        return;
+      }
+      break;
   }
   
 });
@@ -953,7 +1169,45 @@ app.post('/EditarBien', async function (req, res) {
   }else{
     fcompra= null;
   }
+  //Convertir cuenta
 
+  if (cuenta){
+    cuenta=`'`+cuenta+`'`;
+  }else{
+    cuenta= null;
+  }
+
+  //Convertir codigo
+
+  if (codigo){
+    codigo=`'`+codigo+`'`;
+  }else{
+    codigo= null;
+  }
+
+  //Convertir modelo
+
+  if (modelo){
+    modelo=`'`+modelo+`'`;
+  }else{
+    modelo= null;
+  }
+
+  //Convertir serie
+
+  if (serie){
+    serie=`'`+serie+`'`;
+  }else{
+    serie= null;
+  }
+
+  //Convertir imagen
+
+  if (imagen){
+    imagen=`'`+imagen+`'`;
+  }else{
+    imagen= null;
+  }
   
   let idmarca=null;
   try{
@@ -979,15 +1233,15 @@ app.post('/EditarBien', async function (req, res) {
       
       }
     }
-}catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
-    return;
-}
+  }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
+      return;
+  }
 
   try{
-    let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = "`+cuenta+`", codigo="`+codigo+`", marca = `+idmarca+`,
-    cantidad = `+cantidad+`, modelo = "`+modelo+`", serie = "`+serie+`", imagen = "`+imagen+`", precio = `+precio+`, descripcion = "`+descripcion+`",
+    let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = `+cuenta+`, codigo=`+codigo+`, marca = `+idmarca+`,
+    cantidad = `+cantidad+`, modelo = `+modelo+`, serie = `+serie+`, imagen = `+imagen+`, precio = `+precio+`, descripcion = "`+descripcion+`",
     categoria = `+categoria+`, ubicacion = `+ubicacion+`   WHERE id =`+id+`;`;
     const result3 = await query(sql);
     res.json({success: true, message: req.body.codigo});
@@ -1278,6 +1532,92 @@ app.get('/DescargarBitacora', async function (req, res) {
       worksheet.cell(index + 7, 5).string(cast);
       cast=""+row.identificador+""
       worksheet.cell(index + 7, 6).string(cast);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al Descargar", error:error});
+    return;
+  }
+});
+
+
+
+//------------------------------------------------ DESCARGAR BITACORA -------------------------------------
+
+app.get('/DescargarBienesBaja', async function (req, res) {
+
+  try{
+
+    let sql = `SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,
+    IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+    INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+    INNER JOIN bien ON bien.id = r.bien
+    INNER JOIN usuario u ON u.userId = t.usuario
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+    WHERE r.activo=0 and bien.activo=0
+    GROUP BY r.bien)
+    UNION
+    SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+    WHERE r.activo=0);`;
+    
+    const result = await query(sql);
+
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Total');
+
+    // titulo
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true
+      }
+    });
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 16
+      }
+    });
+
+    worksheet.cell(2, 1).string("Bienes dados de baja").style(myStyle2);
+    worksheet.cell(6, 1).string("Fecha").style(myStyle);
+    worksheet.cell(6, 2).string("Usuario").style(myStyle);
+    worksheet.cell(6, 3).string("Codigo").style(myStyle);
+    worksheet.cell(6, 4).string("Marca").style(myStyle);
+    worksheet.cell(6, 5).string("Modelo").style(myStyle);
+    worksheet.cell(6, 6).string("Serie").style(myStyle);
+    worksheet.cell(6, 7).string("Descripcion").style(myStyle);
+    worksheet.cell(6, 8).string("Precio").style(myStyle);
+
+    result.forEach((row, index) => {
+      let cast=""+row.fecha+""
+      worksheet.cell(index + 7, 1).string(cast);
+      cast=""+row.usuario+""
+      worksheet.cell(index + 7, 2).string(cast);
+      cast=""+row.codigo+""
+      worksheet.cell(index + 7, 3).string(cast);
+      cast=""+row.marca+""
+      worksheet.cell(index + 7, 4).string(cast);
+      cast=""+row.modelo+""
+      worksheet.cell(index + 7, 5).string(cast);
+      cast=""+row.serie+""
+      worksheet.cell(index + 7, 6).string(cast);
+      cast=""+row.descripcion+""
+      worksheet.cell(index + 7, 7).string(cast);
+      cast=""+row.precio+""
+      worksheet.cell(index + 7, 8).string(cast);
     });
 
 

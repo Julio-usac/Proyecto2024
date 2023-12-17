@@ -8,6 +8,17 @@ import useAuth from "../auth/authStore";
 
 
 const ModelEditar = () => {
+
+  //--------------------------------------------Declaracion de estados-----------------------------------------
+
+  const [tipo, setTipo] = useState([]);
+  const [ub, setUb] = useState([]);
+  const [image, setImage] = useState(null);
+  const [imageData, setImageData] = useState(null);
+
+
+//--------------------------------------------Retornar datos del bien a editar-----------------------------------------
+ 
     const mid = useEditar((state) => state.id);
     const mfecha = useEditar((state) => state.fecha);
     const mcodigo = useEditar((state) => state.codigo);
@@ -21,16 +32,19 @@ const ModelEditar = () => {
     const mcategoria= useEditar((state) => state.tipo);
     const mimage= useEditar((state) => state.imagen);
     const mdescripcion = useEditar((state) => state.descripcion);
+
+//--------------------------------------------Retornar ID y token del usuario que realiza el cambio-----------------------------------------
+ 
     const { id } = useAuth((state) => state);
+    const { token,logout} = useAuth((state) => state);
+
+    const {borrarDatos}= useEditar((state) => state);
 
 
-    const [tipo, setTipo] = useState([]);
-    const [ub, setUb] = useState([]);
-    const [image, setImage] = useState(null);
-    const [imageData, setImageData] = useState(null);
-
-    
-  const { register, handleSubmit } = useForm({
+   
+//--------------------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
+  const { register, handleSubmit, reset } = useForm({
     defaultValues: {
       fechaco: null,
       cuenta: "",
@@ -101,6 +115,7 @@ const ModelEditar = () => {
             descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
             categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
             ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
+            token: token,
           },
         });
         
@@ -128,7 +143,12 @@ const ModelEditar = () => {
         }
       } catch (error) {
         console.log(error)
-        toast.error("error")
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          
+          toast.error(error.response.data.message);
+        }
       }
     }else{
       toast.error("No se han ingresado nuevos datos")
@@ -143,7 +163,9 @@ const ModelEditar = () => {
           <button
                         className="flex bg-red-500 text-white px-4 py-2 rounded w-fit"
                         onClick={(e) => {
-                          e.preventDefault()
+                            e.preventDefault();
+                            reset();
+                            borrarDatos();
                             window.my_modal_2.close();
                         }}
                     >

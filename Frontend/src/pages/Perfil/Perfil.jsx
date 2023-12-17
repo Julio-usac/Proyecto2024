@@ -3,8 +3,6 @@ import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
@@ -79,8 +77,8 @@ function Perfil() {
         toast.error(resp.data.message);
       }
     } catch (error) {
-
-      toast.error(error.response.data.message);
+      console.log(error.error);
+      toast.error("Error al actualizar");
     }
   }else{
     toast.error("Las contraseñas no coinciden");

@@ -9,16 +9,22 @@ import useAuth from "../auth/authStore";
 
 const ModelEditarUsuario = () => {
     
-
+//--------------------------------------------Declaracion de estados-----------------------------------------
   const [Roles, setRoles] = useState([]);
+
+//--------------------------------------------Retornar datos del usuario a editar-----------------------------------------
   const userid = useUsuario((state) => state.id);
   const usernombre = useUsuario((state) => state.nombres);
   const userapellido = useUsuario((state) => state.apellidos);
   const usercorreo = useUsuario((state) => state.correo);
   const userrol = useUsuario((state) => state.rol);
-  const { id } = useAuth((state) => state);
 
-  const { register, handleSubmit} = useForm({
+//--------------------------------------------Retornar ID del usuario que realiza el cambio-----------------------------------------
+  const { id } = useAuth((state) => state);
+  const { token,logout} = useAuth((state) => state);
+//--------------------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
+  const { register, handleSubmit,reset} = useForm({
     defaultValues: {
       nombres: null,
       apellidos: null,
@@ -26,6 +32,9 @@ const ModelEditarUsuario = () => {
       rol: null,
     },
   });
+
+//-------------------------------------Llamadas a endpoints que se ejecutaran al ingresar al modulo-----------------------------------------
+ 
 
   useEffect(() => {
     const load = async () => {
@@ -36,7 +45,8 @@ const ModelEditarUsuario = () => {
     load();
   },[]);
 
-
+//-------------------------------------Funcion enviar los datos del formulario-----------------------------------------
+ 
   const onSubmit = async (data) => {
   
     if(data.nombres || data.apellidos || data.correo || data.rol){
@@ -55,7 +65,10 @@ const ModelEditarUsuario = () => {
         });
         
         if (resp.data.success === true) {
-          toast.success("Actualizacion exitosa")
+          toast.success("Actualizacion exitosa");
+
+//-------------------------------------Enviar datos a guardar en la bitacora-----------------------------------------
+ 
           try {
             const resp = await axios({
               url: "http://localhost:9095/IngresarBitacora",
@@ -79,13 +92,19 @@ const ModelEditarUsuario = () => {
         }
       } catch (error) {
 
-        toast.error(error.response.data.message);
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          
+          toast.error(error.response.data.message);
+        }
       }
   }else{
     toast.error("Debe realizar un cambio para actualizar");
   }
   };
-
+//-------------------------------------------------------HTML---------------------------------------------------------
+ 
   return (
     <dialog id="my_modal_4" className="modal">
    <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
@@ -96,7 +115,8 @@ const ModelEditarUsuario = () => {
                         className="flex bg-red-500 text-white px-4 py-2 rounded w-fit"
                         onClick={(e) => {
                           e.preventDefault()
-                            window.my_modal_4.close();
+                          reset();
+                          window.my_modal_4.close();
                         }}
                     >
                         X

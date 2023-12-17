@@ -20,7 +20,7 @@ function AsBien() {
   const [bien2, setBien2] = useState([]);
   const [opcion, setOpcion] = useState('');
   
-
+  const { token,logout} = useAuth((state) => state);
   const  userid  = useAuth((state) => state.id);
 
   //Variables utilizadas para la visibilidad de las tablas
@@ -172,8 +172,7 @@ function AsBien() {
   };
 
   const onSubmit = async (data) => {
-    console.log(quitar);
-    console.log(agregar);
+   
     if (data.categoria!=null && data.categoria!="Seleccionar" && opcion!="" && opcion!="Seleccionar" ){
       if (agregar.length!=0 || quitar.length!=0){
         try {
@@ -188,6 +187,7 @@ function AsBien() {
               saldo: data.saldo,
               asignar: agregar,
               quitar: quitar,
+              token: token,
             },
           });
           
@@ -215,7 +215,12 @@ function AsBien() {
           }
         } catch (error) {
 
-          toast.error(error.response.data.message);
+          if ('token' in error.response.data){
+            logout();
+          }else{
+            
+            toast.error(error.response.data.message);
+          }
         }
       }else{
         toast.error("Debe asignar o quitar un bien")

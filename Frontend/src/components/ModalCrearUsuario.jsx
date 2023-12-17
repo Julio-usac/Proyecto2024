@@ -4,9 +4,12 @@ import axios from "axios";
 import { useState } from "react";
 import { useEffect } from "react";
 
+import useAuth from "../auth/authStore";
 
 const ModelCrearUsuario = () => {
-    
+  
+  const { id } = useAuth((state) => state);
+  const { token,logout} = useAuth((state) => state);
 
   const [Roles, setRoles] = useState([]);
 
@@ -41,20 +44,39 @@ const ModelCrearUsuario = () => {
             apellidos: data.apellidos,
             rol: data.rol,
             correo: data.correo,
+            token: token,
           },
         });
         
         if (resp.data.success === true) {
           toast.success("Registro exitoso")
-          
+          try {
+            const resp = await axios({
+              url: "http://localhost:9095/IngresarBitacora",
+              method: "post",
+              data: {
+                usuario: id,
+                usuarioaf: null,
+                bienaf: null,
+                tipo: 1,
+                afectado:false,
+              },
+            });
+          } catch (error) {
+            console.log(error)
+          }
           window.my_modal_3.close();
           setTimeout(function(){ window.location.reload(); }, 1000);
         }else{
           toast.error(resp.data.message);
         }
       } catch (error) {
-
-        toast.error(error.response.data.message);
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          
+          toast.error(error.response.data.message);
+        }
       }
   }else{
     toast.error("Debe elegir un rol");

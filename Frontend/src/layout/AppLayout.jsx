@@ -1,15 +1,15 @@
 import { Link,useNavigate } from "react-router-dom";
 import useAuth from "../auth/authStore";
-import Carrito from "../components/Carrito";
-import useCarrito from "../store/carritoStore";
-
+import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 
-import Favorito from "../components/Favorito";
+import { useEffect } from "react";
+
+
 // eslint-disable-next-line react/prop-types
 const AppLayout = ({ children }) => {
-  const { nombre,rol,logout } = useAuth((state) => state);
-  const vaciar = useCarrito((state) => state.vaciar);
+  const { nombre,rol,logout,token } = useAuth((state) => state);
+  
 
   const navigate = useNavigate();
 
@@ -26,6 +26,26 @@ const AppLayout = ({ children }) => {
     }
     
   }
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      axios.post("http://localhost:9095/token", {
+          token: token,
+        
+      })
+        .then((resp) => {
+          
+        })
+        .catch((error) => {
+          
+          setTimeout(function(){toast.error("Se requiere volver a iniciar sesion");  }, 2000);
+          logout();
+        });
+    }, 600000); // 600000 milisegundos son 10 minutos
+
+    // Limpiar el intervalo cuando el componente se desmonte
+    return () => clearInterval(intervalId);
+  }, []);
 
 
   // console.log('usuario', usuario);
@@ -80,8 +100,9 @@ const AppLayout = ({ children }) => {
               </div>
             </div>
           </div>
-          <Toaster/>
+          
         </div>
+        <Toaster/>
       </header>
 
       <main className="w-full bg-base-200 flex flex-col items-center h-screen overflow-y-auto">

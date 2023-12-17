@@ -213,7 +213,7 @@ function Busqueda() {
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
                                         <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria,item.imagen)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                         <td className="px-6 py-4 text-right">
                                         

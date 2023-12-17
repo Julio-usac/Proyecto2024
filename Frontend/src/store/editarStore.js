@@ -33,6 +33,22 @@ const useEditar = create(
           descripcion: descripcion,
           imagen: imagen,
         });
+      },borrarDatos: () => {
+        set({
+          id:null,
+          codigo: null,
+          cuenta: null,
+          fecha: null,
+          marca: null,
+          modelo: null,
+          serie: null,
+          precio: null,
+          ubicacion: null,
+          tipo: null,
+          cantidad: null,
+          descripcion: null,
+          imagen: null,
+        });
       },
       
      

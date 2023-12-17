@@ -1,30 +1,17 @@
-import { useAsync, useMountEffect } from "@react-hookz/web";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
 function InBien() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
 
 
-  const [state, actions] = useAsync(() => {
-    return axios({
-      url: "http://localhost:9095/BienUsuario/Tabla",
-      method: "get",
-    });
-    
-  });
+  const { id } = useAuth((state) => state);
+  const { token,logout} = useAuth((state) => state);
 
-  useMountEffect(actions.execute);
 
   const [tipo, setTipo] = useState([]);
   const [ub, setUb] = useState([]);
@@ -105,18 +92,39 @@ function InBien() {
             categoria:  data.categoria,
             tarjeta:  data.tarjeta,
             ubicacion:  data.ubicacion,
+            token: token,
           },
         });
         
         if (resp.data.success === true) {
           toast.success("Ingreso exitoso!")
+          try {
+            const resp = await axios({
+              url: "http://localhost:9095/IngresarBitacora",
+              method: "post",
+              data: {
+                usuario: id,
+                usuarioaf: null,
+                bienaf: null,
+                tipo: 1,
+                afectado:true,
+              },
+            });
+          } catch (error) {
+            console.log(error)
+          }
           setTimeout(function(){ window.location.reload(); }, 1000);
         }else{
           toast.error(resp.data.message)
         }
       } catch (error) {
-
-        toast.error(error.response.data.message)
+        console.log(error)
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          
+          toast.error(error.response.data.message);
+        }
       }
     }else{
       toast.error("Debe seleccionar un tipo de bien");

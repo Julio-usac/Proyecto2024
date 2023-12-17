@@ -45,11 +45,11 @@ function DeBaja() {
 
   //Funcion para volver a activar el bien.
 
-  const DarBaja = (e) => {
+  const Restaurar= (e) => {
     
-    const confirmacion = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
+    const confirmacion = window.confirm('¿Estás seguro de que quieres restaurar este producto?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/DardeBaja/'+e)
+      axios.put('http://localhost:9095/RestaurarBien/'+e)
       .then(response => {
         toast.success(response.data.message);
         setTimeout(function(){ window.location.reload(); }, 1000);
@@ -167,7 +167,7 @@ function DeBaja() {
                                   
                                   <td className="px-6 py-4 text-right">
                                         
-                                    <button  onClick={() => {DarBaja(item.id);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Restaurar</button>
+                                    <button  onClick={() => {Restaurar(item.id);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Restaurar</button>
                                   </td>
                               </tr>
                           )

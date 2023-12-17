@@ -35,13 +35,14 @@ const Login = () => {
           pass: data.password,
         },
       });
-
-      if (resp.data.success === true) {
-        login(1, resp.data.message);
+      
+      if (resp.data.success == true) {
+        login(resp.data.token);
         navigate("/");
       }
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.log(error);
+      toast.error("Error en las credenciales");
       
     }
   };

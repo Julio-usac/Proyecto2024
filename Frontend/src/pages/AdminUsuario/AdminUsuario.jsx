@@ -20,7 +20,7 @@ function AdminUsuario() {
   const seteditar = useUsuario((state) => state.setEditarUser);
 
   const  userid  = useAuth((state) => state.id);
-  
+  const { token,logout} = useAuth((state) => state);
 
   //Obtener usuarios
   useEffect(() => {
@@ -91,7 +91,12 @@ function AdminUsuario() {
     
     const confirmacion = window.confirm('¿Estás seguro de eliminar este usuario?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/EliminarUsuario/'+e)
+      axios.delete('http://localhost:9095/EliminarUsuario/'+e,{
+      params:{
+      token: token
+      }
+    
+    })
       .then( async response => {
         try {
           const resp = await axios({
@@ -114,7 +119,12 @@ function AdminUsuario() {
       })
       .catch(error => {
         console.log(error.error);
-        toast.error(error.message);
+        if ('token' in error){
+          logout();
+        }else{
+          toast.error(error.message);
+        }
+        
       });
     }
 
@@ -162,7 +172,7 @@ function AdminUsuario() {
           </div>
           <div style={{ height: '30px' }} />
 
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-screen">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-[550px]">
               <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
                   <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>

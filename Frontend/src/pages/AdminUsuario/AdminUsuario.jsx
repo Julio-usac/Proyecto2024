@@ -81,9 +81,10 @@ function AdminUsuario() {
       
         estado: estado,
         id: id,
-        token:token,
       
-    })
+    },{ headers: {
+      'Authorization': token
+    },})
       .then((resp) => {
         if (resp.data.success === true) {
           toast.success("Estado actualizado")
@@ -109,12 +110,9 @@ function AdminUsuario() {
     
     const confirmacion = window.confirm('¿Estás seguro de eliminar este usuario?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/EliminarUsuario/'+e,{
-      params:{
-      token: token
-      }
-    
-    })
+      axios.delete('http://localhost:9095/EliminarUsuario/'+e,{ headers: {
+        'Authorization': token
+      },})
       .then( async response => {
         try {
           const resp = await axios({

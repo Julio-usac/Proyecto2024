@@ -34,10 +34,9 @@ const AppLayout = ({ children }) => {
   //Funcion para Revalidar token
   
   useEffect(() => {
-    axios.post("http://localhost:9095/Revalidar", {
-          token: token,
-        
-      })
+    axios.post("http://localhost:9095/Revalidar",{},{ headers: {
+      'Authorization': token
+    },})
         .then((resp) => {
           Revalidar(resp.data.token);
         })
@@ -62,7 +61,7 @@ const AppLayout = ({ children }) => {
           setTimeout(function(){toast.error("Se requiere volver a iniciar sesion");  }, 2000);
           logout();
         });
-    }, 600000); // 600000 milisegundos son 10 minutos
+    }, 60000); // 600000 milisegundos son 10 minutos
 
     // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(intervalId);

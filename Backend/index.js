@@ -34,7 +34,7 @@ function encriptar(texto) {
 }
 
 function getToken(datos) {
-  return jwt.sign(datos, 'MINECO', {expiresIn : '60m'});
+  return jwt.sign(datos, 'MINECO', {expiresIn : '1m'});
 }
 
 function verToken(token) {
@@ -63,7 +63,13 @@ app.post('/token', async function (req, res) {
 app.post('/Revalidar', async function (req, res) {
 
   try {
-    let decoded = verToken(req.body.token);
+    //Verificar token
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     let respuesta = {
       message: {
         Id : "",
@@ -152,7 +158,13 @@ app.post('/InBien', async function (req, res) {
 
  
   try {
-    let decoded = verToken(req.body.token);
+    //Verificar token
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
   
 
     //inicializar variables
@@ -450,13 +462,14 @@ app.post('/bienAsignado2', async function (req, res) {
 app.post('/AsBien', async function (req, res) {
 
   try {
-    let decoded = verToken(req.body.token);
-    //fecha actual
-    const fecha = new Date();
-    const añoActual = fecha.getFullYear();
-    const hoy = fecha.getDate();
-    const mes = fecha.getMonth() + 1; 
-    let fechaActual= hoy+"/"+mes+"/"+ añoActual
+
+    //Verificar token
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
 
     //Obtener datos
 
@@ -1180,7 +1193,12 @@ app.post('/VerificarPass', function (req, res) {
 app.post('/EditarBien', async function (req, res) {
 
   try {
-    let decoded = verToken(req.body.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     //fecha actual
     const fecha = new Date();
     const añoActual = fecha.getFullYear();
@@ -1308,7 +1326,12 @@ app.post('/EditarBien', async function (req, res) {
 
 app.delete('/DardeBaja/:id', async function (req, res) {
   try {
-    let decoded = verToken(req.query.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     try{
       let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
       const result = await query(sql);
@@ -1331,7 +1354,12 @@ app.delete('/DardeBaja/:id', async function (req, res) {
 
 app.delete('/EliminarUsuario/:id', async function (req, res) {
   try {
-    let decoded = verToken(req.query.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     try{
       let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
       const result = await query(sql);
@@ -1354,7 +1382,12 @@ app.delete('/EliminarUsuario/:id', async function (req, res) {
 
 app.put('/ActualizarPass', async function (req, res) {
   try {
-    let decoded = verToken(req.body.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     try{
       let nueva = req.body.nueva;
       let correo = req.body.correo;
@@ -1383,7 +1416,12 @@ app.put('/ActualizarPass', async function (req, res) {
 
 app.put('/ActualizarEstado', function (req, res) {
   try {
-    let decoded = verToken(req.body.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     let estado = req.body.estado;
     let id = req.body.id;
 
@@ -1400,7 +1438,6 @@ app.put('/ActualizarEstado', function (req, res) {
       }
     });
   } catch (err) {
-    console.log("nada")
     res.status(401).json({token: false});
     return;
   }
@@ -1412,7 +1449,12 @@ app.put('/ActualizarEstado', function (req, res) {
 
 app.post('/CrearUsuario', async function (req, res) {
   try {
-    let decoded = verToken(req.body.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     try{
       let correo= req.body.correo;
 
@@ -1463,7 +1505,12 @@ app.post('/CrearUsuario', async function (req, res) {
 app.put('/EditarUsuario', async function (req, res) {
 
   try {
-    let decoded = verToken(req.body.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
     try{
       let correo= req.body.correo;
       

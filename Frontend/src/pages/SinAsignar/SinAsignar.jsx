@@ -38,12 +38,9 @@ function SinAsignar() {
     
     const confirmacion = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/DardeBaja/'+e,{
-        params:{
-        token: token
-        }
-      
-      })
+      axios.delete('http://localhost:9095/DardeBaja/'+e,{ headers: {
+        'Authorization': token
+      },})
       .then(async response => {
         try {
           const resp = await axios({

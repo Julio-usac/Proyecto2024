@@ -8,19 +8,21 @@ import useAuth from "../../auth/authStore";
 
 function InBien() {
 
+//-----------------------------------------Retornar informacion del usuario-----------------------------------------
 
   const { id } = useAuth((state) => state);
   const { token,logout} = useAuth((state) => state);
 
 
+//--------------------------------------------Declaracion de estados-----------------------------------------
+
   const [tipo, setTipo] = useState([]);
   const [ub, setUb] = useState([]);
-
   const [image, setImage] = useState(null);
-
   const [imageData, setImageData] = useState('');
 
-  
+  //--------------------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
   const { register, handleSubmit } = useForm({
     defaultValues: {
       fechaco: null,
@@ -40,6 +42,8 @@ function InBien() {
     },
   });
 
+//Funcion para retornar las categorias de los bienes al cargar el modulo
+
   useEffect(() => {
     const load = async () => {
       let result = await fetch("http://localhost:9095/tipo");
@@ -48,6 +52,8 @@ function InBien() {
     };
     load();
   },[]);
+
+//Funcion para retornar las ubicaciones de los bienes al cargar el modulo
 
   useEffect(() => {
     const load = async () => {
@@ -58,6 +64,7 @@ function InBien() {
     load();
   },[]);
   
+  //Funcion para obtener la imagen
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -71,6 +78,8 @@ function InBien() {
       reader.readAsDataURL(file);
     }
   };
+
+  //Funcion para enviar los datos del formulario
 
   const onSubmit = async (data) => {
     
@@ -94,7 +103,8 @@ function InBien() {
               categoria:  data.categoria,
               tarjeta:  data.tarjeta,
               ubicacion:  data.ubicacion,
-              token: token,
+            },headers: {
+              'Authorization': token
             },
           });
           
@@ -135,6 +145,8 @@ function InBien() {
       toast.error("La imagen a ingresar debe ser menor o igual a 700 KB");
     }
   };
+
+//----------------------------------------------HTML-----------------------------------------------------
 
   return (
     <AppLayout>

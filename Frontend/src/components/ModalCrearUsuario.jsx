@@ -57,8 +57,11 @@ const ModelCrearUsuario = () => {
             apellidos: data.apellidos,
             rol: data.rol,
             correo: data.correo,
-            token: token,
           },
+          headers: {
+            'Authorization': token
+          },
+          
         });
         
         if (resp.data.success === true) {

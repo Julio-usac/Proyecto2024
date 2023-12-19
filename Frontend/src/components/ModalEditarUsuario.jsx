@@ -61,7 +61,9 @@ const ModelEditarUsuario = () => {
             apellidos: (data.apellidos!=null)?data.apellidos:userapellido,
             rol: (data.rol!=null&&data.rol!="Seleccionar")?data.rol:userrol,
             correo: (data.correo!=null)?data.correo:usercorreo,
-            token:token,
+          },
+          headers: {
+            'Authorization': token
           },
         });
         

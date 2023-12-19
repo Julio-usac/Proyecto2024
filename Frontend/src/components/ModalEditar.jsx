@@ -124,7 +124,8 @@ const ModelEditar = () => {
               descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
               categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
               ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
-              token: token,
+            }, headers: {
+              'Authorization': token
             },
           });
           

@@ -68,7 +68,10 @@ function Perfil() {
         data: {
           nueva: data.nueva,
           correo: correo,
-          token:token,
+        },
+        
+        headers: {
+          'Authorization': token
         },
       });
       

@@ -8,16 +8,20 @@ import { useEffect } from "react";
 
 // eslint-disable-next-line react/prop-types
 const AppLayout = ({ children }) => {
-  const { nombre,rol,logout,token } = useAuth((state) => state);
+
+//---------------------------------------------------Retornar datos del usuario-----------------------------------------
+  const { nombre,rol,logout,token,Revalidar } = useAuth((state) => state);
   
 
+//---------------------------------------------------Funciones utilizadas-----------------------------------------
+//Funcion para navegar a otros modulos
   const navigate = useNavigate();
 
+//Funcion para cerrar sesion
   const handleLogout = () => {
     logout();
-    vaciar();
   };
-
+//Funcion para Verificar Rol Administrador
   const VerificarRol= () => {
     if (rol == 1){
       navigate("/AdminUsuario");
@@ -26,6 +30,23 @@ const AppLayout = ({ children }) => {
     }
     
   }
+
+  //Funcion para Revalidar token
+  
+  useEffect(() => {
+    axios.post("http://localhost:9095/Revalidar", {
+          token: token,
+        
+      })
+        .then((resp) => {
+          Revalidar(resp.data.token);
+        })
+        .catch((error) => {
+          
+          setTimeout(function(){toast.error("Se requiere volver a iniciar sesion");  }, 2000);
+          logout();
+        });
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(() => {

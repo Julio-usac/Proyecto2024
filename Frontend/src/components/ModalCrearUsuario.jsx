@@ -7,13 +7,20 @@ import { useEffect } from "react";
 import useAuth from "../auth/authStore";
 
 const ModelCrearUsuario = () => {
+
+  //--------------------------------------------Declaracion de estados-----------------------------------------
   
+  const [Roles, setRoles] = useState([]);
+
+//--------------------------------------------Retornar datos del usuario-----------------------------------------
+ 
   const { id } = useAuth((state) => state);
   const { token,logout} = useAuth((state) => state);
 
-  const [Roles, setRoles] = useState([]);
+ 
 
-
+//----------------------------------Declaracion de datos a enviar en el formulario-------------------------------
+ 
   const { register, handleSubmit} = useForm({
     defaultValues: {
       nombres: null,
@@ -22,6 +29,11 @@ const ModelCrearUsuario = () => {
       rol: null,
     },
   });
+
+   //-------------------------------------------Funciones utilizadas----------------------------------------
+
+
+  //Funcion utilizada para obtener los roles de los usuario
 
   useEffect(() => {
     const load = async () => {
@@ -32,6 +44,7 @@ const ModelCrearUsuario = () => {
     load();
   },[]);
 
+  //Funcion utilizada para enviar los datos del formulario al endpoint CrearUsuario
   const onSubmit = async (data) => {
   
     if(data.rol && data.rol != "Seleccionar"){
@@ -50,6 +63,9 @@ const ModelCrearUsuario = () => {
         
         if (resp.data.success === true) {
           toast.success("Registro exitoso")
+
+          //Si la creacion es exitosa, se registra la operacion en la bitacora
+
           try {
             const resp = await axios({
               url: "http://localhost:9095/IngresarBitacora",
@@ -83,6 +99,7 @@ const ModelCrearUsuario = () => {
   }
   };
 
+  //----------------------------------------------HTML-----------------------------------------------------
   return (
     <dialog id="my_modal_3" className="modal">
    <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">

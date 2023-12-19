@@ -10,11 +10,18 @@ import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
 
-  const { rol,logout,token } = useAuth((state) => state);
+  //--------------------------------------------Retornar Rol del usuario-----------------------------------------
+  
+
+  const { rol} = useAuth((state) => state);
+
+
+  //--------------------------------------------Funciones utilizadas-----------------------------------------
+  
+  //Funcion para navegar entre los modulos
   const navigate = useNavigate();
 
- 
-
+ //Funcion para verificar el rol del usuario
   const VerificarRol1= () => {
     if (rol != 3){
       navigate("/Asbien");
@@ -23,34 +30,19 @@ function App() {
     }
     
   }
-
+  //Funcion para verificar el rol del usuario
   const VerificarRol2= async () => {
-    try {
-      const resp = await axios({
-        url: "http://localhost:9095/token",
-        method: "post",
-        data: {
-          token:token,
-        },
-      });
-
-      if(resp.data.message==true){
-        if (rol != 3){
-          navigate("/InBien");
-        }else{
-          toast.error("No cuenta con los permisos para ingresar a este modulo")
-        }
-      }else{
-        logout();
-      }
-    } catch (error) {
-      console.log(error)
+   
+    if (rol != 3){
+      navigate("/InBien");
+    }else{
+      toast.error("No cuenta con los permisos para ingresar a este modulo")
     }
-    
-    
+      
   }
 
-
+//-------------------------------------------------------HTML---------------------------------------------------------
+ 
   return (
     <AppLayout>
       <div style={{ height: '50px' }} />

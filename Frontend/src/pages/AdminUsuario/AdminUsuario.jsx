@@ -12,17 +12,28 @@ import useAuth from "../../auth/authStore";
 
 function AdminUsuario() {
 
+//--------------------------------------------Declaracion de estados-----------------------------------------
+
+
   const [usuario, setUsuario] = useState([]);
   const [showButton, setShowButton] = useState([]);
   const [actualizar, setactualizar] = useState("");
-  
   const [ed,seted] = useState(null);
+
+  //-----------------------------Funcion para guardar la informacion del usuario a editar------------------------
+
   const seteditar = useUsuario((state) => state.setEditarUser);
+
+  //-----------------------------------------Retornar informacion del usuario-----------------------------------------
+
 
   const  userid  = useAuth((state) => state.id);
   const { token,logout} = useAuth((state) => state);
 
-  //Obtener usuarios
+//-------------------------------------------Funciones utilizadas----------------------------------------
+
+
+  //Funcion para obtener la lista de usuarios al entrar al modulo
   useEffect(() => {
     
       axios.get('http://localhost:9095/listaUsuarios')
@@ -53,7 +64,7 @@ function AdminUsuario() {
 
 
   
-
+  //Funcion para actualizar el estado del usuario
   const ActualizarEstado = (id) => {
 
     const updatedVisibility = [...showButton];
@@ -70,6 +81,7 @@ function AdminUsuario() {
       
         estado: estado,
         id: id,
+        token:token,
       
     })
       .then((resp) => {
@@ -81,11 +93,17 @@ function AdminUsuario() {
         }
       })
       .catch((error) => {
-        console.error(error);
-        toast.error(error.response.data.message)
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          toast.error(error.message);
+        }
       });
       
   };
+
+
+//Funcion para eliminar al usuario
 
   const EliminarUsuario = (e) => {
     
@@ -111,15 +129,15 @@ function AdminUsuario() {
             },
           });
         } catch (error) {
-          console.log(error)
+          console.log("Error en la Bitacora")
         }
         toast.success(response.data.message);
         setactualizar('a');
         //setTimeout(function(){ window.location.reload(); }, 1000);
       })
       .catch(error => {
-        console.log(error.error);
-        if ('token' in error){
+        
+        if ('token' in error.response.data){
           logout();
         }else{
           toast.error(error.message);
@@ -130,11 +148,14 @@ function AdminUsuario() {
 
   }
 
+
+   //Funcion para mostrar el formulario para crear usuarios
   const CrearUsuario= (e) => {
     window.my_modal_3.showModal();
     
   }
 
+ //Funcion para mostrar el formulario para editar usuarios
   useEffect(() => {
     if(ed!=null){
         window.my_modal_4.showModal();
@@ -142,13 +163,16 @@ function AdminUsuario() {
     }
   }, [ed]);
 
+  //Funcion para guardar los datos del usuario a editar
+
   const EditarUsuario= (id,nombre,apellido,correo,usuario) => {
     seteditar(id,nombre,apellido,correo,usuario);
     seted("e");
 
     
   }
-
+//-------------------------------------------------------HTML---------------------------------------------------------
+ 
   return (
     <AppLayout>
       

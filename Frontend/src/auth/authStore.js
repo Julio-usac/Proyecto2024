@@ -32,6 +32,12 @@ const useAuth = create(
           token:null,
         });
       },
+      Revalidar:(nuevo)=> {
+        set({
+          token:nuevo,
+        })
+        
+      },
       setUrl: (url) => {
         set({ url: url });
       },

@@ -14,7 +14,7 @@ const ModelEditar = () => {
   const [tipo, setTipo] = useState([]);
   const [ub, setUb] = useState([]);
   const [image, setImage] = useState(null);
-  const [imageData, setImageData] = useState(null);
+  const [imageData, setImageData] = useState('');
 
 
 //--------------------------------------------Retornar datos del bien a editar-----------------------------------------
@@ -62,6 +62,10 @@ const ModelEditar = () => {
     },
   });
 
+//-------------------------------------------Funciones utilizadas----------------------------------------
+
+//Funcion para recibir las categorias de los bienes
+
   useEffect(() => {
     const load = async () => {
       let result = await fetch("http://localhost:9095/tipo");
@@ -70,6 +74,8 @@ const ModelEditar = () => {
     };
     load();
   },[]);
+
+  //Funcion para recibir la ubicacion de los bienes
 
   useEffect(() => {
     const load = async () => {
@@ -80,7 +86,8 @@ const ModelEditar = () => {
     load();
   },[]);
 
-  
+  //Funcion para obtener la imagen
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setImage(URL.createObjectURL(file));
@@ -94,68 +101,73 @@ const ModelEditar = () => {
     }
   };
 
-  const onSubmit = async (data) => {
+  //Funcion para enviar los datos del formulario
 
-    if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || data.categoria || data.ubicacion){
-      try {
-        const resp = await axios({
-          url: "http://localhost:9095/EditarBien",
-          method: "post",
-          data: {
-            id: mid,
-            fechaco: (data.fechaco)?data.fechaco:mfecha,
-            cuenta:  (data.cuenta)?data.cuenta:mcuenta,
-            codigo: (data.codigo)? data.codigo:mcodigo,
-            marca:  (data.marca)? data.marca:mmarca,
-            cantidad: (data.cantidad)? data.cantidad:mcantidad,
-            modelo:  (data.modelo)? data.modelo:mmodelo,
-            serie:  (data.serie!="")? data.serie:mserie,
-            imagen:   (imageData)? imageData:mimage,
-            precio:  (data.precio)? data.precio:mprecio,
-            descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
-            categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
-            ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
-            token: token,
-          },
-        });
-        
-        if (resp.data.success === true) {
-          toast.success("Ingreso exitoso!")
-          try {
-            const resp = await axios({
-              url: "http://localhost:9095/IngresarBitacora",
-              method: "post",
-              data: {
-                usuario: id,
-                usuarioaf: null,
-                bienaf: mid,
-                tipo: 2,
-                afectado:true,
-              },
-            });
-          } catch (error) {
-            console.log(error)
-          }
-          window.my_modal_2.close();
-          setTimeout(function(){ window.location.reload(); }, 1000);
-        }else{
-          toast.error(resp.data.message)
-        }
-      } catch (error) {
-        console.log(error)
-        if ('token' in error.response.data){
-          logout();
-        }else{
+  const onSubmit = async (data) => {
+    if(imageData.length<1000000){
+      if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || data.categoria || data.ubicacion){
+        try {
+          const resp = await axios({
+            url: "http://localhost:9095/EditarBien",
+            method: "post",
+            data: {
+              id: mid,
+              fechaco: (data.fechaco)?data.fechaco:mfecha,
+              cuenta:  (data.cuenta)?data.cuenta:mcuenta,
+              codigo: (data.codigo)? data.codigo:mcodigo,
+              marca:  (data.marca)? data.marca:mmarca,
+              cantidad: (data.cantidad)? data.cantidad:mcantidad,
+              modelo:  (data.modelo)? data.modelo:mmodelo,
+              serie:  (data.serie!="")? data.serie:mserie,
+              imagen:   (imageData)? imageData:mimage,
+              precio:  (data.precio)? data.precio:mprecio,
+              descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
+              categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
+              ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
+              token: token,
+            },
+          });
           
-          toast.error(error.response.data.message);
+          if (resp.data.success === true) {
+            toast.success("Ingreso exitoso!")
+            //Si la creacion es exitosa, se registra la operacion en la bitacora
+            try {
+              const resp = await axios({
+                url: "http://localhost:9095/IngresarBitacora",
+                method: "post",
+                data: {
+                  usuario: id,
+                  usuarioaf: null,
+                  bienaf: mid,
+                  tipo: 2,
+                  afectado:true,
+                },
+              });
+            } catch (error) {
+              console.log(error)
+            }
+            window.my_modal_2.close();
+            setTimeout(function(){ window.location.reload(); }, 1000);
+          }else{
+            toast.error(resp.data.message)
+          }
+        } catch (error) {
+          console.log(error)
+          if ('token' in error.response.data){
+            logout();
+          }else{
+            
+            toast.error(error.response.data.message);
+          }
         }
+      }else{
+        toast.error("No se han ingresado nuevos datos")
       }
     }else{
-      toast.error("No se han ingresado nuevos datos")
+      toast.error("La imagen a ingresar debe ser menor o igual a 700 KB");
     }
-    
   };
-    
+    //----------------------------------------------HTML-----------------------------------------------------
     return (
         <dialog id="my_modal_2" className="modal">
              <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">

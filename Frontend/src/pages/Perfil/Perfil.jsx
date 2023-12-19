@@ -11,6 +11,7 @@ function Perfil() {
 
   const correo = useAuth((state) => state.correo);
 
+  const { token,logout} = useAuth((state) => state);
 
   const [Pass, setPass] = useState('');
   const [Visible, setVisible] = useState(true);
@@ -67,6 +68,7 @@ function Perfil() {
         data: {
           nueva: data.nueva,
           correo: correo,
+          token:token,
         },
       });
       
@@ -77,8 +79,11 @@ function Perfil() {
         toast.error(resp.data.message);
       }
     } catch (error) {
-      console.log(error.error);
-      toast.error("Error al actualizar");
+      if ('token' in error.response.data){
+        logout();
+      }else{
+        toast.error(error.message);
+      }
     }
   }else{
     toast.error("Las contraseñas no coinciden");

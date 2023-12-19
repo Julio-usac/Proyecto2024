@@ -59,6 +59,37 @@ app.post('/token', async function (req, res) {
  
 });
 
+// Revalidar Token
+app.post('/Revalidar', async function (req, res) {
+
+  try {
+    let decoded = verToken(req.body.token);
+    let respuesta = {
+      message: {
+        Id : "",
+        Nombre : "",
+        Correo : "",
+        Rol: "",
+      }
+    }
+
+    respuesta.message.Id = decoded.Id;
+    respuesta.message.Nombre = decoded.Nombre;
+    respuesta.message.Correo = decoded.Correo;
+    respuesta.message.Rol = decoded.Rol;
+
+
+    let jToken = getToken(respuesta.message);
+
+    res.json({success: true,token: jToken});
+    return;
+  } catch (err) {
+    res.status(400).json({message: false});
+    return;
+  }
+ 
+});
+
 //------------------------------Funcion para comunicacion con la base de datos-----------------------
 function query(sql) {
   return new Promise((resolve, reject) => {
@@ -1276,14 +1307,20 @@ app.post('/EditarBien', async function (req, res) {
 //------------------------------------- DAR DE BAJA UN BIEN --------------------------------------
 
 app.delete('/DardeBaja/:id', async function (req, res) {
-
-  try{
-    let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
-    const result = await query(sql);
-    res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+  try {
+    let decoded = verToken(req.query.token);
+    try{
+      let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
+      const result = await query(sql);
+      res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+      return;
+    }
+  } catch (err) {
+    console.log(err)
+    res.status(401).json({token: false});
     return;
   }
   
@@ -1316,22 +1353,28 @@ app.delete('/EliminarUsuario/:id', async function (req, res) {
 
 
 app.put('/ActualizarPass', async function (req, res) {
-  try{
-    let nueva = req.body.nueva;
-    let correo = req.body.correo;
+  try {
+    let decoded = verToken(req.body.token);
+    try{
+      let nueva = req.body.nueva;
+      let correo = req.body.correo;
 
-    let passCrypto = encriptar(nueva);
+      let passCrypto = encriptar(nueva);
 
-    let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE correo='" + correo + "' ;";
+      let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE correo='" + correo + "' ;";
 
-    const result = await query(sql);
+      const result = await query(sql);
 
-    res.json({success: true});
+      res.json({success: true});
 
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al verificar", error:error});
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al verificar", error:error});
+      return;
+    }
+  } catch (err) {
+    res.status(401).json({token: false});
     return;
   }
 });
@@ -1339,21 +1382,28 @@ app.put('/ActualizarPass', async function (req, res) {
 //------------------------------------- Actualizar estado --------------------------------------
 
 app.put('/ActualizarEstado', function (req, res) {
-  let estado = req.body.estado;
-  let id = req.body.id;
+  try {
+    let decoded = verToken(req.body.token);
+    let estado = req.body.estado;
+    let id = req.body.id;
 
-  let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-    }else{
-      
-      res.json({success: true});
+    let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
+    
+    connection.query(sql, async function(error,result){
+      if(error){
+        console.log("Error al conectar");
+        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+      }else{
+        
+        res.json({success: true});
 
-    }
-  });
+      }
+    });
+  } catch (err) {
+    console.log("nada")
+    res.status(401).json({token: false});
+    return;
+  }
 });
 
 
@@ -1386,8 +1436,10 @@ app.post('/CrearUsuario', async function (req, res) {
       let correo= req.body.correo;
       let rol= req.body.rol;
 
+      let passCrypto = encriptar('MINECO');
+
       let sql = `INSERT INTO usuario(fecha_mod,nombres,apellidos,correo,rol,estado,pass)
-      VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`',`+rol+`,1,'MINECO') ;`;
+      VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`',`+rol+`,1,'`+passCrypto+`') ;`;
       
       const result2 = await query(sql);
       

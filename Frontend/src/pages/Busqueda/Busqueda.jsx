@@ -11,11 +11,15 @@ import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
 function Busqueda() {
+
+  //-------------------------------Retornar rol del usuario y estados para guardar informacion -----------------------------------------
+
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
   const {rol } = useAuth((state) => state);
 
-  //Inicilizar variables
+  //--------------------------------------------Declaracion de estados-----------------------------------------
+
 
   const [Opcion, setOpcion] = useState(0);
   const [Buscar, setBuscar] = useState('');
@@ -24,7 +28,7 @@ function Busqueda() {
   const [ed,seted] = useState(null);
   const [Tabla, setTabla] = useState([]);
 
-  //----------------------------Funciones para manejar cambios de estado -------------------------
+  //---------------------------------------Funciones utilizadas--------------------------------------------
 
   //Funcion para manejar el cambio de estado de las elecciones de busqueda
   const handleChange = (event) => {
@@ -35,34 +39,16 @@ function Busqueda() {
     setBuscar(event.target.value);
   };
  
+  //Funcion para mostrar la imagen del bien
  
-  useEffect(() => {
-    if (Opcion==10) {
-      axios.get("http://localhost:9095/bienAsignado", {
-        
-          usuario: Opcion,
-        
-      })
-        .then((resp) => {
-          if (resp.data.success === true) {
-            setBien2(resp.data.message);
-          }else{
-            toast.error(resp.data.message)
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    
-    }
-  }, [Opcion]);
-
   useEffect(() => {
     if(im!=null){
         window.my_modal_1.showModal();
         setim(null);
     }
   }, [im]);
+
+  //Funcion para mostrar el formulario para editar bienes
 
   useEffect(() => {
     if(ed!=null){
@@ -71,12 +57,16 @@ function Busqueda() {
     }
   }, [ed]);
 
+  //Funcion para guardar la imagen del bien seleccionado
+
   const FImagen = (e) => {
     
     setimag(e)
     setim("e")
 
   }
+
+  //Funcion para guardar la informacion del bien seleccionado
 
   const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
     if (rol!=3){
@@ -88,6 +78,7 @@ function Busqueda() {
 
   }
 
+  //Funcion para descargar el reporte total de bienes
 
   const Descargar = async() => {
     try {
@@ -103,6 +94,8 @@ function Busqueda() {
     }
   };
 
+
+  //Funcion para buscar bienes segun las opcion de busqueda seleccionada
 
   const Busqueda = async() => {
     if (Opcion!=0 && Buscar!=''){
@@ -122,7 +115,7 @@ function Busqueda() {
         }
     }
   }
-
+ //------------------------------------------------HTML---------------------------------------------
   return (
     <AppLayout>
         <ModalImagen />

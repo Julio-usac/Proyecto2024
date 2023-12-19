@@ -18,7 +18,7 @@ function InBien() {
 
   const [image, setImage] = useState(null);
 
-  const [imageData, setImageData] = useState(null);
+  const [imageData, setImageData] = useState('');
 
   
   const { register, handleSubmit } = useForm({
@@ -73,61 +73,66 @@ function InBien() {
   };
 
   const onSubmit = async (data) => {
-    if (data.categoria!=null){
-      try {
-        const resp = await axios({
-          url: "http://localhost:9095/InBien",
-          method: "post",
-          data: {
-            fechaco: data.fechaco,
-            cuenta:  data.cuenta,
-            codigo:  data.codigo,
-            marca:  data.marca,
-            cantidad:  data.cantidad,
-            modelo:  data.modelo,
-            serie:  data.serie,
-            imagen:  imageData,
-            precio:  data.precio,
-            descripcion:  data.descripcion,
-            categoria:  data.categoria,
-            tarjeta:  data.tarjeta,
-            ubicacion:  data.ubicacion,
-            token: token,
-          },
-        });
-        
-        if (resp.data.success === true) {
-          toast.success("Ingreso exitoso!")
-          try {
-            const resp = await axios({
-              url: "http://localhost:9095/IngresarBitacora",
-              method: "post",
-              data: {
-                usuario: id,
-                usuarioaf: null,
-                bienaf: null,
-                tipo: 1,
-                afectado:true,
-              },
-            });
-          } catch (error) {
-            console.log(error)
-          }
-          setTimeout(function(){ window.location.reload(); }, 1000);
-        }else{
-          toast.error(resp.data.message)
-        }
-      } catch (error) {
-        console.log(error)
-        if ('token' in error.response.data){
-          logout();
-        }else{
+    
+    if(imageData.length<1000000){
+      if (data.categoria!=null){
+        try {
+          const resp = await axios({
+            url: "http://localhost:9095/InBien",
+            method: "post",
+            data: {
+              fechaco: data.fechaco,
+              cuenta:  data.cuenta,
+              codigo:  data.codigo,
+              marca:  data.marca,
+              cantidad:  data.cantidad,
+              modelo:  data.modelo,
+              serie:  data.serie,
+              imagen:  imageData,
+              precio:  data.precio,
+              descripcion:  data.descripcion,
+              categoria:  data.categoria,
+              tarjeta:  data.tarjeta,
+              ubicacion:  data.ubicacion,
+              token: token,
+            },
+          });
           
-          toast.error(error.response.data.message);
+          if (resp.data.success === true) {
+            toast.success("Ingreso exitoso!")
+            try {
+              const resp = await axios({
+                url: "http://localhost:9095/IngresarBitacora",
+                method: "post",
+                data: {
+                  usuario: id,
+                  usuarioaf: null,
+                  bienaf: null,
+                  tipo: 1,
+                  afectado:true,
+                },
+              });
+            } catch (error) {
+              console.log(error)
+            }
+            setTimeout(function(){ window.location.reload(); }, 1000);
+          }else{
+            toast.error(resp.data.message)
+          }
+        } catch (error) {
+          console.log(error)
+          if ('token' in error.response.data){
+            logout();
+          }else{
+            
+            toast.error(error.response.data.message);
+          }
         }
+      }else{
+        toast.error("Debe seleccionar un tipo de bien");
       }
     }else{
-      toast.error("Debe seleccionar un tipo de bien");
+      toast.error("La imagen a ingresar debe ser menor o igual a 700 KB");
     }
   };
 

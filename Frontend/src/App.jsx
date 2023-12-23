@@ -2,9 +2,6 @@ import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "./layout/AppLayout";
 import { Link,useNavigate } from "react-router-dom";
 import axios from "axios";
-import ModalAgregar from "./components/ModalAgregar";
-import useCarrito from "./store/carritoStore";
-import useFav from "./store/favStore";
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "./auth/authStore";
@@ -13,11 +10,18 @@ import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
 
-  const { rol } = useAuth((state) => state);
+  //--------------------------------------------Retornar Rol del usuario-----------------------------------------
+  
+
+  const { rol} = useAuth((state) => state);
+
+
+  //--------------------------------------------Funciones utilizadas-----------------------------------------
+  
+  //Funcion para navegar entre los modulos
   const navigate = useNavigate();
 
- 
-
+ //Funcion para verificar el rol del usuario
   const VerificarRol1= () => {
     if (rol != 3){
       navigate("/Asbien");
@@ -26,17 +30,19 @@ function App() {
     }
     
   }
-
-  const VerificarRol2= () => {
+  //Funcion para verificar el rol del usuario
+  const VerificarRol2= async () => {
+   
     if (rol != 3){
       navigate("/InBien");
     }else{
       toast.error("No cuenta con los permisos para ingresar a este modulo")
     }
-    
+      
   }
 
-
+//-------------------------------------------------------HTML---------------------------------------------------------
+ 
   return (
     <AppLayout>
       <div style={{ height: '50px' }} />

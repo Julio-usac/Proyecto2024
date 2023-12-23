@@ -12,17 +12,27 @@ import useAuth from "../../auth/authStore";
 
 function AdminUsuario() {
 
+//--------------------------------------------Declaracion de estados-----------------------------------------
+
+
   const [usuario, setUsuario] = useState([]);
   const [showButton, setShowButton] = useState([]);
   const [actualizar, setactualizar] = useState("");
-  
-  const [ed,seted] = useState(null);
+
+  //-----------------------------Funcion para guardar la informacion del usuario a editar------------------------
+
   const seteditar = useUsuario((state) => state.setEditarUser);
 
-  const  userid  = useAuth((state) => state.id);
-  
+  //-----------------------------------------Retornar informacion del usuario-----------------------------------------
 
-  //Obtener usuarios
+
+  const  userid  = useAuth((state) => state.id);
+  const { token,logout} = useAuth((state) => state);
+
+//-------------------------------------------Funciones utilizadas----------------------------------------
+
+
+  //Funcion para obtener la lista de usuarios al entrar al modulo
   useEffect(() => {
     
       axios.get('http://localhost:9095/listaUsuarios')
@@ -53,7 +63,7 @@ function AdminUsuario() {
 
 
   
-
+  //Funcion para actualizar el estado del usuario
   const ActualizarEstado = (id) => {
 
     const updatedVisibility = [...showButton];
@@ -71,7 +81,9 @@ function AdminUsuario() {
         estado: estado,
         id: id,
       
-    })
+    },{ headers: {
+      'Authorization': token
+    },})
       .then((resp) => {
         if (resp.data.success === true) {
           toast.success("Estado actualizado")
@@ -81,17 +93,25 @@ function AdminUsuario() {
         }
       })
       .catch((error) => {
-        console.error(error);
-        toast.error(error.response.data.message)
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          toast.error(error.message);
+        }
       });
       
   };
+
+
+//Funcion para eliminar al usuario
 
   const EliminarUsuario = (e) => {
     
     const confirmacion = window.confirm('¿Estás seguro de eliminar este usuario?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/EliminarUsuario/'+e)
+      axios.delete('http://localhost:9095/EliminarUsuario/'+e,{ headers: {
+        'Authorization': token
+      },})
       .then( async response => {
         try {
           const resp = await axios({
@@ -106,39 +126,43 @@ function AdminUsuario() {
             },
           });
         } catch (error) {
-          console.log(error)
+          console.log("Error en la Bitacora")
         }
         toast.success(response.data.message);
         setactualizar('a');
-        //setTimeout(function(){ window.location.reload(); }, 1000);
+        setTimeout(function(){  }, 2000);
       })
       .catch(error => {
-        console.log(error.error);
-        toast.error(error.message);
+        
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          toast.error(error.message);
+        }
+        
       });
     }
 
   }
 
+
+   //Funcion para mostrar el formulario para crear usuarios
   const CrearUsuario= (e) => {
     window.my_modal_3.showModal();
     
   }
 
-  useEffect(() => {
-    if(ed!=null){
-        window.my_modal_4.showModal();
-        seted(null);
-    }
-  }, [ed]);
 
-  const EditarUsuario= (id,nombre,apellido,correo,usuario) => {
-    seteditar(id,nombre,apellido,correo,usuario);
-    seted("e");
+  //Funcion para guardar los datos del usuario a editar
+
+  const EditarUsuario= async(id,nombre,apellido,correo,usuario) => {
+    await seteditar(id,nombre,apellido,correo,usuario);
+    window.my_modal_4.showModal();
 
     
   }
-
+//-------------------------------------------------------HTML---------------------------------------------------------
+ 
   return (
     <AppLayout>
       
@@ -162,7 +186,7 @@ function AdminUsuario() {
           </div>
           <div style={{ height: '30px' }} />
 
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-screen">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-[550px]">
               <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
                   <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>

@@ -34,11 +34,11 @@ function encriptar(texto) {
 }
 
 function getToken(datos) {
-  return jwt.sign(datos, 'HoySiSale', {expiresIn : '60m'});
+  return jwt.sign(datos, 'MINECO', {expiresIn : '60m'});
 }
 
 function verToken(token) {
-  return jwt.verify(token, 'HoySiSale');
+  return jwt.verify(token, 'MINECO');
 }
 
 //--------------------------------------------------Pruebas---------------------------------------
@@ -47,15 +47,53 @@ app.get('/', function (req, res) {
     res.send("Hola mundo!");
 });
 
-app.get('/pruebaToken', function (req, res) {
-  var token =  req.body.token;
+// Verificar Token
+app.post('/token', async function (req, res) {
 
   try {
-    var data = verToken(token);
-    res.json(data);
-  } catch (error) {
-    res.status(400).json(error);
+    let decoded = verToken(req.body.token);
+    res.json({message: true});
+  } catch (err) {
+    res.status(400).json({message: false});
   }
+ 
+});
+
+// Revalidar Token
+app.post('/Revalidar', async function (req, res) {
+
+  try {
+    //Verificar token
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
+    let respuesta = {
+      message: {
+        Id : "",
+        Nombre : "",
+        Correo : "",
+        Rol: "",
+      }
+    }
+
+    respuesta.message.Id = decoded.Id;
+    respuesta.message.Nombre = decoded.Nombre;
+    respuesta.message.Correo = decoded.Correo;
+    respuesta.message.Rol = decoded.Rol;
+
+
+    let jToken = getToken(respuesta.message);
+
+    res.json({success: true,token: jToken});
+    return;
+  } catch (err) {
+    res.status(400).json({message: false});
+    return;
+  }
+ 
 });
 
 //------------------------------Funcion para comunicacion con la base de datos-----------------------
@@ -74,13 +112,14 @@ function query(sql) {
 //--------------------------------------------------Endpoints---------------------------------------
 
 
+
 //----------------INICIAR SESION----------------
 
 app.post('/Login', function (req, res) {
     let correo = req.body.correo;
     let pass = req.body.pass;
-
-    let sql = "SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, correo, rol FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "' AND estado = 1;";
+    let passCrypto = encriptar(pass);
+    let sql = "SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, correo, rol FROM usuario WHERE correo='" + correo + "' AND pass='" + passCrypto+ "' AND estado = 1;";
     
     connection.query(sql, async function(error,result){
       if(error){
@@ -88,7 +127,7 @@ app.post('/Login', function (req, res) {
         res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
       }else{
         if (result.length == 1) {
-          var respuesta = { success: true,
+          let respuesta = { success: true,
                             message: {
                               Id : "",
                               Nombre : "",
@@ -96,13 +135,16 @@ app.post('/Login', function (req, res) {
                               Rol: "",
                             }
                           }
+          
 
           respuesta.message.Id = result[0].userId;
           respuesta.message.Nombre = result[0].nombre;
           respuesta.message.Correo = result[0].correo;
           respuesta.message.Rol = result[0].rol;
-        
-          res.json(respuesta);
+
+          let jToken = getToken(respuesta.message);
+
+          res.json({success: true,token: jToken});
         } else {
           res.status(400).json({success: false, message: "Credenciales incorrectas"});
         }
@@ -114,169 +156,196 @@ app.post('/Login', function (req, res) {
 //------------------------------------- INGRESAR BIENES--------------------------------------
 app.post('/InBien', async function (req, res) {
 
-  //fecha actual
-  const fecha = new Date();
-  const añoActual = fecha.getFullYear();
-  const hoy = fecha.getDate();
-  const mes = fecha.getMonth() + 1; 
-  let fechaActual= hoy+"/"+mes+"/"+ añoActual
-
-  //inicializar variables
-
-  let fcompra="";
-  let ingresar=true;
-  //Obtener datos
+ 
+  try {
+    //Verificar token
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
   
-  let fechaco = req.body.fechaco;
-  let cuenta = req.body.cuenta;
-  let codigo = req.body.codigo;
-  let marca = req.body.marca;
-  let cantidad = req.body.cantidad;
-  let modelo = req.body.modelo;
-  let serie = req.body.serie;
-  let imagen = req.body.imagen;
-  let precio = req.body.precio;
-  let descripcion = req.body.descripcion;
-  let categoria = req.body.categoria;
-  let tarjeta = req.body.tarjeta;
-  let ubicacion = req.body.ubicacion;
 
-  //Convertir fecha de compra
-  console.log(fechaco,"1")
-  if (fechaco){
-    fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
-  }else{
-    fcompra= null;
-  }
+    //inicializar variables
 
-  //Convertir cuenta
+    let fcompra="";
+    let ingresar=true;
+    //Obtener datos
+    
+    let fechaco = req.body.fechaco;
+    let cuenta = req.body.cuenta;
+    let codigo = req.body.codigo;
+    let marca = req.body.marca;
+    let cantidad = req.body.cantidad;
+    let modelo = req.body.modelo;
+    let serie = req.body.serie;
+    let imagen = req.body.imagen;
+    let precio = req.body.precio;
+    let descripcion = req.body.descripcion;
+    let categoria = req.body.categoria;
+    let tarjeta = req.body.tarjeta;
+    let ubicacion = req.body.ubicacion;
 
-  if (cuenta){
-    cuenta=`'`+cuenta+`'`;
-  }else{
-    cuenta= null;
-  }
+    //Convertir fecha de compra
+    if (fechaco){
+      fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+    }else{
+      fcompra= null;
+    }
 
-  //Convertir codigo
+    //Convertir cuenta
 
-  if (codigo){
-    codigo=`'`+codigo+`'`;
-  }else{
-    codigo= null;
-  }
+    if (cuenta){
+      cuenta=`'`+cuenta+`'`;
+    }else{
+      cuenta= null;
+    }
 
-  //Convertir modelo
+    //Convertir codigo
 
-  if (modelo){
-    modelo=`'`+modelo+`'`;
-  }else{
-    modelo= null;
-  }
+    if (codigo){
+      codigo=`'`+codigo+`'`;
+    }else{
+      codigo= null;
+    }
 
-  //Convertir serie
+    //Convertir modelo
 
-  if (serie){
-    serie=`'`+serie+`'`;
-  }else{
-    serie= null;
-  }
+    if (modelo){
+      modelo=`'`+modelo+`'`;
+    }else{
+      modelo= null;
+    }
 
-  //Convertir imagen
+    //Convertir serie
 
-  if (imagen){
-    imagen=`'`+imagen+`'`;
-  }else{
-    imagen= null;
-  }
+    if (serie){
+      serie=`'`+serie+`'`;
+    }else{
+      serie= null;
+    }
 
-   //Convertir imagen
+    //Convertir imagen
 
-   if (ubicacion && ubicacion!="Seleccionar"){
-    ubicacion=`'`+ubicacion+`'`;
-  }else{
-    ubicacion= null;
-  }
+    if (imagen){
+      imagen=`'`+imagen+`'`;
+    }else{
+      imagen= null;
+    }
 
-  //Convertir precio
+    //Convertir ubicacion
 
-  if (precio){
-    precio=`'`+precio+`'`;
-  }else{
-    precio= null;
-  }
+    if (ubicacion && ubicacion!="Seleccionar"){
+      ubicacion=`'`+ubicacion+`'`;
+    }else{
+      ubicacion= null;
+    }
 
-  //Consultar bienes repetidos en base de datos 
+    //Convertir precio
 
-  /*
-  try{
-      
-      if (codigo!=""){
-        let sql =`SELECT * FROM bien WHERE codigo="`+codigo+`";`;
+    if (precio){
+      precio=`'`+precio+`'`;
+    }else{
+      precio= null;
+    }
+
+    //Consultar bienes repetidos en base de datos 
+
+    /*
+    try{
+        
+        if (codigo!=""){
+          let sql =`SELECT * FROM bien WHERE codigo="`+codigo+`";`;
+          const result = await query(sql);
+          
+          if (result.length > 0) {
+            res.status(400).json({success: false, message:"No se puede ingresar un bien repetido"});
+            return
+          } else {
+              ingresar=true;
+          }
+        }else{
+          ingresar=true;
+        }
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }*/
+
+    //Verificar Marca
+    let idmarca=null;
+    try{
+        
+      if (marca!=''){
+        marca = marca.toUpperCase();
+        let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
         const result = await query(sql);
         
         if (result.length > 0) {
-           res.status(400).json({success: false, message:"No se puede ingresar un bien repetido"});
-          return
+          
+          idmarca=result[0].marcaId;
+
         } else {
-            ingresar=true;
+          let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
+          VALUES (NOW(),"`+marca+`",activo);`;
+          const result1 = await query(sql);
+
+          sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+          const result2 = await query(sql);
+
+          idmarca=result2[0].marcaId;
+        
         }
-      }else{
-        ingresar=true;
       }
-  }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-  }*/
-
-  //Verificar Marca
-  let idmarca=null;
-  try{
-      
-    if (marca!=''){
-      marca = marca.toUpperCase();
-      let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-      const result = await query(sql);
-      
-      if (result.length > 0) {
-         
-        idmarca=result[0].marcaId;
-
-      } else {
-        let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
-        VALUES (NOW(),"`+marca+`",activo);`;
-        const result1 = await query(sql);
-
-        sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-        const result2 = await query(sql);
-
-        idmarca=result2[0].marcaId;
-      
-      }
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+        return;
     }
-}catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-    return;
-}
 
-  //Ingresar bien a la base de datos  
-  try{
     
-      if (ingresar==true){
-        let sql =  `INSERT INTO bien(fecha_mod,fechaco,cuenta,codigo,marca,cantidad,modelo,serie,imagen,precio,activo,descripcion,categoria,tarjeta,ubicacion)
-        VALUES(NOW(),`+fcompra+`,`+cuenta+`,`+codigo+`,`+idmarca+`,`+cantidad+`,
-        `+modelo+`,`+serie+`,`+imagen+`,`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
-        
-        const result2 = await query(sql);
 
-        res.json({success: true, message: "Bien ingresado"});
-        
-      }else{
-        res.status(400).json({success: false, message: "Error al ingresar"});
-      }
-  }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al ingresar los datos"});
+    //Ingresar bien a la base de datos  
+    try{
+      
+        if (ingresar==true){
+          let sql =  `INSERT INTO bien(fecha_mod,fechaco,cuenta,codigo,marca,cantidad,modelo,serie,imagen,precio,activo,descripcion,categoria,tarjeta,ubicacion)
+          VALUES(NOW(),`+fcompra+`,`+cuenta+`,`+codigo+`,`+idmarca+`,`+cantidad+`,
+          `+modelo+`,`+serie+`,`+imagen+`,`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
+          
+          const result2 = await query(sql);
+
+
+          if(ubicacion){
+            try{
+
+              let sql =`SELECT MAX(id) AS id FROM bien;`;
+              const result1 = await query(sql);
+
+              let sql2 =`INSERT INTO ubicacion_activo(fecha,bien,ubicacion) 
+                VALUES (NOW(),`+result1[0].id+`,`+ubicacion+`);`;
+                const result2 = await query(sql2);
+            } catch (error) {
+              console.log(error);
+              res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+              return;
+            }
+          }
+
+          res.json({success: true, message: "Bien ingresado"});
+          return;
+        }else{
+          res.status(400).json({success: false, message: "Error al ingresar"});
+        }
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al ingresar los datos"});
+    }
+
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
   }
 
 });
@@ -389,7 +458,7 @@ app.post('/bienAsignado', async function (req, res) {
 app.post('/bienAsignado2', async function (req, res) {
   try{
     let usuario= req.body.usuario;
-    let sql = `SELECT bien.id,fechaco,cuenta,marca,codigo,modelo,serie,cantidad,bien.categoria,marca.nombre as marca2,descripcion,ubicacion.nombre as ubicacion,bien.ubicacion as ubicacion2,bien.precio,imagen FROM bien
+    let sql = `SELECT bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,marca,codigo,modelo,serie,cantidad,bien.categoria,marca.nombre as marca2,descripcion,ubicacion.nombre as ubicacion,bien.ubicacion as ubicacion2,bien.precio,imagen FROM bien
     INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.usuario=`+usuario+`
     LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
     LEFT JOIN marca ON bien.marca = marca.marcaId;`;
@@ -410,206 +479,213 @@ app.post('/bienAsignado2', async function (req, res) {
 
 app.post('/AsBien', async function (req, res) {
 
-  //fecha actual
-  const fecha = new Date();
-  const añoActual = fecha.getFullYear();
-  const hoy = fecha.getDate();
-  const mes = fecha.getMonth() + 1; 
-  let fechaActual= hoy+"/"+mes+"/"+ añoActual
+  try {
 
-  //Obtener datos
+    //Verificar token
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
 
-  let op = req.body.op;
-  let tarjeta = req.body.tarjeta;
-  let categoria = req.body.categoria;
-  let usuario = req.body.usuario;
-  let saldo = req.body.saldo;
-  let asignar = req.body.asignar;
-  let quitar = req.body.quitar;
+    //Obtener datos
+
+    let op = req.body.op;
+    let tarjeta = req.body.tarjeta;
+    let categoria = req.body.categoria;
+    let usuario = req.body.usuario;
+    let saldo = req.body.saldo;
+    let asignar = req.body.asignar;
+    let quitar = req.body.quitar;
 
 
 
-  //Asignar nueva tarjeta
-  if(op==true){
-  //Crear tarjeta de responsabilidad
-    try{
-      //Verificar numero de tarjeta
-      let sql =  `SELECT numero_tarjeta from tarjeta_responsabilidad
-      WHERE numero_tarjeta=`+tarjeta+`;`;
+    //Asignar nueva tarjeta
+    if(op==true){
+    //Crear tarjeta de responsabilidad
+      try{
+        //Verificar numero de tarjeta
+        let sql =  `SELECT numero_tarjeta from tarjeta_responsabilidad
+        WHERE numero_tarjeta=`+tarjeta+`;`;
 
-      const result1 = await query(sql);
+        const result1 = await query(sql);
 
-      if (result1.length==0){
-        console.log("no hubo repetido")
-      //Crear tarjeta
-        sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,usuario,categoria)
-        VALUES(`+tarjeta+`,`+saldo+`,`+usuario+`,`+categoria+`);`;
+        if (result1.length==0){
+          console.log("no hubo repetido")
+        //Crear tarjeta
+          sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,usuario,categoria)
+          VALUES(`+tarjeta+`,`+saldo+`,`+usuario+`,`+categoria+`);`;
+            
+          const result2 = await query(sql);
+        }else{
+          res.json({success: false, message: "Numero de tarjeta repetido"});
+          return;
+        }
+      
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al crear la tarjeta"});
+        return;
+      }
+
+      //Registrar bienes desasignados
+      
+      if (quitar.length>0){  //Verificar si hay bienes para desasignar
+        
+        try{
+          //recuperar id de la tarjeta
+          let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+          const result2 = await query(sql);
+
+          let idtarjeta = result2[0].tarjeta;
           
-        const result2 = await query(sql);
-      }else{
-        res.json({success: false, message: "Numero de tarjeta repetido"});
-        return;
-      }
-    
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al crear la tarjeta"});
-      return;
-    }
+          //Quitar referencia de la tarjeta a la tabla bienes
 
-    //Registrar bienes desasignados
-    
-    if (quitar.length>0){  //Verificar si hay bienes para desasignar
-      
-      try{
-        //recuperar id de la tarjeta
-        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
-        const result2 = await query(sql);
+          for (var i = 0; i < quitar.length; i++) {
+            let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+            const result3 = await query(sql);
+          }
+          console.log("si pudo quitar referencia")
+          //Registrar bienes desasignados
 
-        let idtarjeta = result2[0].tarjeta;
-        
-        //Quitar referencia de la tarjeta a la tabla bienes
-
-        for (var i = 0; i < quitar.length; i++) {
-          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
-          const result3 = await query(sql);
-        }
-        console.log("si pudo quitar referencia")
-        //Registrar bienes desasignados
-
-        for (var i = 0; i < quitar.length; i++) {
-          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-          VALUES(NOW(),`+idtarjeta+`,`+quitar[i]+`,False);`;
-          const result4 = await query(sql);
-        }
-        console.log("si pudo registrar desasignados")
-
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
-        return;
-      }
-    }
-  //asignar bienes la tarjeta
-    if (asignar.length>0){ //Verificar si hay bienes por asignar
-      try{
-        //recuperar id de la tarjeta
-        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
-        const result2 = await query(sql);
-
-        let idtarjeta = result2[0].tarjeta;
-
-         //Agregar referencia de la tarjeta a la tabla bienes
-
-         for (var i = 0; i < asignar.length; i++) {
-          let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
-          const result3 = await query(sql);
-        }
-        console.log("si pudo agregar referencia")
-        //asignar bienes
-        
-          for (var i = 0; i < asignar.length; i++) {
+          for (var i = 0; i < quitar.length; i++) {
             let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-            VALUES(NOW(),`+idtarjeta+`,`+asignar[i]+`,True);`;
+            VALUES(NOW(),`+idtarjeta+`,`+quitar[i]+`,False);`;
             const result4 = await query(sql);
           }
-          console.log("si pudo registrar asignaciones")
-        
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
-        return;
-      }
-    }
-  }else{
+          console.log("si pudo registrar desasignados")
 
-    //ACTUALIZAR TARJETA
-
-    //Actualizar datos de la tarjeta
-    let tarjetaid=0;
-    try{
-      //Verificar existencia de numero de tarjeta
-      let sql =  `SELECT id from tarjeta_responsabilidad
-      WHERE numero_tarjeta=`+tarjeta+` and usuario=`+usuario+`;`;
-
-      const result1 = await query(sql);
-
-      if (result1.length==1){
-
-        tarjetaid= result1[0].id;
-        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
-        const result2 = await query(sql);
-
-      }else{
-        res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
-        return;
-      }
-    
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al verificar tarjeta"});
-      return;
-    }
-
-    
-    //Registrar bienes desasignados
-    
-    if (quitar.length>0){  //Verificar si hay bienes para desasignar
-      
-      try{
-        
-        //Quitar referencia de la tarjeta a la tabla bienes
-
-        for (var i = 0; i < quitar.length; i++) {
-          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
-          const result3 = await query(sql);
+        }catch (error) {
+          console.log(error);
+          res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+          return;
         }
-
-        //Registrar bienes desasignados
-
-        for (var i = 0; i < quitar.length; i++) {
-          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-          VALUES(NOW(),`+tarjetaid+`,`+quitar[i]+`,False);`;
-          const result4 = await query(sql);
-        }
-        console.log("si pudo registrar desasignados")
-
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
-        return;
       }
-    }
+    //asignar bienes la tarjeta
+      if (asignar.length>0){ //Verificar si hay bienes por asignar
+        try{
+          //recuperar id de la tarjeta
+          let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+          const result2 = await query(sql);
 
-    if (asignar.length>0){ //Verificar si hay bienes por asignar
-      try{
-         //Agregar referencia de la tarjeta a la tabla bienes
+          let idtarjeta = result2[0].tarjeta;
 
-         for (var i = 0; i < asignar.length; i++) {
-          let sql =   `UPDATE bien SET tarjeta =`+tarjetaid+`  WHERE id =`+asignar[i]+`;`;
-          const result3 = await query(sql);
-        }
-        
-        //asignar bienes
-        
+          //Agregar referencia de la tarjeta a la tabla bienes
+
           for (var i = 0; i < asignar.length; i++) {
+            let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
+            const result3 = await query(sql);
+          }
+          console.log("si pudo agregar referencia")
+          //asignar bienes
+          
+            for (var i = 0; i < asignar.length; i++) {
+              let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+              VALUES(NOW(),`+idtarjeta+`,`+asignar[i]+`,True);`;
+              const result4 = await query(sql);
+            }
+            console.log("si pudo registrar asignaciones")
+          
+        }catch (error) {
+          console.log(error);
+          res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+          return;
+        }
+      }
+    }else{
+
+      //ACTUALIZAR TARJETA
+
+      //Actualizar datos de la tarjeta
+      let tarjetaid=0;
+      try{
+        //Verificar existencia de numero de tarjeta
+        let sql =  `SELECT id from tarjeta_responsabilidad
+        WHERE numero_tarjeta=`+tarjeta+` and usuario=`+usuario+`;`;
+
+        const result1 = await query(sql);
+
+        if (result1.length==1){
+
+          tarjetaid= result1[0].id;
+          let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
+          const result2 = await query(sql);
+
+        }else{
+          res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
+          return;
+        }
+      
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al verificar tarjeta"});
+        return;
+      }
+
+      
+      //Registrar bienes desasignados
+      
+      if (quitar.length>0){  //Verificar si hay bienes para desasignar
+        
+        try{
+          
+          //Quitar referencia de la tarjeta a la tabla bienes
+
+          for (var i = 0; i < quitar.length; i++) {
+            let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+            const result3 = await query(sql);
+          }
+
+          //Registrar bienes desasignados
+
+          for (var i = 0; i < quitar.length; i++) {
             let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-            VALUES(NOW(),`+tarjetaid+`,`+asignar[i]+`,True);`;
+            VALUES(NOW(),`+tarjetaid+`,`+quitar[i]+`,False);`;
             const result4 = await query(sql);
           }
-          console.log("si pudo registrar asignaciones")
-        
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
-        return;
+          console.log("si pudo registrar desasignados")
+
+        }catch (error) {
+          console.log(error);
+          res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+          return;
+        }
       }
+
+      if (asignar.length>0){ //Verificar si hay bienes por asignar
+        try{
+          //Agregar referencia de la tarjeta a la tabla bienes
+
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =   `UPDATE bien SET tarjeta =`+tarjetaid+`  WHERE id =`+asignar[i]+`;`;
+            const result3 = await query(sql);
+          }
+          
+          //asignar bienes
+          
+            for (var i = 0; i < asignar.length; i++) {
+              let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+              VALUES(NOW(),`+tarjetaid+`,`+asignar[i]+`,True);`;
+              const result4 = await query(sql);
+            }
+            console.log("si pudo registrar asignaciones")
+          
+        }catch (error) {
+          console.log(error);
+          res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+          return;
+        }
+      }
+
     }
 
+    res.json({success: true, message: "Operacion exitosa"});
+    return;
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
   }
-
-  res.json({success: true, message: "Operacion exitosa"});
-  
 });
 
 
@@ -725,7 +801,7 @@ app.get('/BuscarBienes', async function (req, res) {
   switch (opcion) {
     case  "1":
 
-      sql = `SELECT usuario.correo, bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -745,7 +821,7 @@ app.get('/BuscarBienes', async function (req, res) {
       break;
     case "2":
       buscar=buscar.toUpperCase()
-      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -764,7 +840,7 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "3":
-      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -782,7 +858,7 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "4":
-      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -800,7 +876,7 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "5":
-      sql = `SELECT usuario.correo,bien.id,fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT usuario.correo,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -1111,7 +1187,8 @@ app.get('/ObtenerRoles', async function (req, res) {
 app.post('/VerificarPass', function (req, res) {
   let correo = req.body.correo;
   let pass = req.body.pass;
-  let sql = "SELECT pass FROM usuario WHERE correo='" + correo + "' AND pass='" + pass+ "';";
+  let passCrypto = encriptar(pass);
+  let sql = "SELECT pass FROM usuario WHERE correo='" + correo + "' AND pass='" + passCrypto + "';";
   
   connection.query(sql, async function(error,result){
     if(error){
@@ -1133,121 +1210,153 @@ app.post('/VerificarPass', function (req, res) {
 //------------------------------------------EDITAR BIENES----------------------------------
 app.post('/EditarBien', async function (req, res) {
 
-
-  //fecha actual
-  const fecha = new Date();
-  const añoActual = fecha.getFullYear();
-  const hoy = fecha.getDate();
-  const mes = fecha.getMonth() + 1; 
-  let fechaActual= hoy+"/"+mes+"/"+ añoActual
-
-  let id = req.body.id;
-  let fechaco = req.body.fechaco;
-  let cuenta = req.body.cuenta;
-  let codigo = req.body.codigo;
-  let marca = req.body.marca;
-  let cantidad = req.body.cantidad;
-  let modelo = req.body.modelo;
-  let serie = req.body.serie;
-  let imagen = req.body.imagen;
-  let precio = req.body.precio;
-  let descripcion = req.body.descripcion;
-  let categoria = req.body.categoria;
-  let ubicacion = req.body.ubicacion;
-
-  
-
-  //Convertir fecha de compra
-
-  if (fechaco!=null){
-    if(fechaco.includes('-')){
-      fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
-    }else{
-      
-      fcompra= `STR_TO_DATE("`+fechaco+`", "%d/%m/%Y")`;
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
     }
-  }else{
-    fcompra= null;
-  }
-  //Convertir cuenta
+    let decoded = verToken(token);
+    //fecha actual
+    const fecha = new Date();
+    const añoActual = fecha.getFullYear();
+    const hoy = fecha.getDate();
+    const mes = fecha.getMonth() + 1; 
+    let fechaActual= hoy+"/"+mes+"/"+ añoActual
 
-  if (cuenta){
-    cuenta=`'`+cuenta+`'`;
-  }else{
-    cuenta= null;
-  }
+    let id = req.body.id;
+    let fechaco = req.body.fechaco;
+    let cuenta = req.body.cuenta;
+    let codigo = req.body.codigo;
+    let marca = req.body.marca;
+    let cantidad = req.body.cantidad;
+    let modelo = req.body.modelo;
+    let serie = req.body.serie;
+    let imagen = req.body.imagen;
+    let precio = req.body.precio;
+    let descripcion = req.body.descripcion;
+    let categoria = req.body.categoria;
+    let ubicacion = req.body.ubicacion;
 
-  //Convertir codigo
+    
 
-  if (codigo){
-    codigo=`'`+codigo+`'`;
-  }else{
-    codigo= null;
-  }
+    //Convertir fecha de compra
 
-  //Convertir modelo
+    if (fechaco!=null && fechaco!="No ingresado"){
+      if(fechaco.includes('-')){
+        fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+      }else{
+        
+        fcompra= `STR_TO_DATE("`+fechaco+`", "%d/%m/%Y")`;
+      }
+    }else{
+      fcompra= null;
+    }
+    //Convertir cuenta
 
-  if (modelo){
-    modelo=`'`+modelo+`'`;
-  }else{
-    modelo= null;
-  }
+    if (cuenta){
+      cuenta=`'`+cuenta+`'`;
+    }else{
+      cuenta= null;
+    }
 
-  //Convertir serie
+    //Convertir codigo
 
-  if (serie){
-    serie=`'`+serie+`'`;
-  }else{
-    serie= null;
-  }
+    if (codigo){
+      codigo=`'`+codigo+`'`;
+    }else{
+      codigo= null;
+    }
 
-  //Convertir imagen
+    //Convertir modelo
 
-  if (imagen){
-    imagen=`'`+imagen+`'`;
-  }else{
-    imagen= null;
-  }
-  
-  let idmarca=null;
-  try{
-      
-    if (marca!='' && marca!=null){
-      marca = marca.toUpperCase();
-      let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-      const result = await query(sql);
-      
-      if (result.length > 0) {
-         
-        idmarca=result[0].marcaId;
+    if (modelo){
+      modelo=`'`+modelo+`'`;
+    }else{
+      modelo= null;
+    }
 
-      } else {
-        let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
-        VALUES (NOW(),"`+marca+`",activo);`;
+    //Convertir serie
+
+    if (serie){
+      serie=`'`+serie+`'`;
+    }else{
+      serie= null;
+    }
+
+    //Convertir imagen
+
+    if (imagen){
+      imagen=`'`+imagen+`'`;
+    }else{
+      imagen= null;
+    }
+    
+    let idmarca=null;
+    try{
+        
+      if (marca!='' && marca!=null){
+        marca = marca.toUpperCase();
+        let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+        const result = await query(sql);
+        
+        if (result.length > 0) {
+          
+          idmarca=result[0].marcaId;
+
+        } else {
+          let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
+          VALUES (NOW(),"`+marca+`",activo);`;
+          const result1 = await query(sql);
+
+          sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+          const result2 = await query(sql);
+
+          idmarca=result2[0].marcaId;
+        
+        }
+      }
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
+        return;
+    }
+
+    if(ubicacion){
+      try{
+
+        let sql =`SELECT ubicacion FROM bien WHERE id = `+id+`;`;
         const result1 = await query(sql);
+        if(result1[0].ubicacion!=ubicacion){
 
-        sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-        const result2 = await query(sql);
-
-        idmarca=result2[0].marcaId;
-      
+          let sql2 =`INSERT INTO ubicacion_activo(fecha,bien,ubicacion) 
+          VALUES (NOW(),`+id+`,`+ubicacion+`);`;
+          const result2 = await query(sql2);
+          
+        }
+       
+      } catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error en la operacion"});
+        return;
       }
     }
-  }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
-      return;
-  }
 
-  try{
-    let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = `+cuenta+`, codigo=`+codigo+`, marca = `+idmarca+`,
-    cantidad = `+cantidad+`, modelo = `+modelo+`, serie = `+serie+`, imagen = `+imagen+`, precio = `+precio+`, descripcion = "`+descripcion+`",
-    categoria = `+categoria+`, ubicacion = `+ubicacion+`   WHERE id =`+id+`;`;
-    const result3 = await query(sql);
-    res.json({success: true, message: req.body.codigo});
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al editar",error:error});
+    try{
+      let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = `+cuenta+`, codigo=`+codigo+`, marca = `+idmarca+`,
+      cantidad = `+cantidad+`, modelo = `+modelo+`, serie = `+serie+`, imagen = `+imagen+`, precio = `+precio+`, descripcion = "`+descripcion+`",
+      categoria = `+categoria+`, ubicacion = `+ubicacion+`   WHERE id =`+id+`;`;
+      const result3 = await query(sql);
+
+      res.json({success: true, message: "Edicion exitosa"});
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al editar",error:error});
+      return;
+    }
+  } catch (err) {
+    res.status(401).json({token: false});
     return;
   }
 });
@@ -1255,14 +1364,25 @@ app.post('/EditarBien', async function (req, res) {
 //------------------------------------- DAR DE BAJA UN BIEN --------------------------------------
 
 app.delete('/DardeBaja/:id', async function (req, res) {
-
-  try{
-    let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
-    const result = await query(sql);
-    res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
+    try{
+      let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
+      const result = await query(sql);
+      res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+      return;
+    }
+  } catch (err) {
+    console.log(err)
+    res.status(401).json({token: false});
     return;
   }
   
@@ -1272,58 +1392,94 @@ app.delete('/DardeBaja/:id', async function (req, res) {
 //------------------------------------- DAR DE BAJA UN USUARIO--------------------------------------
 
 app.delete('/EliminarUsuario/:id', async function (req, res) {
-
-  try{
-    let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
-    const result = await query(sql);
-    res.json({success: true, message: "Usuario eliminado satisfactoriamente"});
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
+    try{
+      let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
+      const result = await query(sql);
+      res.json({success: true, message: "Usuario eliminado satisfactoriamente"});
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+      return;
+    }
+  } catch (err) {
+    console.log(err)
+    res.status(401).json({token: false});
     return;
   }
-  
 });
 
 
 //------------------------------------- Actualizar contraseña --------------------------------------
 
 
-app.put('/ActualizarPass', function (req, res) {
-  let nueva = req.body.nueva;
-  let correo = req.body.correo;
-  let sql = "UPDATE usuario SET pass='" + nueva + "' WHERE correo='" + correo + "' ;";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-    }else{
-      
+app.put('/ActualizarPass', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
+    try{
+      let nueva = req.body.nueva;
+      let correo = req.body.correo;
+
+      let passCrypto = encriptar(nueva);
+
+      let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE correo='" + correo + "' ;";
+
+      const result = await query(sql);
+
       res.json({success: true});
 
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al verificar", error:error});
+      return;
     }
-  });
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
 });
 
 //------------------------------------- Actualizar estado --------------------------------------
 
 app.put('/ActualizarEstado', function (req, res) {
-  let estado = req.body.estado;
-  let id = req.body.id;
-
-  let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-    }else{
-      
-      res.json({success: true});
-
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
     }
-  });
+    let decoded = verToken(token);
+    let estado = req.body.estado;
+    let id = req.body.id;
+
+    let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
+    
+    connection.query(sql, async function(error,result){
+      if(error){
+        console.log("Error al conectar");
+        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+      }else{
+        
+        res.json({success: true});
+
+      }
+    });
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
 });
 
 
@@ -1331,43 +1487,54 @@ app.put('/ActualizarEstado', function (req, res) {
 //------------------------------------- CREAR/INGRESAR USUARIOS --------------------------------------
 
 app.post('/CrearUsuario', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    let decoded = verToken(token);
+    try{
+      let correo= req.body.correo;
 
-  try{
-    let correo= req.body.correo;
-
-    let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
-    
-    const result1 = await query(sql);
-    
-    if (result1.length>0){
-      res.status(400).json({success: false, message: "Correo repetido"});
+      let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
+      
+      const result1 = await query(sql);
+      
+      if (result1.length>0){
+        res.status(400).json({success: false, message: "Correo repetido"});
+        return;
+      }
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear usuario", error:error});
       return;
     }
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al crear usuario"});
+
+    try{
+      let nombres= req.body.nombres;
+      let apellidos= req.body.apellidos;
+      let correo= req.body.correo;
+      let rol= req.body.rol;
+
+      let passCrypto = encriptar('MINECO');
+
+      let sql = `INSERT INTO usuario(fecha_mod,nombres,apellidos,correo,rol,estado,pass)
+      VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`',`+rol+`,1,'`+passCrypto+`') ;`;
+      
+      const result2 = await query(sql);
+      
+      res.json({success: true});
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear usuario", error:error});
+      return;
+    }
+  } catch (err) {
+    res.status(401).json({token: false});
     return;
   }
-
-  try{
-    let nombres= req.body.nombres;
-    let apellidos= req.body.apellidos;
-    let correo= req.body.correo;
-    let rol= req.body.rol;
-
-    let sql = `INSERT INTO usuario(fecha_mod,nombres,apellidos,correo,rol,estado,pass)
-    VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`',`+rol+`,1,'MINECO') ;`;
-    
-    const result2 = await query(sql);
-    
-    res.json({success: true});
-    return;
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al crear usuario"});
-    return;
-  }
-  
 });
 
 
@@ -1376,47 +1543,57 @@ app.post('/CrearUsuario', async function (req, res) {
 
 app.put('/EditarUsuario', async function (req, res) {
 
-
-  try{
-    let correo= req.body.correo;
-    
-    let id = req.body.id;
-
-    let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
-    
-    const result1 = await query(sql);
-    
-    if (result1.length>0){
-      if(result1[0].userId==id){
-        //El id no pertenece a otro usuario
-      }else{
-        
-        res.status(400).json({success: false, message: "Correo repetido"});
-        return;
-      }
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
     }
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al editar usuario"});
-    return;
-  }
- 
-  try{
-    let id = req.body.id;
-    let nombres = req.body.nombres;
-    let apellidos = req.body.apellidos;
-    let correo = req.body.correo;
-    let rol = req.body.rol;
+    let decoded = verToken(token);
+    try{
+      let correo= req.body.correo;
+      
+      let id = req.body.id;
 
-    let sql =  `UPDATE usuario SET nombres='` + nombres + `',apellidos='` + apellidos + `',
-    correo='` + correo + `',rol='`+rol+`' WHERE userId= ` + id +  ` ; `;
-    const result2 = await query(sql);
-    
-    res.json({success: true});
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al editar usuario", error:error});
+      let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
+      
+      const result1 = await query(sql);
+      
+      if (result1.length>0){
+        if(result1[0].userId==id){
+          //El id no pertenece a otro usuario
+        }else{
+          
+          res.status(400).json({success: false, message: "Correo repetido"});
+          return;
+        }
+      }
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al editar usuario"});
+      return;
+    }
+  
+    try{
+      let id = req.body.id;
+      let nombres = req.body.nombres;
+      let apellidos = req.body.apellidos;
+      let correo = req.body.correo;
+      let rol = req.body.rol;
+
+      let sql =  `UPDATE usuario SET nombres='` + nombres + `',apellidos='` + apellidos + `',
+      correo='` + correo + `',rol='`+rol+`' WHERE userId= ` + id +  ` ; `;
+      const result2 = await query(sql);
+      
+      res.json({success: true});
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al editar usuario", error:error});
+      return;
+    }
+  } catch (err) {
+    res.status(401).json({token: false});
     return;
   }
 });
@@ -1434,12 +1611,37 @@ app.post('/IngresarBitacora', async function (req, res) {
     let tipo= req.body.tipo;
     let afectado= req.body.afectado;
 
-
-    let sql = `INSERT INTO movimiento_bien (fecha,usuario,usuario_afectado,bien_afectado,tipo_movimiento,afectado) 
-    VALUES(NOW(),`+usuario+`,`+usuarioaf+`,`+bienaf+`,`+tipo+`,`+afectado+`);`;
+    let sql="";
+    if(tipo==1){
+      if (afectado==true){
+        let sql = `SELECT MAX(id) as id FROM bien;`;
     
-    const result = await query(sql);
+        const result = await query(sql);
+        sql = `INSERT INTO movimiento_bien (fecha,usuario,usuario_afectado,bien_afectado,tipo_movimiento,afectado) 
+        VALUES(NOW(),`+usuario+`,`+usuarioaf+`,`+result[0].id+`,`+tipo+`,`+afectado+`);`;
+        const result2 = await query(sql);
+        res.json({success: true});
+       
+      }else{
+        let sql = `SELECT MAX(userId) as id FROM usuario;`;
+    
+        const result = await query(sql);
+        sql = `INSERT INTO movimiento_bien (fecha,usuario,usuario_afectado,bien_afectado,tipo_movimiento,afectado) 
+        VALUES(NOW(),`+usuario+`,`+result[0].id+`,`+bienaf+`,`+tipo+`,`+afectado+`);`;
+        const result2 = await query(sql);
+        res.json({success: true});
+      }
+      
+    }else{
+      sql = `INSERT INTO movimiento_bien (fecha,usuario,usuario_afectado,bien_afectado,tipo_movimiento,afectado) 
+    VALUES(NOW(),`+usuario+`,`+usuarioaf+`,`+bienaf+`,`+tipo+`,`+afectado+`);`;
+
+    const result2 = await query(sql);
     res.json({success: true});
+    }
+
+   
+ 
     return;
   }catch (error) {
     console.log(error);
@@ -1525,12 +1727,17 @@ app.get('/DescargarBitacora', async function (req, res) {
       cast=""+row.movimiento+""
       worksheet.cell(index + 7, 4).string(cast);
       if(row.objetivo==0){
-        cast="Usuario"
+        cast="Usuario";
       }else{
-        cast="Bien"
+        cast="Bien";
       }
       worksheet.cell(index + 7, 5).string(cast);
-      cast=""+row.identificador+""
+      if(row.identificador){
+        cast=""+row.identificador+"";
+      }else{
+        cast="";
+      }
+      
       worksheet.cell(index + 7, 6).string(cast);
     });
 
@@ -1632,4 +1839,20 @@ app.get('/DescargarBienesBaja', async function (req, res) {
     res.status(400).json({success: false, message: "Error al Descargar", error:error});
     return;
   }
+});
+
+//------------------------------------- RESTAURAR BIEN --------------------------------------
+
+app.put('/RestaurarBien/:id', async function (req, res) {
+
+  try{
+    let sql =  `UPDATE bien SET activo = true WHERE id =`+req.params.id+`;`;
+    const result = await query(sql);
+    res.json({success: true, message: "Bien restaurado satisfactoriamente"});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+    return;
+  }
+  
 });

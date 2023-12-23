@@ -4,10 +4,8 @@ import App from "./App.jsx";
 import "./index.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Login from "./pages/Login.jsx";
-import SignUp from "./pages/SignUp/SignUp.jsx";
 import ProtectedRoute from "./pages/ProtectedRoute.jsx";
 import Perfil from "./pages/Perfil/Perfil.jsx";
-import Reportes from "./pages/Reportes/Reportes.jsx";
 import Token from "./pages/Token.jsx";
 import Busqueda from "./pages/Busqueda/Busqueda.jsx";
 import BienUsuario from "./pages/BienUsuario/BienUsuario.jsx";
@@ -22,10 +20,6 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
-  },
-  {
-    path: "/signup",
-    element: <SignUp />,
   },
   {
     path: "/",
@@ -70,10 +64,6 @@ const router = createBrowserRouter([
       {
         path: "/perfil",
         element: <Perfil />,
-      },
-      {
-        path: "/reportes",
-        element: <Reportes />,
       },
       {
         path: "/token",

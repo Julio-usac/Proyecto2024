@@ -6,30 +6,37 @@ const useAuth = create(
   persist(
     (set) => ({
       isAuthenticated: false,
-      tipo: null,
       id: null,
       nombre: null,
       correo: null,
       rol: null,
+      token:null,
 
-      login: (tipo, message) => {
+      login: (mensaje) => {
+        const message = jwtDecode(mensaje);
         set({
           isAuthenticated: true,
-          tipo: tipo,
           id: message.Id,
           nombre: message.Nombre,
           correo: message.Correo,
           rol:message.Rol,
+          token:mensaje,
         });
       },
       logout: () => {
         set({
           isAuthenticated: false,
-          tipo: null,
           id: null,
           nombre: null,
           correo:null,
+          token:null,
         });
+      },
+      Revalidar:(nuevo)=> {
+        set({
+          token:nuevo,
+        })
+        
       },
       setUrl: (url) => {
         set({ url: url });

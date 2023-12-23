@@ -11,20 +11,21 @@ import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
 function Busqueda() {
+
+  //-------------------------------Retornar rol del usuario y estados para guardar informacion -----------------------------------------
+
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
   const {rol } = useAuth((state) => state);
 
-  //Inicilizar variables
+  //--------------------------------------------Declaracion de estados-----------------------------------------
+
 
   const [Opcion, setOpcion] = useState(0);
   const [Buscar, setBuscar] = useState('');
-  const [im,setim] = useState(null);
-  
-  const [ed,seted] = useState(null);
   const [Tabla, setTabla] = useState([]);
 
-  //----------------------------Funciones para manejar cambios de estado -------------------------
+  //---------------------------------------Funciones utilizadas--------------------------------------------
 
   //Funcion para manejar el cambio de estado de las elecciones de busqueda
   const handleChange = (event) => {
@@ -35,59 +36,28 @@ function Busqueda() {
     setBuscar(event.target.value);
   };
  
- 
-  useEffect(() => {
-    if (Opcion==10) {
-      axios.get("http://localhost:9095/bienAsignado", {
-        
-          usuario: Opcion,
-        
-      })
-        .then((resp) => {
-          if (resp.data.success === true) {
-            setBien2(resp.data.message);
-          }else{
-            toast.error(resp.data.message)
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+
+  //Funcion para guardar la imagen del bien seleccionado
+
+  const FImagen = async (e) => {
     
-    }
-  }, [Opcion]);
-
-  useEffect(() => {
-    if(im!=null){
-        window.my_modal_1.showModal();
-        setim(null);
-    }
-  }, [im]);
-
-  useEffect(() => {
-    if(ed!=null){
-        window.my_modal_2.showModal();
-        seted(null);
-    }
-  }, [ed]);
-
-  const FImagen = (e) => {
-    
-    setimag(e)
-    setim("e")
-
+    await setimag(e)
+    window.my_modal_1.showModal();
   }
 
-  const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+  //Funcion para guardar la informacion del bien seleccionado
+
+  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
     if (rol!=3){
-      seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
-      seted("e");
+      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      window.my_modal_2.showModal();
     }else{
       toast.error("No cuenta con los permisos para realizar esta operacion")
     }
 
   }
 
+  //Funcion para descargar el reporte total de bienes
 
   const Descargar = async() => {
     try {
@@ -103,6 +73,8 @@ function Busqueda() {
     }
   };
 
+
+  //Funcion para buscar bienes segun las opcion de busqueda seleccionada
 
   const Busqueda = async() => {
     if (Opcion!=0 && Buscar!=''){
@@ -122,7 +94,7 @@ function Busqueda() {
         }
     }
   }
-
+ //------------------------------------------------HTML---------------------------------------------
   return (
     <AppLayout>
         <ModalImagen />
@@ -213,7 +185,7 @@ function Busqueda() {
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
                                         <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria,item.imagen)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                         <td className="px-6 py-4 text-right">
                                         

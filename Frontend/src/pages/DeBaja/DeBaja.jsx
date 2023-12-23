@@ -6,6 +6,9 @@ import { useEffect } from "react";
 
 function DeBaja() {
 
+  //--------------------------------------------Declaracion de estados-----------------------------------------
+
+
   const [bien, setBien] = useState([]);
   const [Opcion, setOpcion] = useState(0);
   const [Buscar, setBuscar] = useState('');
@@ -22,7 +25,9 @@ function DeBaja() {
     setBuscar(event.target.value);
   };
 
+  //--------------------------------------- Funciones utilizadas -----------------------------------------
 
+  //Funcion para buscar los bienes dados de baja
   const Busqueda = async() => {
     if (Opcion!=0 && Buscar!=''){
         try {
@@ -45,11 +50,11 @@ function DeBaja() {
 
   //Funcion para volver a activar el bien.
 
-  const DarBaja = (e) => {
+  const Restaurar= (e) => {
     
-    const confirmacion = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
+    const confirmacion = window.confirm('¿Estás seguro de que quieres restaurar este producto?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/DardeBaja/'+e)
+      axios.put('http://localhost:9095/RestaurarBien/'+e)
       .then(response => {
         toast.success(response.data.message);
         setTimeout(function(){ window.location.reload(); }, 1000);
@@ -63,7 +68,7 @@ function DeBaja() {
   }
 
 
-
+ //Funcion para descargar todos los bienes dadosd de baja
   const Descargar = async() => {
     try {
       const response = await axios.get('http://localhost:9095/DescargarBienesBaja/', { responseType: 'blob'  });
@@ -77,7 +82,7 @@ function DeBaja() {
       console.error('Hubo un error al descargar el archivo: ', error);
     }
   };
-
+//----------------------------------------------------HTML---------------------------------------------
   return (
     <AppLayout>
       <h1 className="text-5xl mt-6"> Bienes de baja</h1>
@@ -167,7 +172,7 @@ function DeBaja() {
                                   
                                   <td className="px-6 py-4 text-right">
                                         
-                                    <button  onClick={() => {DarBaja(item.id);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Restaurar</button>
+                                    <button  onClick={() => {Restaurar(item.id);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Restaurar</button>
                                   </td>
                               </tr>
                           )

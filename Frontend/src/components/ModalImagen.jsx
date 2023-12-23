@@ -2,8 +2,12 @@ import { useState } from 'react';
 import useImagen from '../store/imgStore';
 
 const ModelImagen = () => {
+
+    //--------------------------------------------Retornar datos de la imagen a mostrar-----------------------------------------
     const imag = useImagen((state) => state.imagen);
     
+    //-------------------------------------------------------HTML---------------------------------------------------------
+ 
     return (
         <dialog id="my_modal_1" className="modal">
             <form  method="dialog" className="modal-box ">

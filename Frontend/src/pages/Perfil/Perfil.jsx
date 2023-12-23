@@ -3,8 +3,6 @@ import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
@@ -13,6 +11,7 @@ function Perfil() {
 
   const correo = useAuth((state) => state.correo);
 
+  const { token,logout} = useAuth((state) => state);
 
   const [Pass, setPass] = useState('');
   const [Visible, setVisible] = useState(true);
@@ -70,6 +69,10 @@ function Perfil() {
           nueva: data.nueva,
           correo: correo,
         },
+        
+        headers: {
+          'Authorization': token
+        },
       });
       
       if (resp.data.success === true) {
@@ -79,8 +82,11 @@ function Perfil() {
         toast.error(resp.data.message);
       }
     } catch (error) {
-
-      toast.error(error.response.data.message);
+      if ('token' in error.response.data){
+        logout();
+      }else{
+        toast.error(error.message);
+      }
     }
   }else{
     toast.error("Las contraseñas no coinciden");

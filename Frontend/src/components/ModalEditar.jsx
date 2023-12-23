@@ -8,6 +8,17 @@ import useAuth from "../auth/authStore";
 
 
 const ModelEditar = () => {
+
+  //--------------------------------------------Declaracion de estados-----------------------------------------
+
+  const [tipo, setTipo] = useState([]);
+  const [ub, setUb] = useState([]);
+  const [image, setImage] = useState(null);
+  const [imageData, setImageData] = useState('');
+
+
+//--------------------------------------------Retornar datos del bien a editar-----------------------------------------
+ 
     const mid = useEditar((state) => state.id);
     const mfecha = useEditar((state) => state.fecha);
     const mcodigo = useEditar((state) => state.codigo);
@@ -21,16 +32,19 @@ const ModelEditar = () => {
     const mcategoria= useEditar((state) => state.tipo);
     const mimage= useEditar((state) => state.imagen);
     const mdescripcion = useEditar((state) => state.descripcion);
+
+//--------------------------------------------Retornar ID y token del usuario que realiza el cambio-----------------------------------------
+ 
     const { id } = useAuth((state) => state);
+    const { token,logout} = useAuth((state) => state);
+
+    const {borrarDatos}= useEditar((state) => state);
 
 
-    const [tipo, setTipo] = useState([]);
-    const [ub, setUb] = useState([]);
-    const [image, setImage] = useState(null);
-    const [imageData, setImageData] = useState(null);
-
-    
-  const { register, handleSubmit } = useForm({
+   
+//--------------------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
+  const { register, handleSubmit, reset } = useForm({
     defaultValues: {
       fechaco: null,
       cuenta: "",
@@ -48,6 +62,10 @@ const ModelEditar = () => {
     },
   });
 
+//-------------------------------------------Funciones utilizadas----------------------------------------
+
+//Funcion para recibir las categorias de los bienes
+
   useEffect(() => {
     const load = async () => {
       let result = await fetch("http://localhost:9095/tipo");
@@ -56,6 +74,8 @@ const ModelEditar = () => {
     };
     load();
   },[]);
+
+  //Funcion para recibir la ubicacion de los bienes
 
   useEffect(() => {
     const load = async () => {
@@ -66,7 +86,8 @@ const ModelEditar = () => {
     load();
   },[]);
 
-  
+  //Funcion para obtener la imagen
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setImage(URL.createObjectURL(file));
@@ -80,70 +101,84 @@ const ModelEditar = () => {
     }
   };
 
-  const onSubmit = async (data) => {
+  //Funcion para enviar los datos del formulario
 
-    if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || data.categoria || data.ubicacion){
-      try {
-        const resp = await axios({
-          url: "http://localhost:9095/EditarBien",
-          method: "post",
-          data: {
-            id: mid,
-            fechaco: (data.fechaco)?data.fechaco:mfecha,
-            cuenta:  (data.cuenta)?data.cuenta:mcuenta,
-            codigo: (data.codigo)? data.codigo:mcodigo,
-            marca:  (data.marca)? data.marca:mmarca,
-            cantidad: (data.cantidad)? data.cantidad:mcantidad,
-            modelo:  (data.modelo)? data.modelo:mmodelo,
-            serie:  (data.serie!="")? data.serie:mserie,
-            imagen:   (imageData)? imageData:mimage,
-            precio:  (data.precio)? data.precio:mprecio,
-            descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
-            categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
-            ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
-          },
-        });
-        
-        if (resp.data.success === true) {
-          toast.success("Ingreso exitoso!")
-          try {
-            const resp = await axios({
-              url: "http://localhost:9095/IngresarBitacora",
-              method: "post",
-              data: {
-                usuario: id,
-                usuarioaf: null,
-                bienaf: mid,
-                tipo: 2,
-                afectado:true,
-              },
-            });
-          } catch (error) {
-            console.log(error)
+  const onSubmit = async (data) => {
+    if(imageData.length<1000000){
+      if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || (data.categoria && data.categoria != "Seleccionar") || (data.ubicacion && data.ubicacion != "Seleccionar")){
+        try {
+          const resp = await axios({
+            url: "http://localhost:9095/EditarBien",
+            method: "post",
+            data: {
+              id: mid,
+              fechaco: (data.fechaco)?data.fechaco:mfecha,
+              cuenta:  (data.cuenta)?data.cuenta:mcuenta,
+              codigo: (data.codigo)? data.codigo:mcodigo,
+              marca:  (data.marca)? data.marca:mmarca,
+              cantidad: (data.cantidad)? data.cantidad:mcantidad,
+              modelo:  (data.modelo)? data.modelo:mmodelo,
+              serie:  (data.serie!="")? data.serie:mserie,
+              imagen:   (imageData)? imageData:mimage,
+              precio:  (data.precio)? data.precio:mprecio,
+              descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
+              categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
+              ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
+            }, headers: {
+              'Authorization': token
+            },
+          });
+          
+          if (resp.data.success === true) {
+            toast.success("Ingreso exitoso!")
+            //Si la creacion es exitosa, se registra la operacion en la bitacora
+            try {
+              const resp = await axios({
+                url: "http://localhost:9095/IngresarBitacora",
+                method: "post",
+                data: {
+                  usuario: id,
+                  usuarioaf: null,
+                  bienaf: mid,
+                  tipo: 2,
+                  afectado:true,
+                },
+              });
+            } catch (error) {
+              console.log(error)
+            }
+            window.my_modal_2.close();
+            setTimeout(function(){ window.location.reload(); }, 1000);
+          }else{
+            toast.error(resp.data.message)
           }
-          window.my_modal_2.close();
-          setTimeout(function(){ window.location.reload(); }, 1000);
-        }else{
-          toast.error(resp.data.message)
+        } catch (error) {
+          console.log(error)
+          if ('token' in error.response.data){
+            logout();
+          }else{
+            
+            toast.error(error.response.data.message);
+          }
         }
-      } catch (error) {
-        console.log(error)
-        toast.error("error")
+      }else{
+        toast.error("No se han ingresado nuevos datos")
       }
     }else{
-      toast.error("No se han ingresado nuevos datos")
+      toast.error("La imagen a ingresar debe ser menor o igual a 700 KB");
     }
-    
   };
-    
+    //----------------------------------------------HTML-----------------------------------------------------
     return (
         <dialog id="my_modal_2" className="modal">
              <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
              <div className="flex justify-end mt-3 px-3">
           <button
                         className="flex bg-red-500 text-white px-4 py-2 rounded w-fit"
-                        onClick={(e) => {
-                          e.preventDefault()
+                        onClick={async (e) => {
+                            e.preventDefault();
+                            reset();
+                            borrarDatos();
                             window.my_modal_2.close();
                         }}
                     >

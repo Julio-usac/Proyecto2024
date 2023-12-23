@@ -1,39 +1,28 @@
-import { useAsync, useMountEffect } from "@react-hookz/web";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
-import ModalAgregar from "../../components/ModalAgregar";
-import useCarrito from "../../store/carritoStore";
-import useFav from "../../store/favStore";
 import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
 function InBien() {
-  const setProductoSeleccionado = useCarrito(
-    (state) => state.setProductoSeleccionado
-  );
+
+//-----------------------------------------Retornar informacion del usuario-----------------------------------------
+
+  const { id } = useAuth((state) => state);
+  const { token,logout} = useAuth((state) => state);
 
 
-  const [state, actions] = useAsync(() => {
-    return axios({
-      url: "http://localhost:9095/BienUsuario/Tabla",
-      method: "get",
-    });
-    
-  });
-
-  useMountEffect(actions.execute);
+//--------------------------------------------Declaracion de estados-----------------------------------------
 
   const [tipo, setTipo] = useState([]);
   const [ub, setUb] = useState([]);
-
   const [image, setImage] = useState(null);
+  const [imageData, setImageData] = useState('');
 
-  const [imageData, setImageData] = useState(null);
-
-  
+  //--------------------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
   const { register, handleSubmit } = useForm({
     defaultValues: {
       fechaco: null,
@@ -53,6 +42,8 @@ function InBien() {
     },
   });
 
+//Funcion para retornar las categorias de los bienes al cargar el modulo
+
   useEffect(() => {
     const load = async () => {
       let result = await fetch("http://localhost:9095/tipo");
@@ -61,6 +52,8 @@ function InBien() {
     };
     load();
   },[]);
+
+//Funcion para retornar las ubicaciones de los bienes al cargar el modulo
 
   useEffect(() => {
     const load = async () => {
@@ -71,6 +64,7 @@ function InBien() {
     load();
   },[]);
   
+  //Funcion para obtener la imagen
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -85,43 +79,74 @@ function InBien() {
     }
   };
 
-  const onSubmit = async (data) => {
-    if (data.categoria!=null){
-      try {
-        const resp = await axios({
-          url: "http://localhost:9095/InBien",
-          method: "post",
-          data: {
-            fechaco: data.fechaco,
-            cuenta:  data.cuenta,
-            codigo:  data.codigo,
-            marca:  data.marca,
-            cantidad:  data.cantidad,
-            modelo:  data.modelo,
-            serie:  data.serie,
-            imagen:  imageData,
-            precio:  data.precio,
-            descripcion:  data.descripcion,
-            categoria:  data.categoria,
-            tarjeta:  data.tarjeta,
-            ubicacion:  data.ubicacion,
-          },
-        });
-        
-        if (resp.data.success === true) {
-          toast.success("Ingreso exitoso!")
-          setTimeout(function(){ window.location.reload(); }, 1000);
-        }else{
-          toast.error(resp.data.message)
-        }
-      } catch (error) {
+  //Funcion para enviar los datos del formulario
 
-        toast.error(error.response.data.message)
+  const onSubmit = async (data) => {
+    
+    if(imageData.length<1000000){
+      if (data.categoria!=null){
+        try {
+          const resp = await axios({
+            url: "http://localhost:9095/InBien",
+            method: "post",
+            data: {
+              fechaco: data.fechaco,
+              cuenta:  data.cuenta,
+              codigo:  data.codigo,
+              marca:  data.marca,
+              cantidad:  data.cantidad,
+              modelo:  data.modelo,
+              serie:  data.serie,
+              imagen:  imageData,
+              precio:  data.precio,
+              descripcion:  data.descripcion,
+              categoria:  data.categoria,
+              tarjeta:  data.tarjeta,
+              ubicacion:  data.ubicacion,
+            },headers: {
+              'Authorization': token
+            },
+          });
+          
+          if (resp.data.success === true) {
+            toast.success("Ingreso exitoso!")
+            try {
+              const resp = await axios({
+                url: "http://localhost:9095/IngresarBitacora",
+                method: "post",
+                data: {
+                  usuario: id,
+                  usuarioaf: null,
+                  bienaf: null,
+                  tipo: 1,
+                  afectado:true,
+                },
+              });
+            } catch (error) {
+              console.log(error)
+            }
+            setTimeout(function(){ window.location.reload(); }, 1000);
+          }else{
+            toast.error(resp.data.message)
+          }
+        } catch (error) {
+          console.log(error)
+          if ('token' in error.response.data){
+            logout();
+          }else{
+            
+            toast.error(error.response.data.message);
+          }
+        }
+      }else{
+        toast.error("Debe seleccionar un tipo de bien");
       }
     }else{
-      toast.error("Debe seleccionar un tipo de bien");
+      toast.error("La imagen a ingresar debe ser menor o igual a 700 KB");
     }
   };
+
+//----------------------------------------------HTML-----------------------------------------------------
 
   return (
     <AppLayout>

@@ -6,13 +6,13 @@ import { useState } from "react";
 
 function Bitacora() {
 
-  //Declaracion de estados
+  //-----------------------------------------Declaracion de estados----------------------------------------
 
   const [usuarios, setUsuarios] = useState([]);
   const [fecha, setFecha] = useState('');
 
 
-  //-----------------------Funciones utilizadas--------------------------------
+  //-------------------------------------------Funciones utilizadas----------------------------------------
 
   //Funcion utilizada para guardar la fecha en el estado fecha
 
@@ -20,7 +20,7 @@ function Bitacora() {
     setFecha(evento.target.value);
   }
 
-//Funcion utilizada para llamar al endpoint DescargarBitacora y descargar la bitacora
+ //Funcion utilizada para llamar al endpoint DescargarBitacora y descargar la bitacora
 
   const Descargar = async() => {
     try {
@@ -32,7 +32,7 @@ function Bitacora() {
       document.body.appendChild(link);
       link.click();
     } catch (error) {
-      console.error('Hubo un error al descargar el archivo: ', error);
+      console.error('Hubo un error al descargar el archivo');
     }
   };
   
@@ -47,7 +47,7 @@ function Bitacora() {
         }  });
         setUsuarios(response.data.message);
       } catch (error) {
-        console.error('Hubo un error al retornar el saldo: ', error);
+        console.error('Hubo un error al retornar el saldo');
       }
     }
   };

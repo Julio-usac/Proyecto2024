@@ -12,16 +12,26 @@ import useAuth from "../../auth/authStore";
 
 function BienUsuario() {
 
-  const setimag = useImagen((state) => state.setImagen);
-  const seteditar = useEditar((state) => state.setEditar);
-  const {rol } = useAuth((state) => state);
+//-----------------------------------------Declaracion de estados-----------------------------------------
+
   const [usuarios, setUsuarios] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [bien, setBien] = useState([]);
   const [saldo, setSaldo] = useState(0);
-  const [im,setim] = useState(null);
-  const [ed,seted] = useState(null);
 
+//-----------------------------------------Retornar funciones del Storage-----------------------------------------
+
+  const setimag = useImagen((state) => state.setImagen);
+  const seteditar = useEditar((state) => state.setEditar);
+
+  //-----------------------------------------Retornar rol de usuario-----------------------------------------
+  const {rol } = useAuth((state) => state);
+  
+
+//---------------------------------------Funciones utilizadas----------------------------------------
+
+
+//Funcion para retornar la lista de usuarios
 
   useEffect(() => {
     const load = async () => {
@@ -31,6 +41,8 @@ function BienUsuario() {
     };
     load();
   },[]);
+
+  //Funcion para retornar los bienes asignados a los usuarios
 
   useEffect(() => {
     if (opcion) {
@@ -54,43 +66,34 @@ function BienUsuario() {
     
     }
   }, [opcion]);
+
+  //Funcion para ejecutar la funcion para retornar los bienes al momento de seleccionar un usuario
   
   const CambioS = (event) => {
     setOpcion(event.target.value);
   };
 
-  useEffect(() => {
-    if(im!=null){
-        window.my_modal_1.showModal();
-        setim(null);
-    }
-  }, [im]);
-  
-  useEffect(() => {
-    if(ed!=null){
-        window.my_modal_2.showModal();
-        seted(null);
-    }
-  }, [ed]);
-
-  const FImagen = (e) => {
-    
-    setimag(e)
-    setim("e")
+  //Funcion para retornar la imagen del bien
+  const FImagen = async (e) => {
+    await setimag(e);
+    window.my_modal_1.showModal();
 
   }
 
-  const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+
+  //Funcion para retornar el modulo de edicion de activos
+
+  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
     if (rol!=3){
-      seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
-      seted("e");
+      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      window.my_modal_2.showModal();
     }else{
       toast.error("No cuenta con los permisos para realizar esta operacion")
     }
 
   }
 
-
+//Funcion para descargar el reporte por usuario
   const Descargar = async() => {
     try {
       const response = await axios.get('http://localhost:9095/DescargarReporteUsuario/', { responseType: 'blob',  params: {
@@ -108,7 +111,7 @@ function BienUsuario() {
   };
   
 
-  
+  //Funcion para retornar el saldo total
   const Saldo = async() => {
     try {
       const response = await axios.get('http://localhost:9095/saldoUsuario/', { params: {
@@ -120,6 +123,7 @@ function BienUsuario() {
     }
   };
 
+  //---------------------------------------------------HTML-----------------------------------------------------
 
   return (
     <AppLayout>
@@ -191,7 +195,7 @@ function BienUsuario() {
                           bien.map((item)=>
                               <tr key={item.id} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
                                   <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
-                                      { (item.fechaco)?new Date(item.fechaco).toLocaleDateString():"No ingresado"}
+                                      { item.fechaco}
                                   </th>
                                   <td className="px-6 py-4"> {item.cuenta}</td>
                                   <td className="px-6 py-4"> {item.codigo}</td>
@@ -200,7 +204,7 @@ function BienUsuario() {
                                   <td className="px-6 py-4"> {item.ubicacion}</td>
                                   <td className="px-6 py-4"> {item.precio}</td>
                                   <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, item.fechaco,item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, item.fechaco,item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria,item.imagen)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                   <td className="px-6 py-4 text-right">
                                         

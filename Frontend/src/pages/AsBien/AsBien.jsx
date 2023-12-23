@@ -9,6 +9,7 @@ import useAuth from "../../auth/authStore";
 
 function AsBien() {
 
+//-----------------------------------------Declaracion de estados-----------------------------------------
 
   const [showButton, setShowButton] = useState([]);
   const [showButton2, setShowButton2] = useState([]);
@@ -20,30 +21,39 @@ function AsBien() {
   const [bien2, setBien2] = useState([]);
   const [opcion, setOpcion] = useState('');
   
+//-----------------------------------------Retornar informacion del usuario-----------------------------------------
 
+  const { token,logout} = useAuth((state) => state);
   const  userid  = useAuth((state) => state.id);
 
-  //Variables utilizadas para la visibilidad de las tablas
+  //estados utilizados para la visibilidad de las tablas
   const [Vagregar, setVagregar] = useState(true);
   const [Vquitar, setVquitar] = useState(false);
   
   const [toggleTipo, setToggleTipo] = useState(true);
+
+
+  //funcion para cambiar el estado de los botones al agregar un bien
 
   const fVagregar = (e) => {
     setVagregar(true);
     setVquitar(false);
   };
 
+  //funcion para cambiar el estado de los botones al quitar un bien
+
   const fVeliminar = (e) => {
     setVquitar(true);
     setVagregar(false);
   };
 
-
+ //funcion para llenar el arreglo con los bienes a agregar
 
   const fagregar = (id) => {
     setAgregar([...agregar,id]);
   };
+
+  //funcion para quitar un bien del arreglo
 
   const fagregar2 = (id) => {
     const agregarid= [...agregar];
@@ -55,9 +65,13 @@ function AsBien() {
     setAgregar(agregarid);
   };
 
+  //funcion para llenar el arreglo con los bienes a quitar
+
   const fquitar = (id) => {
     setQuitar([...quitar,id]);
   };
+
+//funcion para quitar un bien del arreglo
 
   const fquitar2 = (id) => {
     const quitarid= [...quitar];
@@ -69,11 +83,15 @@ function AsBien() {
     setQuitar(quitarid);
   };
 
+//funcion para cambiar la visibilidad de los botones
+
   const toggleButton = (id) => {
     const updatedVisibility = [...showButton];
     updatedVisibility[id] =  !updatedVisibility[id] ;
     setShowButton(updatedVisibility);
   };
+
+//funcion para cambiar la visibilidad de los botones
 
   const toggleButton2 = (id) => {
     const updatedVisibility = [...showButton2];
@@ -82,7 +100,8 @@ function AsBien() {
   };
 
 
-
+//--------------------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
   
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -96,6 +115,10 @@ function AsBien() {
     },
   });
 
+  //-------------------------------------------Funciones utilizadas----------------------------------------
+
+  //Funcion para retornar las categoria de los bienes
+
   useEffect(() => {
     const load = async () => {
       let result = await fetch("http://localhost:9095/tipo");
@@ -105,6 +128,8 @@ function AsBien() {
     load();
   },[]);
 
+  //Funcion para retornar la lista de usuarios
+
   useEffect(() => {
     const load = async () => {
       let result = await fetch("http://localhost:9095/listaUsuarios");
@@ -113,6 +138,8 @@ function AsBien() {
     };
     load();
   },[]);
+
+  //Funcion para retornar los bienes no asignados
 
   useEffect(() => {
  
@@ -133,10 +160,12 @@ function AsBien() {
       })
       .catch((error) => {
         toast.error('Error al retornar los bienes no asignados')
-        console.error('Hubo un error al retornar los bienes: ', error);
 
       });
   },[]);
+
+
+   //Funcion para retornar los bienes asignados del usuario seleccionado
 
   useEffect(() => {
     if (opcion) {
@@ -166,14 +195,16 @@ function AsBien() {
     }
   }, [opcion]);
 
+  //Funcion para indicar que se ha seleccionado un usuario
 
   const Cambio = (event) => {
     setOpcion(event.target.value);
   };
 
+
+   //Funcion para enviar los datos del formulario
   const onSubmit = async (data) => {
-    console.log(quitar);
-    console.log(agregar);
+   
     if (data.categoria!=null && data.categoria!="Seleccionar" && opcion!="" && opcion!="Seleccionar" ){
       if (agregar.length!=0 || quitar.length!=0){
         try {
@@ -188,6 +219,8 @@ function AsBien() {
               saldo: data.saldo,
               asignar: agregar,
               quitar: quitar,
+            },headers: {
+              'Authorization': token
             },
           });
           
@@ -215,7 +248,12 @@ function AsBien() {
           }
         } catch (error) {
 
-          toast.error(error.response.data.message);
+          if ('token' in error.response.data){
+            logout();
+          }else{
+            
+            toast.error(error.response.data.message);
+          }
         }
       }else{
         toast.error("Debe asignar o quitar un bien")
@@ -224,6 +262,7 @@ function AsBien() {
         toast.error("Debe seleccionar un tipo y un usuario")
     }
   };
+//----------------------------------------------HTML-----------------------------------------------------
 
   return (
     <AppLayout>

@@ -8,9 +8,15 @@ import useAuth from "../../auth/authStore";
 
 function SinAsignar() {
 
+//-------------------------------------------------Declaracion de estados------------------------------------------
+
   const [bien, setBien] = useState([]);
 
   const  userid  = useAuth((state) => state.id);
+
+  const { token,logout} = useAuth((state) => state);
+
+//-----------------------------------------------Funciones utilizadas----------------------------------------------
 
   //Obtener bienes sin asignar
   useEffect(() => {
@@ -36,7 +42,9 @@ function SinAsignar() {
     
     const confirmacion = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/DardeBaja/'+e)
+      axios.delete('http://localhost:9095/DardeBaja/'+e,{ headers: {
+        'Authorization': token
+      },})
       .then(async response => {
         try {
           const resp = await axios({
@@ -57,8 +65,11 @@ function SinAsignar() {
         setTimeout(function(){ window.location.reload(); }, 1000);
       })
       .catch(error => {
-        console.log(error.error);
-        toast.error(error.message);
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          toast.error(error.response.data.message);
+        }
       });
     }
 

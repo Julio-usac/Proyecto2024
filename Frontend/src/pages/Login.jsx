@@ -7,9 +7,17 @@ import useAuth from "../auth/authStore";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const navigate = useNavigate();
+
+
+  //------------------------------- Retornar funciones del Storage -----------------------------------------
+
+
   const login = useAuth((state) => state.login);
   const isAuthenticated = useAuth((state) => state.isAuthenticated);
+
+
+ //----------------------------------Declaracion de datos a enviar en el formulario-----------------------------------------
+ 
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -20,10 +28,21 @@ const Login = () => {
     },
   });
 
+//-------------------------------------- Funciones utilizadas ---------------------------------------------
+
+//Funcion para navegar a otros modulos
+  const navigate = useNavigate();
+
+ //Condicion para verificar si el usuario ya se encuentra logeado
+
   if (isAuthenticated) {
     console.log("isAuthenticated", isAuthenticated);
     return <Navigate to="/" />;
   }
+
+
+  //Funcion para enviar los datos del formulario
+
   const onSubmit = async (data) => {
     
     try {
@@ -46,6 +65,8 @@ const Login = () => {
       
     }
   };
+  
+//----------------------------------------------HTML-----------------------------------------------------
 
   return (
     <div className="bg-base-300 w-full h-[100vh] flex justify-center items-center">

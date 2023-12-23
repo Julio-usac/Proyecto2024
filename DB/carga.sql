@@ -18,16 +18,16 @@ insert into categoria(nombre,activo) values ("Fungible",True);
 
 #Usuarios
 insert into usuario (fecha_mod,nombres,apellidos,correo,pass,estado,rol) 
-values (NOW(),"Cesar","Chavez","c1","123",1,1);
+values (NOW(),"Cesar","Chavez","c1","A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3",1,1);
 
 insert into usuario (fecha_mod,nombres,apellidos,correo,pass,estado,rol) 
-values (NOW(),"Hugo","Sanchez","c2","123",1,1);
+values (NOW(),"Hugo","Sanchez","c2","A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3",1,1);
 
 insert into usuario (fecha_mod,nombres,apellidos,correo,pass,estado,rol) 
-values (NOW(),"Victor","Herrera","c3","123",1,1);
+values (NOW(),"Victor","Herrera","c3","A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3",1,1);
 
 insert into usuario (fecha_mod,nombres,apellidos,correo,pass,estado,rol) 
-values (NOW(),"John","Doe","c4","123",2,1);
+values (NOW(),"John","Doe","c4","A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3",2,1);
 
 #Tipo de movimientos
 
@@ -66,6 +66,4 @@ SELECT codigo,marca.marcaId,modelo,serie,descripcion,tbien.activo,cantidad,categ
 LEFT JOIN marca on marca.nombre=tbien.marca;
 
 
-
-select * from bien;
 

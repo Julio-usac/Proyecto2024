@@ -23,9 +23,6 @@ function Busqueda() {
 
   const [Opcion, setOpcion] = useState(0);
   const [Buscar, setBuscar] = useState('');
-  const [im,setim] = useState(null);
-  
-  const [ed,seted] = useState(null);
   const [Tabla, setTabla] = useState([]);
 
   //---------------------------------------Funciones utilizadas--------------------------------------------
@@ -39,39 +36,21 @@ function Busqueda() {
     setBuscar(event.target.value);
   };
  
-  //Funcion para mostrar la imagen del bien
- 
-  useEffect(() => {
-    if(im!=null){
-        window.my_modal_1.showModal();
-        setim(null);
-    }
-  }, [im]);
-
-  //Funcion para mostrar el formulario para editar bienes
-
-  useEffect(() => {
-    if(ed!=null){
-        window.my_modal_2.showModal();
-        seted(null);
-    }
-  }, [ed]);
 
   //Funcion para guardar la imagen del bien seleccionado
 
-  const FImagen = (e) => {
+  const FImagen = async (e) => {
     
-    setimag(e)
-    setim("e")
-
+    await setimag(e)
+    window.my_modal_1.showModal();
   }
 
   //Funcion para guardar la informacion del bien seleccionado
 
-  const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
     if (rol!=3){
-      seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
-      seted("e");
+      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      window.my_modal_2.showModal();
     }else{
       toast.error("No cuenta con los permisos para realizar esta operacion")
     }

@@ -12,16 +12,26 @@ import useAuth from "../../auth/authStore";
 
 function BienUsuario() {
 
-  const setimag = useImagen((state) => state.setImagen);
-  const seteditar = useEditar((state) => state.setEditar);
-  const {rol } = useAuth((state) => state);
+//-----------------------------------------Declaracion de estados-----------------------------------------
+
   const [usuarios, setUsuarios] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [bien, setBien] = useState([]);
   const [saldo, setSaldo] = useState(0);
-  const [im,setim] = useState(null);
-  const [ed,seted] = useState(null);
 
+//-----------------------------------------Retornar funciones del Storage-----------------------------------------
+
+  const setimag = useImagen((state) => state.setImagen);
+  const seteditar = useEditar((state) => state.setEditar);
+
+  //-----------------------------------------Retornar rol de usuario-----------------------------------------
+  const {rol } = useAuth((state) => state);
+  
+
+//---------------------------------------Funciones utilizadas----------------------------------------
+
+
+//Funcion para retornar la lista de usuarios
 
   useEffect(() => {
     const load = async () => {
@@ -31,6 +41,8 @@ function BienUsuario() {
     };
     load();
   },[]);
+
+  //Funcion para retornar los bienes asignados a los usuarios
 
   useEffect(() => {
     if (opcion) {
@@ -54,43 +66,34 @@ function BienUsuario() {
     
     }
   }, [opcion]);
+
+  //Funcion para ejecutar la funcion para retornar los bienes al momento de seleccionar un usuario
   
   const CambioS = (event) => {
     setOpcion(event.target.value);
   };
 
-  useEffect(() => {
-    if(im!=null){
-        window.my_modal_1.showModal();
-        setim(null);
-    }
-  }, [im]);
-  
-  useEffect(() => {
-    if(ed!=null){
-        window.my_modal_2.showModal();
-        seted(null);
-    }
-  }, [ed]);
-
-  const FImagen = (e) => {
-    
-    setimag(e)
-    setim("e")
+  //Funcion para retornar la imagen del bien
+  const FImagen = async (e) => {
+    await setimag(e);
+    window.my_modal_1.showModal();
 
   }
 
-  const Feditar = (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+
+  //Funcion para retornar el modulo de edicion de activos
+
+  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
     if (rol!=3){
-      seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
-      seted("e");
+      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      window.my_modal_2.showModal();
     }else{
       toast.error("No cuenta con los permisos para realizar esta operacion")
     }
 
   }
 
-
+//Funcion para descargar el reporte por usuario
   const Descargar = async() => {
     try {
       const response = await axios.get('http://localhost:9095/DescargarReporteUsuario/', { responseType: 'blob',  params: {
@@ -108,7 +111,7 @@ function BienUsuario() {
   };
   
 
-  
+  //Funcion para retornar el saldo total
   const Saldo = async() => {
     try {
       const response = await axios.get('http://localhost:9095/saldoUsuario/', { params: {
@@ -120,6 +123,7 @@ function BienUsuario() {
     }
   };
 
+  //---------------------------------------------------HTML-----------------------------------------------------
 
   return (
     <AppLayout>

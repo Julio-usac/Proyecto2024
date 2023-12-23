@@ -105,7 +105,7 @@ const ModelEditar = () => {
 
   const onSubmit = async (data) => {
     if(imageData.length<1000000){
-      if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || data.categoria || data.ubicacion){
+      if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || (data.categoria && data.categoria != "Seleccionar") || (data.ubicacion && data.ubicacion != "Seleccionar")){
         try {
           const resp = await axios({
             url: "http://localhost:9095/EditarBien",
@@ -175,7 +175,7 @@ const ModelEditar = () => {
              <div className="flex justify-end mt-3 px-3">
           <button
                         className="flex bg-red-500 text-white px-4 py-2 rounded w-fit"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                             e.preventDefault();
                             reset();
                             borrarDatos();

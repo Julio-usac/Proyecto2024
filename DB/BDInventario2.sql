@@ -1,8 +1,6 @@
 CREATE DATABASE dbinventario;
 use dbinventario;
 
-drop database dbinventario;
-
 CREATE TABLE rol(
  rolId INT AUTO_INCREMENT PRIMARY KEY,
  fecha_mod DATETIME,
@@ -141,11 +139,4 @@ CREATE TABLE tbien(
  FOREIGN KEY (ubicacion) REFERENCES ubicacion(id)
 );
 
-create table fechas(
-id INT AUTO_INCREMENT PRIMARY KEY,
-fecha datetime
-);
-
-drop table fechas;
-drop table tbien;
 

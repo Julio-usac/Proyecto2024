@@ -18,7 +18,6 @@ function AdminUsuario() {
   const [usuario, setUsuario] = useState([]);
   const [showButton, setShowButton] = useState([]);
   const [actualizar, setactualizar] = useState("");
-  const [ed,seted] = useState(null);
 
   //-----------------------------Funcion para guardar la informacion del usuario a editar------------------------
 
@@ -131,7 +130,7 @@ function AdminUsuario() {
         }
         toast.success(response.data.message);
         setactualizar('a');
-        //setTimeout(function(){ window.location.reload(); }, 1000);
+        setTimeout(function(){  }, 2000);
       })
       .catch(error => {
         
@@ -153,19 +152,12 @@ function AdminUsuario() {
     
   }
 
- //Funcion para mostrar el formulario para editar usuarios
-  useEffect(() => {
-    if(ed!=null){
-        window.my_modal_4.showModal();
-        seted(null);
-    }
-  }, [ed]);
 
   //Funcion para guardar los datos del usuario a editar
 
-  const EditarUsuario= (id,nombre,apellido,correo,usuario) => {
-    seteditar(id,nombre,apellido,correo,usuario);
-    seted("e");
+  const EditarUsuario= async(id,nombre,apellido,correo,usuario) => {
+    await seteditar(id,nombre,apellido,correo,usuario);
+    window.my_modal_4.showModal();
 
     
   }

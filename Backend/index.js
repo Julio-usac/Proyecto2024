@@ -34,7 +34,7 @@ function encriptar(texto) {
 }
 
 function getToken(datos) {
-  return jwt.sign(datos, 'MINECO', {expiresIn : '1m'});
+  return jwt.sign(datos, 'MINECO', {expiresIn : '60m'});
 }
 
 function verToken(token) {
@@ -188,7 +188,6 @@ app.post('/InBien', async function (req, res) {
     let ubicacion = req.body.ubicacion;
 
     //Convertir fecha de compra
-    console.log(fechaco,"1")
     if (fechaco){
       fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
     }else{
@@ -235,7 +234,7 @@ app.post('/InBien', async function (req, res) {
       imagen= null;
     }
 
-    //Convertir imagen
+    //Convertir ubicacion
 
     if (ubicacion && ubicacion!="Seleccionar"){
       ubicacion=`'`+ubicacion+`'`;
@@ -305,6 +304,8 @@ app.post('/InBien', async function (req, res) {
         return;
     }
 
+    
+
     //Ingresar bien a la base de datos  
     try{
       
@@ -315,8 +316,25 @@ app.post('/InBien', async function (req, res) {
           
           const result2 = await query(sql);
 
+
+          if(ubicacion){
+            try{
+
+              let sql =`SELECT MAX(id) AS id FROM bien;`;
+              const result1 = await query(sql);
+
+              let sql2 =`INSERT INTO ubicacion_activo(fecha,bien,ubicacion) 
+                VALUES (NOW(),`+result1[0].id+`,`+ubicacion+`);`;
+                const result2 = await query(sql2);
+            } catch (error) {
+              console.log(error);
+              res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+              return;
+            }
+          }
+
           res.json({success: true, message: "Bien ingresado"});
-          
+          return;
         }else{
           res.status(400).json({success: false, message: "Error al ingresar"});
         }
@@ -1304,12 +1322,33 @@ app.post('/EditarBien', async function (req, res) {
         return;
     }
 
+    if(ubicacion){
+      try{
+
+        let sql =`SELECT ubicacion FROM bien WHERE id = `+id+`;`;
+        const result1 = await query(sql);
+        if(result1[0].ubicacion!=ubicacion){
+
+          let sql2 =`INSERT INTO ubicacion_activo(fecha,bien,ubicacion) 
+          VALUES (NOW(),`+id+`,`+ubicacion+`);`;
+          const result2 = await query(sql2);
+          
+        }
+       
+      } catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error en la operacion"});
+        return;
+      }
+    }
+
     try{
       let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = `+cuenta+`, codigo=`+codigo+`, marca = `+idmarca+`,
       cantidad = `+cantidad+`, modelo = `+modelo+`, serie = `+serie+`, imagen = `+imagen+`, precio = `+precio+`, descripcion = "`+descripcion+`",
       categoria = `+categoria+`, ubicacion = `+ubicacion+`   WHERE id =`+id+`;`;
       const result3 = await query(sql);
-      res.json({success: true, message: req.body.codigo});
+
+      res.json({success: true, message: "Edicion exitosa"});
       return;
     }catch (error) {
       console.log(error);

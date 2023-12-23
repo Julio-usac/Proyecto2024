@@ -8,11 +8,15 @@ import useAuth from "../../auth/authStore";
 
 function SinAsignar() {
 
+//-------------------------------------------------Declaracion de estados------------------------------------------
+
   const [bien, setBien] = useState([]);
 
   const  userid  = useAuth((state) => state.id);
 
   const { token,logout} = useAuth((state) => state);
+
+//-----------------------------------------------Funciones utilizadas----------------------------------------------
 
   //Obtener bienes sin asignar
   useEffect(() => {

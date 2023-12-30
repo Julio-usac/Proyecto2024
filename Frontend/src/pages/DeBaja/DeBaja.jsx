@@ -4,6 +4,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useState } from "react";
 import { useEffect } from "react";
 
+import useAuth from "../../auth/authStore";
+
 function DeBaja() {
 
   //--------------------------------------------Declaracion de estados-----------------------------------------
@@ -13,7 +15,7 @@ function DeBaja() {
   const [Opcion, setOpcion] = useState(0);
   const [Buscar, setBuscar] = useState('');
 
-
+  const { token,logout} = useAuth((state) => state);
     //----------------------------Funciones para manejar cambios de estado -------------------------
 
   //Funcion para manejar el cambio de estado de las elecciones de busqueda
@@ -54,14 +56,19 @@ function DeBaja() {
     
     const confirmacion = window.confirm('¿Estás seguro de que quieres restaurar este producto?');
     if (confirmacion) {
-      axios.put('http://localhost:9095/RestaurarBien/'+e)
+      axios.put('http://localhost:9095/RestaurarBien/'+e,{ headers: {
+        'Authorization': token
+      },})
       .then(response => {
         toast.success(response.data.message);
         setTimeout(function(){ window.location.reload(); }, 1000);
       })
       .catch(error => {
-        console.log(error.error);
-        toast.error(error.message);
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          toast.error(error.response.data.message);
+        }
       });
     }
 

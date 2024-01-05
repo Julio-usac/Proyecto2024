@@ -47,12 +47,12 @@ const AppLayout = ({ children }) => {
         });
   }, []);
 
+  //Funcion para verificar el tiempo de la sesion
   useEffect(() => {
     const intervalId = setInterval(() => {
-      axios.post("http://localhost:9095/token", {
-          token: token,
-        
-      })
+      axios.post("http://localhost:9095/token",{}, {headers: {
+        'Authorization': token
+      },})
         .then((resp) => {
           
         })
@@ -112,7 +112,11 @@ const AppLayout = ({ children }) => {
                       Administrar usuarios
                     </a>
                   </li>
-                  
+                  <li>
+                    <Link className="justify-between" to="/reporte">
+                      Otros reportes
+                    </Link>
+                  </li>
                   <li>
                     <a onClick={handleLogout}>Cerrar sesión</a>
                   </li>

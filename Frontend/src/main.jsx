@@ -15,6 +15,7 @@ import SinAsignar from "./pages/SinAsignar/SinAsignar.jsx";
 import DeBaja from "./pages/DeBaja/DeBaja.jsx";
 import Bitacora from "./pages/Bitacora/Bitacora.jsx";
 import AdminUsuario from "./pages/AdminUsuario/AdminUsuario.jsx";
+import Reporte from "./pages/Reporte/Reporte.jsx";
 
 const router = createBrowserRouter([
   {
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
       {
         path: "/token",
         element: <Token />,
+      },
+      {
+        path: "/reporte",
+        element: <Reporte />,
       },
     ],
   },

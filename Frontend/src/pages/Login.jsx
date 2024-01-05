@@ -60,7 +60,6 @@ const Login = () => {
         navigate("/");
       }
     } catch (error) {
-      console.log(error);
       toast.error("Error en las credenciales");
       
     }

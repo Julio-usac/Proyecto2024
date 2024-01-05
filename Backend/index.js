@@ -51,7 +51,13 @@ app.get('/', function (req, res) {
 app.post('/token', async function (req, res) {
 
   try {
-    verToken(req.body.token);
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ message: false });
+       return;
+    }
+
+    verToken(token);
     res.json({message: true});
   } catch (err) {
     res.status(400).json({message: false});
@@ -411,7 +417,7 @@ app.get('/ubicacion', function (req, res) {
 
 app.get('/BienesNoAsignados', function (req, res) {
   let sql = `SELECT bien.id,codigo, marca.nombre as marca, descripcion,precio FROM bien 
-  LEFT JOIN marca ON marca.marcaId=bien.marca WHERE tarjeta IS NULL;`;
+  LEFT JOIN marca ON marca.marcaId=bien.marca WHERE tarjeta IS NULL and bien.activo=true;`;
   
   connection.query(sql, async function(error,result){
     if(error){
@@ -1846,7 +1852,7 @@ app.get('/DescargarBienesBaja', async function (req, res) {
 app.put('/RestaurarBien/:id', async function (req, res) {
   try {
     const token = req.body.headers['Authorization'];
-    console.log(req);
+    
     if (!token) {
       res.status(401).json({ token: false });
       return;
@@ -1883,6 +1889,124 @@ app.get('/tarjetasAsignadas/:id', async function (req, res) {
   }catch (error) {
     console.log(error);
     res.status(400).json({success: false, message: "Error", error:error});
+    return;
+  }
+});
+
+
+//------------------------------------- Descargar numero de bienes por usuario --------------------------------------
+
+
+app.get('/DescargarBienesUsuario', async function (req, res) {
+
+  try{
+
+    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) as nombre, u.correo, COUNT(bien.id) as cantidad FROM bien, tarjeta_responsabilidad t, usuario u  
+    WHERE t.id=bien.tarjeta AND bien.activo=True AND u.userId=t.usuario
+    GROUP BY t.usuario;`;
+    
+    const result = await query(sql);
+
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Total');
+
+    // titulo
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true
+      }
+    });
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 16
+      }
+    });
+
+    worksheet.cell(2, 1).string("Total de bienes por usuario").style(myStyle2);
+    worksheet.cell(6, 1).string("Nombre").style(myStyle);
+    worksheet.cell(6, 2).string("Usuario").style(myStyle);
+    worksheet.cell(6, 3).string("Bienes asignados").style(myStyle);
+
+    result.forEach((row, index) => {
+      let cast=""+row.nombre+""
+      worksheet.cell(index + 7, 1).string(cast);
+      cast=""+row.correo+""
+      worksheet.cell(index + 7, 2).string(cast);
+      cast=""+row.cantidad+""
+      worksheet.cell(index + 7, 3).string(cast);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al Descargar", error:error});
+    return;
+  }
+});
+
+
+
+//------------------------------------- Descargar bienes por ubicacion --------------------------------------
+
+
+app.get('/DescargarBienesUbicacion', async function (req, res) {
+
+  try{
+
+    let sql = `SELECT u.nombre, COUNT(bien.id) as cantidad FROM bien, ubicacion u
+    WHERE bien.ubicacion=u.id AND bien.activo=True
+    GROUP BY u.nombre;`;
+    
+    const result = await query(sql);
+
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Total');
+
+    // titulo
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true
+      }
+    });
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 16
+      }
+    });
+
+    worksheet.cell(2, 1).string("Total de bienes por Ubicacion").style(myStyle2);
+    worksheet.cell(6, 1).string("Ubicacion").style(myStyle);
+    worksheet.cell(6, 2).string("Bienes").style(myStyle);
+
+    result.forEach((row, index) => {
+      let cast=""+row.nombre+""
+      worksheet.cell(index + 7, 1).string(cast);
+      cast=""+row.cantidad+""
+      worksheet.cell(index + 7, 2).string(cast);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al Descargar", error:error});
     return;
   }
 });

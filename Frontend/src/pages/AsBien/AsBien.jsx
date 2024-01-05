@@ -20,6 +20,7 @@ function AsBien() {
   const [bien, setBien] = useState([]);
   const [bien2, setBien2] = useState([]);
   const [opcion, setOpcion] = useState('');
+  const [tarjetas, setTarjetas] = useState([]);
   
 //-----------------------------------------Retornar informacion del usuario-----------------------------------------
 
@@ -29,8 +30,10 @@ function AsBien() {
   //estados utilizados para la visibilidad de las tablas
   const [Vagregar, setVagregar] = useState(true);
   const [Vquitar, setVquitar] = useState(false);
+  const [actualizar, setActualizar] = useState(false);
   
   const [toggleTipo, setToggleTipo] = useState(true);
+
 
 
   //funcion para cambiar el estado de los botones al agregar un bien
@@ -169,6 +172,7 @@ function AsBien() {
 
   useEffect(() => {
     if (opcion) {
+      
       axios.post("http://localhost:9095/bienAsignado", {
           usuario: opcion,
         
@@ -191,7 +195,19 @@ function AsBien() {
         .catch((error) => {
           console.error(error);
         });
+      if (!toggleTipo){
+        axios.get('http://localhost:9095/tarjetasAsignadas/'+opcion)
+          .then((resp) => {
     
+          setTarjetas(resp.data.message);
+    
+          })
+          .catch((error) => {
+            toast.error('Error al retornar tarjetas')
+    
+          });
+      }
+        
     }
   }, [opcion]);
 
@@ -205,7 +221,7 @@ function AsBien() {
    //Funcion para enviar los datos del formulario
   const onSubmit = async (data) => {
    
-    if (data.categoria!=null && data.categoria!="Seleccionar" && opcion!="" && opcion!="Seleccionar" ){
+    if (data.categoria && data.categoria!="Seleccionar" && opcion && opcion!="Seleccionar" && data.tarjeta && data.tarjeta!="Seleccionar"){
       if (agregar.length!=0 || quitar.length!=0){
         try {
           const resp = await axios({
@@ -259,7 +275,7 @@ function AsBien() {
         toast.error("Debe asignar o quitar un bien")
       }
     }else{
-        toast.error("Debe seleccionar un tipo y un usuario")
+        toast.error("Debe llenar todos los campos")
     }
   };
 //----------------------------------------------HTML-----------------------------------------------------
@@ -303,11 +319,40 @@ function AsBien() {
                         </a>
                       </div>
                       <div style={{ height: '50px' }} />
-                      <div className="w-fit">
+
+                      <div className="w-fit ">
+                        <h3>Usuario</h3>
+                        <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        required {...register("usuario", { required: true })} value = {opcion} onChange={(e)=>Cambio(e)}>
+                        
+                        <option>Seleccionar</option>
+                          {
+                            usuario.map((item)=>
+                              <option key={item.userId} value={item.userId} >{item.nombre}</option>
+                            )
+                          }
+                          </select>  
+                      </div>
+                      {toggleTipo && (<div className="w-fit mt-6">
                         <h3>Numero de tarjeta</h3>
                         <input className="w-64 appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
-                        type="number" required {...register("tarjeta", { required: true })}/>
+                        type="number" {...register("tarjeta", { required: false })}/>
                       </div>
+                      )}
+
+                       {!toggleTipo && (<div className="w-fit mt-6">
+                        <h3>Numero de Tarjeta</h3>
+                        <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                         {...register("tarjeta", { required: false })} defaultValue={null}>
+                          <option value={null}> Seleccionar </option>
+                          {
+                            tarjetas.map((item)=>
+                              <option key={item.id} value={item.tarjeta}>{item.tarjeta}</option>
+                            )
+                          }
+                          </select>
+                      </div>
+                      )}
                       
                       <div className="w-fit mt-4">
                         <h3>Tipo de tarjeta</h3>
@@ -321,19 +366,7 @@ function AsBien() {
                           }
                           </select>
                       </div>
-                      <div className="w-fit mt-6">
-                        <h3>Usuario</h3>
-                        <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        required {...register("usuario", { required: true })} value = {opcion} onChange={(e)=>Cambio(e)}>
-                        
-                        <option>Seleccionar</option>
-                          {
-                            usuario.map((item)=>
-                              <option key={item.userId} value={item.userId} >{item.nombre}</option>
-                            )
-                          }
-                          </select>  
-                      </div>
+                      
                       <div className="w-fit mt-6">
                         <h3>Saldo (Q)</h3>
                         <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
@@ -505,23 +538,7 @@ function AsBien() {
               </form>
             </div>
 
-            {/* {
-          <div className="tabs tabs-boxed w-fit">
-            <a
-              className={"tab " + (toggleTipo ? "tab-active" : "")}
-              onClick={() => setToggleTipo(true)}
-            >
-              Cliente
-            </a>
-            <a
-              className={"tab " + (toggleTipo ? "" : "tab-active")}
-              onClick={() => setToggleTipo(false)}
-            >
-              {" "}
-              Proveedor
-            </a>
-          </div>
-          } */}
+            
         </div>
       </div>
     </div>

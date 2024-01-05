@@ -83,7 +83,6 @@ function Busqueda() {
             opcion: Opcion,
             buscar: Buscar
         }  });
-        console.log(response.data)
         if(response.data.success==true){
             setTabla(response.data.message)
         }

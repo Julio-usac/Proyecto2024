@@ -51,7 +51,7 @@ app.get('/', function (req, res) {
 app.post('/token', async function (req, res) {
 
   try {
-    let decoded = verToken(req.body.token);
+    verToken(req.body.token);
     res.json({message: true});
   } catch (err) {
     res.status(400).json({message: false});
@@ -546,7 +546,7 @@ app.post('/AsBien', async function (req, res) {
             let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
             const result3 = await query(sql);
           }
-          console.log("si pudo quitar referencia")
+          
           //Registrar bienes desasignados
 
           for (var i = 0; i < quitar.length; i++) {
@@ -554,7 +554,7 @@ app.post('/AsBien', async function (req, res) {
             VALUES(NOW(),`+idtarjeta+`,`+quitar[i]+`,False);`;
             const result4 = await query(sql);
           }
-          console.log("si pudo registrar desasignados")
+          
 
         }catch (error) {
           console.log(error);
@@ -577,7 +577,7 @@ app.post('/AsBien', async function (req, res) {
             let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
             const result3 = await query(sql);
           }
-          console.log("si pudo agregar referencia")
+          
           //asignar bienes
           
             for (var i = 0; i < asignar.length; i++) {
@@ -585,7 +585,7 @@ app.post('/AsBien', async function (req, res) {
               VALUES(NOW(),`+idtarjeta+`,`+asignar[i]+`,True);`;
               const result4 = await query(sql);
             }
-            console.log("si pudo registrar asignaciones")
+            
           
         }catch (error) {
           console.log(error);
@@ -644,7 +644,7 @@ app.post('/AsBien', async function (req, res) {
             VALUES(NOW(),`+tarjetaid+`,`+quitar[i]+`,False);`;
             const result4 = await query(sql);
           }
-          console.log("si pudo registrar desasignados")
+          
 
         }catch (error) {
           console.log(error);
@@ -669,7 +669,7 @@ app.post('/AsBien', async function (req, res) {
               VALUES(NOW(),`+tarjetaid+`,`+asignar[i]+`,True);`;
               const result4 = await query(sql);
             }
-            console.log("si pudo registrar asignaciones")
+            
           
         }catch (error) {
           console.log(error);
@@ -1844,15 +1844,45 @@ app.get('/DescargarBienesBaja', async function (req, res) {
 //------------------------------------- RESTAURAR BIEN --------------------------------------
 
 app.put('/RestaurarBien/:id', async function (req, res) {
+  try {
+    const token = req.body.headers['Authorization'];
+    console.log(req);
+    if (!token) {
+      res.status(401).json({ token: false });
+      return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
 
   try{
     let sql =  `UPDATE bien SET activo = true WHERE id =`+req.params.id+`;`;
-    const result = await query(sql);
+    await query(sql);
     res.json({success: true, message: "Bien restaurado satisfactoriamente"});
   }catch (error) {
     console.log(error);
-    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+    res.status(400).json({success: false, message: "No fue posible restaurar el producto"});
     return;
   }
   
+});
+
+//------------------------------------- OBTENER tarjetas asignadas --------------------------------------
+
+app.get('/tarjetasAsignadas/:id', async function (req, res) {
+  
+  try{
+    let id= req.params.id;
+    let sql = `SELECT id, numero_tarjeta AS tarjeta FROM tarjeta_responsabilidad WHERE usuario=`+id+`;`;
+   
+    const result = await query(sql);
+    
+    res.json({success: true,message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error", error:error});
+    return;
+  }
 });

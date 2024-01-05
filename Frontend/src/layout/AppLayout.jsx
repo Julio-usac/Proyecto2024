@@ -61,7 +61,7 @@ const AppLayout = ({ children }) => {
           setTimeout(function(){toast.error("Se requiere volver a iniciar sesion");  }, 2000);
           logout();
         });
-    }, 60000); // 600000 milisegundos son 10 minutos
+    }, 600000); // 600000 milisegundos son 10 minutos
 
     // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(intervalId);

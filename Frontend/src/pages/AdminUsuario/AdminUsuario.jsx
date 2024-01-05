@@ -55,7 +55,7 @@ function AdminUsuario() {
       })
       .catch((error) => {
 
-        console.error('Hubo un error al retornar los bienes: ', error);
+        console.error('Hubo un error al retornar los usuarios');
 
       });
 

@@ -16,6 +16,8 @@ function SinAsignar() {
 
   const { token,logout} = useAuth((state) => state);
 
+  const [retornar, setRetornar] = useState([]);
+
 //-----------------------------------------------Funciones utilizadas----------------------------------------------
 
   //Obtener bienes sin asignar
@@ -24,8 +26,8 @@ function SinAsignar() {
       axios.get('http://localhost:9095/SinAsignar')
       .then((resp) => {
 
-      setBien(resp.data.message);
-
+        setBien(resp.data.message);
+        setRetornar("");
       })
       .catch((error) => {
 
@@ -33,7 +35,7 @@ function SinAsignar() {
 
       });
 
-  },[]);
+  },[retornar]);
 
 
   //Funcion para dar bienes de baja.
@@ -62,7 +64,7 @@ function SinAsignar() {
           console.log(error)
         }
         toast.success(response.data.message);
-        setTimeout(function(){ window.location.reload(); }, 1000);
+        setRetornar("actualizar");
       })
       .catch(error => {
         if ('token' in error.response.data){

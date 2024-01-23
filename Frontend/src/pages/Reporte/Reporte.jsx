@@ -21,10 +21,25 @@ const Descargar = async() => {
   }
 };
 
-//Funcion para descargar el reporte por usuario
+//Funcion para descargar el reporte por ubicacion
 const Descargar2 = async() => {
   try {
     const response = await axios.get('http://localhost:9095/DescargarBienesUbicacion/', { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
+    document.body.appendChild(link);
+    link.click();
+  } catch (error) {
+    console.error('Hubo un error al descargar el archivo: ', error);
+  }
+};
+
+//Funcion para descargar el reporte de tarjetas por usuario
+const Descargar3 = async() => {
+  try {
+    const response = await axios.get('http://localhost:9095/DescargarUsuariosTarjetas/', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -60,7 +75,7 @@ const Descargar2 = async() => {
                     
                       
                     <div className="w-fit mt-6">
-                      <h3>Numero total de bienes por usuario</h3>
+                      <h3 className="font-bold">Numero total de bienes por usuario</h3>
                       <button
                         className="btn btn-success w-fi mt-2"
                         onClick={ Descargar}
@@ -68,10 +83,18 @@ const Descargar2 = async() => {
                         Descargar reporte
                       </button>
 
-                      <h3  className="mt-6"> Numero total de bienes por ubicacion</h3>
+                      <h3  className="mt-6 font-bold"> Numero total de bienes por ubicacion</h3>
                       <button
                         className="btn btn-success w-fit mt-2"
                         onClick={ Descargar2}
+                      >
+                        Descargar reporte
+                      </button>
+
+                      <h3  className="mt-6 font-bold"> Numero total de tarjetas por usuario</h3>
+                      <button
+                        className="btn btn-success w-fit mt-2"
+                        onClick={ Descargar3}
                       >
                         Descargar reporte
                       </button>

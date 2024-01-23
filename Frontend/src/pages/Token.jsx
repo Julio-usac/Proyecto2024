@@ -1,5 +1,3 @@
-// NO TOCAR ESTE ARCHIVO NO IMPORTA :V
-
 import useAuth from "../auth/authStore";
 
 const Token = () => {

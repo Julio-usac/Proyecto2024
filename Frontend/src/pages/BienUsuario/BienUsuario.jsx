@@ -26,6 +26,7 @@ function BienUsuario() {
 
   //-----------------------------------------Retornar rol de usuario-----------------------------------------
   const {rol } = useAuth((state) => state);
+  const { token,logout} = useAuth((state) => state);
   
 
 //---------------------------------------Funciones utilizadas----------------------------------------
@@ -34,12 +35,24 @@ function BienUsuario() {
 //Funcion para retornar la lista de usuarios
 
   useEffect(() => {
-    const load = async () => {
-      let result = await fetch("http://localhost:9095/listaUsuarios");
-      result = await result.json();
-      setUsuarios(result.message)
-    };
-    load();
+
+    axios.get('http://localhost:9095/listaUsuarios',{ headers: {
+        'Authorization': token
+      },})
+      .then((resp) => {
+
+      setUsuarios(resp.data.message);
+
+      })
+      .catch((error) => {
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          console.error('Hubo un error al retornar los usuarios');
+        }
+        
+
+      });
   },[]);
 
   //Funcion para retornar los bienes asignados a los usuarios

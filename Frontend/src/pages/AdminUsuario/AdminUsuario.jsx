@@ -35,7 +35,9 @@ function AdminUsuario() {
   //Funcion para obtener la lista de usuarios al entrar al modulo
   useEffect(() => {
     
-      axios.get('http://localhost:9095/listaUsuarios')
+      axios.get('http://localhost:9095/listaUsuarios',{ headers: {
+        'Authorization': token
+      },})
       .then((resp) => {
 
       setUsuario(resp.data.message);
@@ -54,8 +56,12 @@ function AdminUsuario() {
       setactualizar('');
       })
       .catch((error) => {
-
-        console.error('Hubo un error al retornar los usuarios');
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          console.error('Hubo un error al retornar los usuarios');
+        }
+        
 
       });
 

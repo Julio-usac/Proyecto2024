@@ -5,6 +5,7 @@ var crypto = require('crypto');
 var mysql = require('mysql');
 var cors = require('cors');
 const excel = require('excel4node');
+require('dotenv').config();
 
 var port = 9095;
 
@@ -21,7 +22,7 @@ console.log('Listening on port', port);
 var connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '1234',
+  password: process.env.DB_PASS,
   database: 'dbinventario',
   port: 3306
 });
@@ -43,8 +44,8 @@ function verToken(token) {
 
 //--------------------------------------------------Pruebas---------------------------------------
 
-app.get('/', function (req, res) {
-    res.send("Hola mundo!");
+app.get('/prueba', function (req, res) {
+    res.send("Hola mundo!!");
 });
 
 // Verificar Token
@@ -359,6 +360,17 @@ app.post('/InBien', async function (req, res) {
 //------------------------------------- OBTENER LISTA DE USUARIOS --------------------------------------
 
 app.get('/listaUsuarios', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+      res.status(401).json({ token: false });
+      return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
 
   try{
     let sql =  `SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, correo, rol.rol, estado,rolId FROM usuario
@@ -518,7 +530,6 @@ app.post('/AsBien', async function (req, res) {
         const result1 = await query(sql);
 
         if (result1.length==0){
-          console.log("no hubo repetido")
         //Crear tarjeta
           sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,usuario,categoria)
           VALUES(`+tarjeta+`,`+saldo+`,`+usuario+`,`+categoria+`);`;
@@ -1995,6 +2006,66 @@ app.get('/DescargarBienesUbicacion', async function (req, res) {
       worksheet.cell(index + 7, 1).string(cast);
       cast=""+row.cantidad+""
       worksheet.cell(index + 7, 2).string(cast);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al Descargar", error:error});
+    return;
+  }
+});
+
+
+//------------------------------------- Descargar cantidad de tarjetas por usuario --------------------------------------
+
+
+app.get('/DescargarUsuariosTarjetas', async function (req, res) {
+
+  try{
+
+    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) AS nombre, u.correo, COUNT(*) AS tarjetas  FROM usuario u, tarjeta_responsabilidad
+    WHERE u.userId=tarjeta_responsabilidad.usuario
+    GROUP BY u.userId;`;
+    
+    const result = await query(sql);
+
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Total');
+
+    // titulo
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true
+      }
+    });
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 16
+      }
+    });
+
+    worksheet.cell(2, 1).string("Cantidad de tarjetas por usuario").style(myStyle2);
+    worksheet.cell(6, 1).string("Nombre").style(myStyle);
+    worksheet.cell(6, 2).string("Usuario").style(myStyle);
+    worksheet.cell(6, 2).string("Tarjetas asignadas").style(myStyle);
+
+    result.forEach((row, index) => {
+      let cast=""+row.nombre+""
+      worksheet.cell(index + 7, 1).string(cast);
+      cast=""+row.correo+""
+      worksheet.cell(index + 7, 2).string(cast);
+      cast=""+row.tarjetas+""
+      worksheet.cell(index + 7, 3).string(cast);
     });
 
 

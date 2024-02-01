@@ -4,14 +4,14 @@ import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 
 import { useEffect } from "react";
-
+import imagen from '../assets/user.png';
 
 // eslint-disable-next-line react/prop-types
 const AppLayout = ({ children }) => {
 
 //---------------------------------------------------Retornar datos del usuario-----------------------------------------
   const { nombre,rol,logout,token,Revalidar } = useAuth((state) => state);
-  
+  const url = useAuth((state) => state.url);
 
 //---------------------------------------------------Funciones utilizadas-----------------------------------------
 //Funcion para navegar a otros modulos
@@ -34,7 +34,7 @@ const AppLayout = ({ children }) => {
   //Funcion para Revalidar token
   
   useEffect(() => {
-    axios.post("http://localhost:9095/Revalidar",{},{ headers: {
+    axios.post(url+"/Revalidar",{},{ headers: {
       'Authorization': token
     },})
         .then((resp) => {
@@ -47,12 +47,12 @@ const AppLayout = ({ children }) => {
         });
   }, []);
 
+  //Funcion para verificar el tiempo de la sesion
   useEffect(() => {
     const intervalId = setInterval(() => {
-      axios.post("http://localhost:9095/token", {
-          token: token,
-        
-      })
+      axios.post(url+"/token",{}, { headers: {
+        'Authorization': token
+      },})
         .then((resp) => {
           
         })
@@ -94,7 +94,7 @@ const AppLayout = ({ children }) => {
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                   <div className="w-12 rounded-full">
-                    <img src={'./src/assets/user.png'} />
+                    <img src={imagen} />
                   </div>
                 </label>
                 <ul
@@ -112,7 +112,11 @@ const AppLayout = ({ children }) => {
                       Administrar usuarios
                     </a>
                   </li>
-                  
+                  <li>
+                    <Link className="justify-between" to="/reporte">
+                      Otros reportes
+                    </Link>
+                  </li>
                   <li>
                     <a onClick={handleLogout}>Cerrar sesión</a>
                   </li>

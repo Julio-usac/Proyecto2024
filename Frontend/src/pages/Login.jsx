@@ -5,6 +5,9 @@ import toast, { Toaster } from 'react-hot-toast';
 import axios from "axios";
 import useAuth from "../auth/authStore";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import imagen from '../assets/login-side.jpg';
+import imagen2 from '../assets/garan.jpg';
+
 
 const Login = () => {
 
@@ -13,6 +16,7 @@ const Login = () => {
 
 
   const login = useAuth((state) => state.login);
+  const url = useAuth((state) => state.url);
   const isAuthenticated = useAuth((state) => state.isAuthenticated);
 
 
@@ -24,7 +28,6 @@ const Login = () => {
       tipoCuenta: false,
       email: "",
       password: "",
-      url: "http://localhost:9095/Login",
     },
   });
 
@@ -47,7 +50,7 @@ const Login = () => {
     
     try {
       const resp = await axios({
-        url: "http://localhost:9095/Login",
+        url: url+"/Login",
         method: "post",
         data: {
           correo: data.email,
@@ -60,7 +63,6 @@ const Login = () => {
         navigate("/");
       }
     } catch (error) {
-      console.log(error);
       toast.error("Error en las credenciales");
       
     }
@@ -71,12 +73,12 @@ const Login = () => {
   return (
     <div className="bg-base-300 w-full h-[100vh] flex justify-center items-center">
       <div className="card lg:card-side bg-base-100 shadow-xl max-w-screen-lg lg:h-fit">
-        <div className="lg:max-w-xs bg-[url('./src/assets/login-side.jpg')]  w-96 h-32 lg:h-auto bg-origin-border bg-center bg-cover rounded-t-xl lg:rounded-tr-none lg:rounded-l-xl "></div>
+        <div style={{ backgroundImage: `url(${imagen})` }} className={`lg:max-w-xs  w-96 h-32 lg:h-auto bg-origin-border bg-center bg-cover rounded-t-xl lg:rounded-tr-none lg:rounded-l-xl`}></div>
         <div className="card-body p-6 w-96 flex flex-col justify-between">
           <div>
           <h2 className="card-title justify-center bg-origin-border">
             <figure >
-            <img src='./src/assets/garan.jpg'  style={{ width: '260px', height: '80px' }}/>
+            <img src={imagen2}  style={{ width: '260px', height: '80px' }}/>
           </figure>
           <div style={{ height: '120px' }} />
           </h2>

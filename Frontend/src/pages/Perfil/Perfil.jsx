@@ -12,6 +12,7 @@ function Perfil() {
   const correo = useAuth((state) => state.correo);
 
   const { token,logout} = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
 
   const [Pass, setPass] = useState('');
   const [Visible, setVisible] = useState(true);
@@ -33,7 +34,7 @@ function Perfil() {
   const InPass = (e) => {
     
     if (Pass) {
-      axios.post("http://localhost:9095/VerificarPass", {
+      axios.post(url+"/VerificarPass", {
         
           correo: correo,
           pass: Pass,
@@ -63,7 +64,7 @@ function Perfil() {
     if(data.confirmar === data.nueva){
     try {
       const resp = await axios({
-        url: "http://localhost:9095/ActualizarPass",
+        url: url+"/ActualizarPass",
         method: "put",
         data: {
           nueva: data.nueva,

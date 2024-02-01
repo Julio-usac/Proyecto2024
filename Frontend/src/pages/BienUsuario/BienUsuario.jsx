@@ -14,10 +14,15 @@ function BienUsuario() {
 
 //-----------------------------------------Declaracion de estados-----------------------------------------
 
-  const [usuarios, setUsuarios] = useState([]);
+  const [empleado, setEmpleado] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [bien, setBien] = useState([]);
   const [saldo, setSaldo] = useState(0);
+
+  const [nombres, setNombres] = useState([]);
+  const [ids,setIds ] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filteredNames, setFilteredNames] = useState(nombres);
 
 //-----------------------------------------Retornar funciones del Storage-----------------------------------------
 
@@ -26,29 +31,56 @@ function BienUsuario() {
 
   //-----------------------------------------Retornar rol de usuario-----------------------------------------
   const {rol } = useAuth((state) => state);
-  
+  const { token,logout} = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
+
 
 //---------------------------------------Funciones utilizadas----------------------------------------
+
+// funcion para filtrar los nombres
+
+const handleSearchChange = (event) => {
+  setSearch(event.target.value);
+  setFilteredNames(nombres.filter(name => name.toLowerCase().includes(event.target.value.toLowerCase())));
+};
 
 
 //Funcion para retornar la lista de usuarios
 
   useEffect(() => {
-    const load = async () => {
-      let result = await fetch("http://localhost:9095/listaUsuarios");
-      result = await result.json();
-      setUsuarios(result.message)
-    };
-    load();
+
+    axios.get(url+'/listaPersonal',{ headers: {
+        'Authorization': token
+      },})
+      .then((resp) => {
+
+      setEmpleado(resp.data.message);
+      const names=resp.data.message.map(item => item.nombre);
+      const iden=resp.data.message.map(item => item.empleadoId);
+      setNombres(names);
+      setIds(iden);
+
+      })
+      .catch((error) => {
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          console.error('Hubo un error al retornar el personal');
+        }
+        
+
+      });
   },[]);
 
   //Funcion para retornar los bienes asignados a los usuarios
 
   useEffect(() => {
     if (opcion) {
-      axios.post("http://localhost:9095/bienAsignado2", {
+      
+
+      axios.post(url+"/bienAsignado2", {
         
-          usuario: opcion,
+          empleado: opcion,
         
       })
         .then((resp) => {
@@ -96,12 +128,12 @@ function BienUsuario() {
 //Funcion para descargar el reporte por usuario
   const Descargar = async() => {
     try {
-      const response = await axios.get('http://localhost:9095/DescargarReporteUsuario/', { responseType: 'blob',  params: {
-        usuario: opcion
+      const response = await axios.get(url+'/DescargarReporteUsuario/', { responseType: 'blob',  params: {
+        empleado: opcion
       }  });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
-      link.href = url;
+      link.href = url2;
       link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
       document.body.appendChild(link);
       link.click();
@@ -114,8 +146,8 @@ function BienUsuario() {
   //Funcion para retornar el saldo total
   const Saldo = async() => {
     try {
-      const response = await axios.get('http://localhost:9095/saldoUsuario/', { params: {
-        usuario: opcion
+      const response = await axios.get(url+'/saldoUsuario/', { params: {
+        empleado: opcion
       }  });
       setSaldo(response.data.message);
     } catch (error) {
@@ -129,24 +161,49 @@ function BienUsuario() {
     <AppLayout>
       <ModalImagen />
       <ModalEditar />
-      <h1 className="text-5xl mt-6">Bienes por usuario</h1>
+      <h1 className="text-5xl mt-6">Bienes por empleado</h1>
+
+      
 
       <div className="w-full max-w-screen-xl px-4 xl:p-0 flex flex-col justify-center">
 
         <div>
-        <label className="block mb-2 text-sm font-medium text-gray-900 text-xl dark:text-black">Seleccione un empleado</label>
+        <label className="block mb-2 text-sm font-medium text-gray-900 text-xl dark:text-black">Busque un empleado</label>
         <div className="py-4 pt-2 flex justify-between items-center">
   
+
+      <div >
+        <input 
+          type="text" 
+          value={search} 
+          onChange={handleSearchChange} 
+          className="w-full px-4 py-2  rounded-md focus:outline-none bg-white ring-2 ring-blue-300"
+          placeholder="Buscar..."
+        />
+        {search && (
+          <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          value = {opcion} onChange={(e)=> {CambioS(e);}}>
+            <option>Seleccionar</option>
+            {filteredNames.map((name, index) => (
+              <option key={index} value={ids[nombres.indexOf(name)]}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
+    </div>
+        {/*
         <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
          value = {opcion} onChange={(e)=> {CambioS(e);}}>
         
         <option>Seleccionar</option>
           {
-            usuarios.map((item)=>
-              <option key={item.userId} value={item.userId} >{item.nombre}</option>
+            empleado.map((item)=>
+              <option key={item.empleadoId} value={item.empleadoId} >{item.nombre}</option>
             )
           }
           </select> 
+        */}
 
           <button
                 className="btn btn-success w-fit"
@@ -242,6 +299,7 @@ function BienUsuario() {
               »
             </button>*/}
         </div>
+        
       </div>
       <Toaster />
     </AppLayout>

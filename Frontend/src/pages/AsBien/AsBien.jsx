@@ -16,16 +16,23 @@ function AsBien() {
   const [agregar, setAgregar] = useState([]);
   const [quitar, setQuitar] = useState([]);
   const [tipo, setTipo] = useState([]);
-  const [usuario, setUsuario] = useState([]);
+  const [empleado, setEmpleado] = useState([]);
   const [bien, setBien] = useState([]);
   const [bien2, setBien2] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [tarjetas, setTarjetas] = useState([]);
+
+  
+  const [nombres, setNombres] = useState([]);
+  const [ids,setIds ] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filteredNames, setFilteredNames] = useState(nombres);
   
 //-----------------------------------------Retornar informacion del usuario-----------------------------------------
 
   const { token,logout} = useAuth((state) => state);
   const  userid  = useAuth((state) => state.id);
+  const url = useAuth((state) => state.url);
 
   //estados utilizados para la visibilidad de las tablas
   const [Vagregar, setVagregar] = useState(true);
@@ -34,6 +41,12 @@ function AsBien() {
   
   const [toggleTipo, setToggleTipo] = useState(true);
 
+// funcion para filtrar los nombres
+
+const handleSearchChange = (event) => {
+  setSearch(event.target.value);
+  setFilteredNames(nombres.filter(name => name.toLowerCase().includes(event.target.value.toLowerCase())));
+};
 
 
   //funcion para cambiar el estado de los botones al agregar un bien
@@ -110,11 +123,10 @@ function AsBien() {
     defaultValues: {
       tarjeta: null,
       categoria: null,
-      usuario: null,
+      empleado: null,
       saldo: null,
       asignar: null,
       quitar: null,
-      url: "http://localhost:9095/AsBien",
     },
   });
 
@@ -124,7 +136,7 @@ function AsBien() {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/tipo");
+      let result = await fetch(url+"/tipo");
       result = await result.json();
       setTipo(result.message)
     };
@@ -134,12 +146,27 @@ function AsBien() {
   //Funcion para retornar la lista de usuarios
 
   useEffect(() => {
-    const load = async () => {
-      let result = await fetch("http://localhost:9095/listaUsuarios");
-      result = await result.json();
-      setUsuario(result.message)
-    };
-    load();
+    
+    axios.get(url+'/listaPersonal',{ headers: {
+        'Authorization': token
+      },})
+      .then((resp) => {
+
+        setEmpleado(resp.data.message);
+        const names=resp.data.message.map(item => item.nombre);
+        const iden=resp.data.message.map(item => item.empleadoId);
+        setNombres(names);
+        setIds(iden);
+
+      })
+      .catch((error) => {
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          console.error('Hubo un error al retornar el personal');
+        }
+
+      });
   },[]);
 
   //Funcion para retornar los bienes no asignados
@@ -147,7 +174,7 @@ function AsBien() {
   useEffect(() => {
  
 
-    axios.get('http://localhost:9095/BienesNoAsignados')
+    axios.get(url+'/BienesNoAsignados')
       .then((resp) => {
 
       setBien(resp.data.message);
@@ -173,8 +200,8 @@ function AsBien() {
   useEffect(() => {
     if (opcion) {
       
-      axios.post("http://localhost:9095/bienAsignado", {
-          usuario: opcion,
+      axios.post(url+"/bienAsignado", {
+          empleado: opcion,
         
       })
         .then((resp) => {
@@ -196,7 +223,7 @@ function AsBien() {
           console.error(error);
         });
       if (!toggleTipo){
-        axios.get('http://localhost:9095/tarjetasAsignadas/'+opcion)
+        axios.get(url+'/tarjetasAsignadas/'+opcion)
           .then((resp) => {
     
           setTarjetas(resp.data.message);
@@ -225,13 +252,13 @@ function AsBien() {
       if (agregar.length!=0 || quitar.length!=0){
         try {
           const resp = await axios({
-            url: "http://localhost:9095/AsBien",
+            url: url+"/AsBien",
             method: "post",
             data: {
               op: toggleTipo,
               tarjeta: data.tarjeta,
               categoria: data.categoria,
-              usuario: data.usuario,
+              empleado: data.empleado,
               saldo: data.saldo,
               asignar: agregar,
               quitar: quitar,
@@ -245,11 +272,11 @@ function AsBien() {
 
             try {
               const resp = await axios({
-                url: "http://localhost:9095/IngresarBitacora",
+                url: url+"/IngresarBitacora",
                 method: "post",
                 data: {
                   usuario: userid,
-                  usuarioaf: data.usuario,
+                  empleado: data.empleado,
                   bienaf: null,
                   tipo: 4,
                   afectado:false,
@@ -321,18 +348,44 @@ function AsBien() {
                       <div style={{ height: '50px' }} />
 
                       <div className="w-fit ">
-                        <h3>Usuario</h3>
+                        <h3>Seleccionar Empleado</h3>
+
+
+                        <div>
+                        <input 
+                          type="text" 
+                          value={search} 
+                          onChange={handleSearchChange} 
+                          className="w-full px-4 py-2  rounded-md focus:outline-none bg-white ring-2 ring-blue-300"
+                          placeholder="Buscar..."
+                        />
+                        {search && (
+                          <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          required {...register("empleado", { required: true })} value = {opcion} onChange={(e)=>Cambio(e)}>
+                            <option>Seleccionar</option>
+                            {filteredNames.map((name, index) => (
+                              <option key={index} value={ids[nombres.indexOf(name)]}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                    </div>
+                        
+                        {/*
                         <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        required {...register("usuario", { required: true })} value = {opcion} onChange={(e)=>Cambio(e)}>
+                        required {...register("empleado", { required: true })} value = {opcion} onChange={(e)=>Cambio(e)}>
                         
                         <option>Seleccionar</option>
                           {
-                            usuario.map((item)=>
-                              <option key={item.userId} value={item.userId} >{item.nombre}</option>
+                            empleado.map((item)=>
+                              <option key={item.empleadoId} value={item.empleadoId} >{item.nombre}</option>
                             )
                           }
                           </select>  
+                        */}
                       </div>
+                        
                       {toggleTipo && (<div className="w-fit mt-6">
                         <h3>Numero de tarjeta</h3>
                         <input className="w-64 appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 

@@ -18,6 +18,7 @@ const ModelEditarUsuario = () => {
   const userapellido = useUsuario((state) => state.apellidos);
   const usercorreo = useUsuario((state) => state.correo);
   const userrol = useUsuario((state) => state.rol);
+  const url = useAuth((state) => state.url);
 
 //--------------------------------------------Retornar ID del usuario que realiza el cambio-----------------------------------------
   const { id } = useAuth((state) => state);
@@ -38,7 +39,7 @@ const ModelEditarUsuario = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/ObtenerRoles");
+      let result = await fetch(url+"/ObtenerRoles");
       result = await result.json();
       setRoles(result.message)
     };
@@ -53,7 +54,7 @@ const ModelEditarUsuario = () => {
 
       try {
         const resp = await axios({
-          url: "http://localhost:9095/EditarUsuario",
+          url: url+"/EditarUsuario",
           method: "put",
           data: {
             id: userid,
@@ -71,14 +72,14 @@ const ModelEditarUsuario = () => {
           toast.success("Actualizacion exitosa");
 
 //-------------------------------------Enviar datos a guardar en la bitacora-----------------------------------------
- 
+          /*
           try {
             const resp = await axios({
               url: "http://localhost:9095/IngresarBitacora",
               method: "post",
               data: {
                 usuario: id,
-                usuarioaf: userid,
+                empleado: null,
                 bienaf: null,
                 tipo: 2,
                 afectado:false,
@@ -86,7 +87,7 @@ const ModelEditarUsuario = () => {
             });
           } catch (error) {
             console.log(error)
-          }
+          }*/
           
           window.my_modal_4.close();
           setTimeout(function(){ window.location.reload(); }, 1000);

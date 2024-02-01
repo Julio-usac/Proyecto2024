@@ -28,6 +28,7 @@ function AdminUsuario() {
 
   const  userid  = useAuth((state) => state.id);
   const { token,logout} = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
 
 //-------------------------------------------Funciones utilizadas----------------------------------------
 
@@ -35,7 +36,9 @@ function AdminUsuario() {
   //Funcion para obtener la lista de usuarios al entrar al modulo
   useEffect(() => {
     
-      axios.get('http://localhost:9095/listaUsuarios')
+      axios.get(url+'/listaUsuarios',{ headers: {
+        'Authorization': token
+      },})
       .then((resp) => {
 
       setUsuario(resp.data.message);
@@ -54,8 +57,12 @@ function AdminUsuario() {
       setactualizar('');
       })
       .catch((error) => {
-
-        console.error('Hubo un error al retornar los usuarios');
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          console.error('Hubo un error al retornar los usuarios');
+        }
+        
 
       });
 
@@ -76,7 +83,7 @@ function AdminUsuario() {
     updatedVisibility[id] = !updatedVisibility[id] ;
     
 
-    axios.put("http://localhost:9095/ActualizarEstado", {
+    axios.put(url+"/ActualizarEstado", {
       
         estado: estado,
         id: id,
@@ -109,17 +116,18 @@ function AdminUsuario() {
     
     const confirmacion = window.confirm('¿Estás seguro de eliminar este usuario?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/EliminarUsuario/'+e,{ headers: {
+      axios.delete(url+'/EliminarUsuario/'+e,{ headers: {
         'Authorization': token
       },})
       .then( async response => {
+        /*
         try {
-          const resp = await axios({
-            url: "http://localhost:9095/IngresarBitacora",
+          await axios({
+            url: url+"/IngresarBitacora",
             method: "post",
             data: {
               usuario:  userid,
-              usuarioaf: e,
+              empleado: null,
               bienaf: null,
               tipo: 3,
               afectado:false,
@@ -127,7 +135,7 @@ function AdminUsuario() {
           });
         } catch (error) {
           console.log("Error en la Bitacora")
-        }
+        }*/
         toast.success(response.data.message);
         setactualizar('a');
         setTimeout(function(){  }, 2000);

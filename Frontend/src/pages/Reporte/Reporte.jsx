@@ -3,13 +3,14 @@ import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 
+import useAuth from "../../auth/authStore";
 function Reporte() {
  
-
+  const url2 = useAuth((state) => state.url);
 //Funcion para descargar el reporte por usuario
 const Descargar = async() => {
   try {
-    const response = await axios.get('http://localhost:9095/DescargarBienesUsuario/', { responseType: 'blob' });
+    const response = await axios.get(url2+'/DescargarBienesUsuario/', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -24,7 +25,7 @@ const Descargar = async() => {
 //Funcion para descargar el reporte por ubicacion
 const Descargar2 = async() => {
   try {
-    const response = await axios.get('http://localhost:9095/DescargarBienesUbicacion/', { responseType: 'blob' });
+    const response = await axios.get(url2+'/DescargarBienesUbicacion/', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -39,7 +40,7 @@ const Descargar2 = async() => {
 //Funcion para descargar el reporte de tarjetas por usuario
 const Descargar3 = async() => {
   try {
-    const response = await axios.get('http://localhost:9095/DescargarUsuariosTarjetas/', { responseType: 'blob' });
+    const response = await axios.get(url2+'/DescargarUsuariosTarjetas/', { responseType: 'blob' });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;

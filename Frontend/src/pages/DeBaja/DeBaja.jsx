@@ -16,6 +16,7 @@ function DeBaja() {
   const [Buscar, setBuscar] = useState('');
 
   const { token,logout} = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
     //----------------------------Funciones para manejar cambios de estado -------------------------
 
   //Funcion para manejar el cambio de estado de las elecciones de busqueda
@@ -33,7 +34,7 @@ function DeBaja() {
   const Busqueda = async() => {
     if (Opcion!=0 && Buscar!=''){
         try {
-        const response = await axios.get('http://localhost:9095/DadosdeBaja/', { params: {
+        const response = await axios.get(url+'/DadosdeBaja/', { params: {
             opcion: Opcion,
             buscar: Buscar
         }  });
@@ -56,7 +57,7 @@ function DeBaja() {
     
     const confirmacion = window.confirm('¿Estás seguro de que quieres restaurar este producto?');
     if (confirmacion) {
-      axios.put('http://localhost:9095/RestaurarBien/'+e,{ headers: {
+      axios.put(url+'/RestaurarBien/'+e,{ headers: {
         'Authorization': token
       },})
       .then(response => {
@@ -78,10 +79,10 @@ function DeBaja() {
  //Funcion para descargar todos los bienes dadosd de baja
   const Descargar = async() => {
     try {
-      const response = await axios.get('http://localhost:9095/DescargarBienesBaja/', { responseType: 'blob'  });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const response = await axios.get(url+'/DescargarBienesBaja/', { responseType: 'blob'  });
+      const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
-      link.href = url;
+      link.href = url2;
       link.setAttribute('download', 'Descarga.xlsx'); 
       document.body.appendChild(link);
       link.click();

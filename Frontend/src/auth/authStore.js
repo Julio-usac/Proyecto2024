@@ -11,6 +11,7 @@ const useAuth = create(
       correo: null,
       rol: null,
       token:null,
+      url:"http://localhost:9095",
 
       login: (mensaje) => {
         const message = jwtDecode(mensaje);
@@ -37,9 +38,6 @@ const useAuth = create(
           token:nuevo,
         })
         
-      },
-      setUrl: (url) => {
-        set({ url: url });
       },
     }),
     {

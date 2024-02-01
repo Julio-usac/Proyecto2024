@@ -16,6 +16,7 @@ const ModelCrearUsuario = () => {
  
   const { id } = useAuth((state) => state);
   const { token,logout} = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
 
  
 
@@ -37,7 +38,7 @@ const ModelCrearUsuario = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/ObtenerRoles");
+      let result = await fetch(url+"/ObtenerRoles");
       result = await result.json();
       setRoles(result.message)
     };
@@ -50,7 +51,7 @@ const ModelCrearUsuario = () => {
     if(data.rol && data.rol != "Seleccionar"){
       try {
         const resp = await axios({
-          url: "http://localhost:9095/CrearUsuario",
+          url: url+"/CrearUsuario",
           method: "post",
           data: {
             nombres: data.nombres,
@@ -68,14 +69,14 @@ const ModelCrearUsuario = () => {
           toast.success("Registro exitoso")
 
           //Si la creacion es exitosa, se registra la operacion en la bitacora
-
+          /*
           try {
             const resp = await axios({
               url: "http://localhost:9095/IngresarBitacora",
               method: "post",
               data: {
                 usuario: id,
-                usuarioaf: null,
+                empleado: null,
                 bienaf: null,
                 tipo: 1,
                 afectado:false,
@@ -83,7 +84,7 @@ const ModelCrearUsuario = () => {
             });
           } catch (error) {
             console.log(error)
-          }
+          }*/
           window.my_modal_3.close();
           setTimeout(function(){ window.location.reload(); }, 1000);
         }else{

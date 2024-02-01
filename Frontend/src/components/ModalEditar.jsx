@@ -37,6 +37,7 @@ const ModelEditar = () => {
  
     const { id } = useAuth((state) => state);
     const { token,logout} = useAuth((state) => state);
+    const url = useAuth((state) => state.url);
 
     const {borrarDatos}= useEditar((state) => state);
 
@@ -58,7 +59,6 @@ const ModelEditar = () => {
       descripcion: "",
       categoria: null,
       ubicacion: null,
-      url: "http://localhost:9095/EditarBien",
     },
   });
 
@@ -68,7 +68,7 @@ const ModelEditar = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/tipo");
+      let result = await fetch(url+"/tipo");
       result = await result.json();
       setTipo(result.message)
     };
@@ -79,7 +79,7 @@ const ModelEditar = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/ubicacion");
+      let result = await fetch(url+"/ubicacion");
       result = await result.json();
       setUb(result.message)
     };
@@ -108,7 +108,7 @@ const ModelEditar = () => {
       if(data.fechaco || data.cuenta || data.codigo || data.marca || data.cantidad || data.modelo || data.serie || data.precio || imageData || data.descripcion || (data.categoria && data.categoria != "Seleccionar") || (data.ubicacion && data.ubicacion != "Seleccionar")){
         try {
           const resp = await axios({
-            url: "http://localhost:9095/EditarBien",
+            url: url+"/EditarBien",
             method: "post",
             data: {
               id: mid,
@@ -134,11 +134,11 @@ const ModelEditar = () => {
             //Si la creacion es exitosa, se registra la operacion en la bitacora
             try {
               const resp = await axios({
-                url: "http://localhost:9095/IngresarBitacora",
+                url: url+"/IngresarBitacora",
                 method: "post",
                 data: {
                   usuario: id,
-                  usuarioaf: null,
+                  empleado: null,
                   bienaf: mid,
                   tipo: 2,
                   afectado:true,
@@ -268,7 +268,7 @@ const ModelEditar = () => {
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Descripcion</h3>
-                      <textarea  className="resize border w-full rounded-md focus:outline-none focus:shadow-outline py-2 px-3 text-gray-700 leading-tight" id="textarea" rows="4"
+                      <textarea  className="border-2 border-blue-500  bg-gray-100 rounded-md focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-300  py-2 px-3 text-gray-700  w-[770px]" id="textarea" rows="4"
                        placeholder={mdescripcion} {...register("descripcion", { required: false })}></textarea>
                     </div>
                   </div>

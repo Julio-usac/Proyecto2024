@@ -16,6 +16,7 @@ const Login = () => {
 
 
   const login = useAuth((state) => state.login);
+  const url = useAuth((state) => state.url);
   const isAuthenticated = useAuth((state) => state.isAuthenticated);
 
 
@@ -27,7 +28,6 @@ const Login = () => {
       tipoCuenta: false,
       email: "",
       password: "",
-      url: "http://localhost:9095/Login",
     },
   });
 
@@ -50,7 +50,7 @@ const Login = () => {
     
     try {
       const resp = await axios({
-        url: "http://localhost:9095/Login",
+        url: url+"/Login",
         method: "post",
         data: {
           correo: data.email,

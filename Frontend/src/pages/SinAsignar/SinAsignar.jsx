@@ -15,6 +15,7 @@ function SinAsignar() {
   const  userid  = useAuth((state) => state.id);
 
   const { token,logout} = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
 
   const [retornar, setRetornar] = useState([]);
 
@@ -23,7 +24,7 @@ function SinAsignar() {
   //Obtener bienes sin asignar
   useEffect(() => {
     
-      axios.get('http://localhost:9095/SinAsignar')
+      axios.get(url+'/SinAsignar')
       .then((resp) => {
 
         setBien(resp.data.message);
@@ -44,17 +45,17 @@ function SinAsignar() {
     
     const confirmacion = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
     if (confirmacion) {
-      axios.delete('http://localhost:9095/DardeBaja/'+e,{ headers: {
+      axios.delete(url+'/DardeBaja/'+e,{ headers: {
         'Authorization': token
       },})
       .then(async response => {
         try {
           const resp = await axios({
-            url: "http://localhost:9095/IngresarBitacora",
+            url: url+"/IngresarBitacora",
             method: "post",
             data: {
               usuario: userid,
-              usuarioaf: null,
+              empleado: null,
               bienaf: e,
               tipo: 3,
               afectado: true,

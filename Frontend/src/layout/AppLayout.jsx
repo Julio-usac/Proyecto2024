@@ -11,7 +11,7 @@ const AppLayout = ({ children }) => {
 
 //---------------------------------------------------Retornar datos del usuario-----------------------------------------
   const { nombre,rol,logout,token,Revalidar } = useAuth((state) => state);
-  
+  const url = useAuth((state) => state.url);
 
 //---------------------------------------------------Funciones utilizadas-----------------------------------------
 //Funcion para navegar a otros modulos
@@ -34,7 +34,7 @@ const AppLayout = ({ children }) => {
   //Funcion para Revalidar token
   
   useEffect(() => {
-    axios.post("http://localhost:9095/Revalidar",{},{ headers: {
+    axios.post(url+"/Revalidar",{},{ headers: {
       'Authorization': token
     },})
         .then((resp) => {
@@ -50,7 +50,7 @@ const AppLayout = ({ children }) => {
   //Funcion para verificar el tiempo de la sesion
   useEffect(() => {
     const intervalId = setInterval(() => {
-      axios.post("http://localhost:9095/token",{}, { headers: {
+      axios.post(url+"/token",{}, { headers: {
         'Authorization': token
       },})
         .then((resp) => {

@@ -17,6 +17,7 @@ function Busqueda() {
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
   const {rol } = useAuth((state) => state);
+  const url = useAuth((state) => state.url);
 
   //--------------------------------------------Declaracion de estados-----------------------------------------
 
@@ -61,10 +62,10 @@ function Busqueda() {
 
   const Descargar = async() => {
     try {
-      const response = await axios.get('http://localhost:9095/DescargarReporteTotal/', { responseType: 'blob'  });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const response = await axios.get(url+'/DescargarReporteTotal/', { responseType: 'blob'  });
+      const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
-      link.href = url;
+      link.href = url2;
       link.setAttribute('download', 'Descarga.xlsx'); 
       document.body.appendChild(link);
       link.click();
@@ -79,7 +80,7 @@ function Busqueda() {
   const Busqueda = async() => {
     if (Opcion!=0 && Buscar!=''){
         try {
-        const response = await axios.get('http://localhost:9095/BuscarBienes/', { params: {
+        const response = await axios.get(url+'/BuscarBienes/', { params: {
             opcion: Opcion,
             buscar: Buscar
         }  });
@@ -177,7 +178,7 @@ function Busqueda() {
                                         <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
                                             {item.codigo}
                                         </th>
-                                        <td className="px-6 py-4"> {(item.correo)?item.correo:"No asignado"}</td>
+                                        <td className="px-6 py-4"> {(item.dpi)?item.dpi:"No asignado"}</td>
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.modelo}</td>
                                         <td className="px-6 py-4"> {item.serie}</td>

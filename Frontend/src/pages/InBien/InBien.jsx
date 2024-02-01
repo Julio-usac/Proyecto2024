@@ -12,7 +12,7 @@ function InBien() {
 
   const { id } = useAuth((state) => state);
   const { token,logout} = useAuth((state) => state);
-
+  const url = useAuth((state) => state.url);
 
 //--------------------------------------------Declaracion de estados-----------------------------------------
 
@@ -38,7 +38,6 @@ function InBien() {
       categoria: null,
       tarjeta: null,
       ubicacion: null,
-      url: "http://localhost:9095/InBien",
     },
   });
 
@@ -46,7 +45,7 @@ function InBien() {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/tipo");
+      let result = await fetch(url+"/tipo");
       result = await result.json();
       setTipo(result.message)
     };
@@ -57,7 +56,7 @@ function InBien() {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch("http://localhost:9095/ubicacion");
+      let result = await fetch(url+"/ubicacion");
       result = await result.json();
       setUb(result.message)
     };
@@ -87,7 +86,7 @@ function InBien() {
       if (data.categoria!=null){
         try {
           const resp = await axios({
-            url: "http://localhost:9095/InBien",
+            url: url+"/InBien",
             method: "post",
             data: {
               fechaco: data.fechaco,
@@ -112,11 +111,11 @@ function InBien() {
             toast.success("Ingreso exitoso!")
             try {
               const resp = await axios({
-                url: "http://localhost:9095/IngresarBitacora",
+                url: url+"/IngresarBitacora",
                 method: "post",
                 data: {
                   usuario: id,
-                  usuarioaf: null,
+                  empleado: null,
                   bienaf: null,
                   tipo: 1,
                   afectado:true,
@@ -232,12 +231,12 @@ function InBien() {
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Cantidad</h3>
-                      <input required type="number" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"  placeholder=""
+                      <input required type="number" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-300 focus:bg-white"  placeholder=""
                       {...register("cantidad", { required: true })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Descripcion</h3>
-                      <textarea required className="resize border w-full rounded-md focus:outline-none focus:shadow-outline py-2 px-3 text-gray-700 leading-tight" id="textarea" rows="4" placeholder="Descripcion..."
+                      <textarea required className="border-2 border-blue-500  bg-gray-100 rounded-md focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-300  py-2 px-3 text-gray-700  w-[770px]" id="textarea" rows="4" placeholder="Descripcion..."
                        {...register("descripcion", { required: true })}></textarea>
                     </div>
                   </div>

@@ -3,6 +3,7 @@ import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useState } from "react";
+import useAuth from "../../auth/authStore";
 
 function Bitacora() {
 
@@ -10,6 +11,7 @@ function Bitacora() {
 
   const [usuarios, setUsuarios] = useState([]);
   const [fecha, setFecha] = useState('');
+  const url = useAuth((state) => state.url);
 
 
   //-------------------------------------------Funciones utilizadas----------------------------------------
@@ -24,10 +26,10 @@ function Bitacora() {
 
   const Descargar = async() => {
     try {
-      const response = await axios.get('http://localhost:9095/DescargarBitacora/', { responseType: 'blob'});
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const response = await axios.get(url+'/DescargarBitacora/', { responseType: 'blob'});
+      const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
-      link.href = url;
+      link.href = url2;
       link.setAttribute('download', 'Descarga.xlsx'); 
       document.body.appendChild(link);
       link.click();
@@ -42,7 +44,7 @@ function Bitacora() {
   const ObtenerBitacora= async() => {
     if(fecha){
       try {
-        const response = await axios.get('http://localhost:9095/ObtenerBitacora/', { params: {
+        const response = await axios.get(url+'/ObtenerBitacora/', { params: {
           fecha: fecha
         }  });
         setUsuarios(response.data.message);
@@ -99,7 +101,7 @@ function Bitacora() {
                               Objetivo
                           </th>
                           <th scope="col" className="px-6 py-3">
-                              N.Usuario/B.Codigo
+                              DPI/B.Codigo
                           </th>
                       </tr>
                   </thead>
@@ -114,7 +116,7 @@ function Bitacora() {
                                   <td className="px-6 py-4"> {item.usuario}</td>
                                   <td className="px-6 py-4"> {item.movimiento}</td>
                                   <td className="px-6 py-4"> {(item.objetivo==0)?"Usuario":"Bien"}</td>
-                                  <td className="px-6 py-4"> {(item.correo)?item.correo:item.bien}</td>
+                                  <td className="px-6 py-4"> {(item.dpi)?item.dpi:item.bien}</td>
                               </tr>
                           )
                       }

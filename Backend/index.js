@@ -171,7 +171,7 @@ app.post('/InBien', async function (req, res) {
        res.status(401).json({ token: false });
        return;
     }
-    let decoded = verToken(token);
+    verToken(token);
   
 
     //inicializar variables
@@ -821,7 +821,7 @@ app.get('/BuscarBienes', async function (req, res) {
   switch (opcion) {
     case  "1":
 
-      sql = `SELECT empleado.dpi, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -841,7 +841,7 @@ app.get('/BuscarBienes', async function (req, res) {
       break;
     case "2":
       buscar=buscar.toUpperCase()
-      sql = `SELECT empleado.dpi,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -860,7 +860,7 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "3":
-      sql = `SELECT empleado.dpi,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -878,7 +878,7 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "4":
-      sql = `SELECT empleado.dpi,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -896,7 +896,7 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "5":
-      sql = `SELECT empleado.dpi,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -923,7 +923,7 @@ app.get('/DescargarReporteTotal', async function (req, res) {
 
   try{
 
-    let sql = `SELECT dpi,codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien 
+    let sql = `SELECT nit,codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien 
     LEFT JOIN marca ON marca.marcaId=bien.marca 
     LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
     LEFT JOIN empleado ON t.empleado=empleado.empleadoId
@@ -1046,7 +1046,7 @@ app.get('/DadosdeBaja', async function (req, res) {
             WHERE r.activo=0 and bien.activo=0
             GROUP BY r.bien)
         UNION
-        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        SELECT bien.id,"Sin empleado","Sin empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
         LEFT JOIN marca ON bien.marca = marca.marcaId
         WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
             WHERE r.activo=0)) grupo
@@ -1075,7 +1075,7 @@ app.get('/DadosdeBaja', async function (req, res) {
             WHERE r.activo=0 and bien.activo=0
             GROUP BY r.bien)
         UNION
-        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        SELECT bien.id,"Sin empleado","Sin empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
         LEFT JOIN marca ON bien.marca = marca.marcaId
         WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
             WHERE r.activo=0)) grupo
@@ -1103,7 +1103,7 @@ app.get('/DadosdeBaja', async function (req, res) {
             WHERE r.activo=0 and bien.activo=0
             GROUP BY r.bien)
         UNION
-        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        SELECT bien.id,"Sin empleado","Sin Empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
         LEFT JOIN marca ON bien.marca = marca.marcaId
         WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
             WHERE r.activo=0)) grupo
@@ -1130,7 +1130,7 @@ app.get('/DadosdeBaja', async function (req, res) {
             WHERE r.activo=0 and bien.activo=0
             GROUP BY r.bien)
         UNION
-        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        SELECT bien.id,"Sin empleado","Sin empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
         LEFT JOIN marca ON bien.marca = marca.marcaId
         WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
             WHERE r.activo=0)) grupo
@@ -1157,7 +1157,7 @@ app.get('/DadosdeBaja', async function (req, res) {
             WHERE r.activo=0 and bien.activo=0
             GROUP BY r.bien)
         UNION
-        SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        SELECT bien.id,"Sin empleado","Sin empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
         LEFT JOIN marca ON bien.marca = marca.marcaId
         WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
             WHERE r.activo=0)) grupo
@@ -1603,7 +1603,7 @@ app.put('/EditarUsuario', async function (req, res) {
 
       let sql =  `UPDATE usuario SET nombres='` + nombres + `',apellidos='` + apellidos + `',
       correo='` + correo + `',rol='`+rol+`' WHERE userId= ` + id +  ` ; `;
-      const result2 = await query(sql);
+      await query(sql);
       
       res.json({success: true});
       return;
@@ -1639,7 +1639,7 @@ app.post('/IngresarBitacora', async function (req, res) {
         const result = await query(sql);
         sql = `INSERT INTO movimiento_bien (fecha,usuario,empleado_afectado,bien_afectado,tipo_movimiento,afectado) 
         VALUES(NOW(),`+usuario+`,`+empleado+`,`+result[0].id+`,`+tipo+`,`+afectado+`);`;
-        const result2 = await query(sql);
+        await query(sql);
         res.json({success: true});
        
       }else{
@@ -1648,7 +1648,7 @@ app.post('/IngresarBitacora', async function (req, res) {
         const result = await query(sql);
         sql = `INSERT INTO movimiento_bien (fecha,usuario,empleado_afectado,bien_afectado,tipo_movimiento,afectado) 
         VALUES(NOW(),`+usuario+`,`+result[0].id+`,`+bienaf+`,`+tipo+`,`+afectado+`);`;
-        const result2 = await query(sql);
+        await query(sql);
         res.json({success: true});
       }
       
@@ -1678,7 +1678,7 @@ app.get('/ObtenerBitacora', async function (req, res) {
   
   try{
     let fecha= req.query.fecha;
-    let sql = `SELECT m.id, m.fecha, TIME(m.fecha) AS hora, u1.correo AS usuario, t.tipo AS movimiento, m.afectado AS objetivo, u2.dpi, bien.codigo AS bien FROM movimiento_bien m
+    let sql = `SELECT m.id, m.fecha, TIME(m.fecha) AS hora, u1.correo AS usuario, t.tipo AS movimiento, m.afectado AS objetivo, u2.nit, bien.codigo AS bien FROM movimiento_bien m
     INNER JOIN usuario u1 ON u1.userId=m.usuario
     LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
     LEFT JOIN bien ON bien.id=m.bien_afectado
@@ -1705,7 +1705,7 @@ app.get('/DescargarBitacora', async function (req, res) {
 
   try{
 
-    let sql = `SELECT m.id, DATE_FORMAT(m.fecha, '%d/%m/%Y') as fecha, TIME(m.fecha) as hora,u1.correo as usuario, t.tipo as movimiento, m.afectado as objetivo, COALESCE(u2.dpi, bien.codigo) as identificador FROM movimiento_bien m
+    let sql = `SELECT m.id, DATE_FORMAT(m.fecha, '%d/%m/%Y') as fecha, TIME(m.fecha) as hora,u1.correo as usuario, t.tipo as movimiento, m.afectado as objetivo, COALESCE(u2.nit, bien.codigo) as identificador FROM movimiento_bien m
     INNER JOIN usuario u1 ON u1.userId=m.usuario
     LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
     LEFT JOIN bien ON bien.id=m.bien_afectado
@@ -1926,9 +1926,9 @@ app.get('/listaPersonal', async function (req, res) {
   }
 
   try{
-    let sql =  `SELECT empleadoId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, dpi, puesto.nombre as puesto, estado,puestoId FROM empleado
+    let sql =  `SELECT empleadoId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, nit, dpi, puesto.nombre as puesto, empleado.activo,puestoId FROM empleado
     INNER JOIN puesto ON puesto.puestoId=empleado.puesto 
-    WHERE estado!=3;`;
+    WHERE empleado.activo = true;`;
     const result = await query(sql);
     res.json({success: true, message: result});
   }catch (error) {
@@ -1946,7 +1946,7 @@ app.get('/DescargarBienesUsuario', async function (req, res) {
 
   try{
 
-    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) as nombre, u.dpi, COUNT(bien.id) as cantidad FROM bien, tarjeta_responsabilidad t, empleado u  
+    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) as nombre, u.nit, COUNT(bien.id) as cantidad FROM bien, tarjeta_responsabilidad t, empleado u  
     WHERE t.id=bien.tarjeta AND bien.activo=True AND u.empleadoId=t.empleado
     GROUP BY t.empleado;`;
     
@@ -1978,7 +1978,7 @@ app.get('/DescargarBienesUsuario', async function (req, res) {
     result.forEach((row, index) => {
       let cast=""+row.nombre+""
       worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.dpi+""
+      cast=""+row.nit+""
       worksheet.cell(index + 7, 2).string(cast);
       cast=""+row.cantidad+""
       worksheet.cell(index + 7, 3).string(cast);
@@ -2064,7 +2064,7 @@ app.get('/DescargarUsuariosTarjetas', async function (req, res) {
 
   try{
 
-    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) AS nombre, u.dpi, COUNT(*) AS tarjetas  FROM empleado u, tarjeta_responsabilidad
+    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) AS nombre, u.nit, COUNT(*) AS tarjetas  FROM empleado u, tarjeta_responsabilidad
     WHERE u.empleadoId=tarjeta_responsabilidad.empleado
     GROUP BY u.empleadoId;`;
     
@@ -2096,7 +2096,7 @@ app.get('/DescargarUsuariosTarjetas', async function (req, res) {
     result.forEach((row, index) => {
       let cast=""+row.nombre+""
       worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.dpi+""
+      cast=""+row.nit+""
       worksheet.cell(index + 7, 2).string(cast);
       cast=""+row.tarjetas+""
       worksheet.cell(index + 7, 3).string(cast);
@@ -2112,6 +2112,249 @@ app.get('/DescargarUsuariosTarjetas', async function (req, res) {
   }catch (error) {
     console.log(error);
     res.status(400).json({success: false, message: "Error al Descargar", error:error});
+    return;
+  }
+});
+
+
+//------------------------------------- CREAR/INGRESAR EMPLEADOS --------------------------------------
+
+app.post('/CrearEmpleado', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+
+    let nombres= req.body.nombres;
+    let apellidos= req.body.apellidos;
+    let correo= req.body.dpi;
+    let nit= req.body.nit;
+    let puesto = req.body.puesto;
+
+    try{
+      
+      let sql = `SELECT * FROM empleado WHERE nit='`+nit+`';`;
+      
+      const result1 = await query(sql);
+      
+      if (result1.length>0){
+        res.status(400).json({success: false, message: "NIT repetido"});
+        return;
+      }
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear empleado"});
+      return;
+    }
+
+
+    //Verificar puesto
+    let idpuesto=null;
+    try{
+        
+      if (puesto!=''){
+        puesto= puesto.toUpperCase();
+        let sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
+        const result = await query(sql);
+        
+        if (result.length > 0) {
+          
+          idpuesto=result[0].puestoId;
+
+        } else {
+          let sql =`INSERT INTO puesto(fecha_mod,nombre,activo) 
+          VALUES (NOW(),"`+puesto+`",activo);`;
+          await query(sql);
+
+          sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
+          const result2 = await query(sql);
+
+          idpuesto=result2[0].puestoId;
+        
+        }
+      }
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+        return;
+    }
+
+    try{
+      
+
+      let sql = `INSERT INTO empleado(fecha_mod,nombres,apellidos,dpi,nit,activo,puesto)
+      VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`','`+nit+`',true,`+idpuesto+`) ;`;
+      
+      await query(sql);
+      
+      res.json({success: true});
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear Empleado"});
+      return;
+    }
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+});
+
+//------------------------------------- EDITAR EMPLEADOS --------------------------------------
+
+app.put('/EditarEmpleado', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+
+    let id = req.body.id;
+    let nombres= req.body.nombres;
+    let apellidos= req.body.apellidos;
+    let dpi= req.body.dpi;
+    let nit= req.body.nit;
+    let puesto = req.body.puesto;
+
+    try{
+      
+      let sql = `SELECT * FROM empleado WHERE nit='`+nit+`';`;
+      
+      const result1 = await query(sql);
+      
+      if (result1.length > 0){
+
+        if(result1[0].empleadoId == id){
+          //El mismo id
+        }else{
+          res.status(400).json({success: false, message: "NIT repetido"});
+          return;
+        }
+        
+      }
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear empleado"});
+      return;
+    }
+
+
+    //Verificar puesto
+    let idpuesto=null;
+    try{
+        
+      if (puesto!=''){
+        puesto= puesto.toUpperCase();
+        let sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
+        const result = await query(sql);
+        
+        if (result.length > 0) {
+          
+          idpuesto=result[0].puestoId;
+
+        } else {
+          let sql =`INSERT INTO puesto(fecha_mod,nombre,activo) 
+          VALUES (NOW(),"`+puesto+`",activo);`;
+          await query(sql);
+
+          sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
+          const result2 = await query(sql);
+
+          idpuesto=result2[0].puestoId;
+        
+        }
+      }
+    }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+        return;
+    }
+
+    try{
+      
+
+      let sql =  `UPDATE empleado SET nombres='` + nombres + `',apellidos='` + apellidos + `',
+      dpi='` + dpi + `',nit='`+nit+`', puesto =`+idpuesto+` WHERE empleadoId= ` + id +  ` ; `;
+      
+      await query(sql);
+      
+      res.json({success: true});
+      return;
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al editar Empleado"});
+      return;
+    }
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+});
+
+
+//------------------------------------- Actualizar estado del Empleado --------------------------------------
+
+app.put('/ActualizarEstadoEmpleado', function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+    let estado = req.body.estado;
+    let id = req.body.id;
+
+    let sql = "UPDATE empleado SET activo="+ estado +" WHERE empleadoId=" + id + " ;";
+    
+    connection.query(sql, async function(error,result){
+      if(error){
+        console.log("Error al conectar");
+        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+      }else{
+        
+        res.json({success: true});
+
+      }
+    });
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+});
+
+
+//------------------------------------- Buscar empleado --------------------------------------
+
+app.get('/BuscarEmpleado', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+      res.status(401).json({ token: false });
+      return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
+  try{
+    let buscar = req.query.buscar;
+    let sql =  `SELECT empleadoId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, nit, dpi, puesto.nombre as puesto, empleado.activo,puestoId FROM empleado
+    INNER JOIN puesto ON puesto.puestoId=empleado.puesto 
+    WHERE CONCAT_WS(' ', nombres, apellidos) LIKE '%`+buscar+`%';`;
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
     return;
   }
 });

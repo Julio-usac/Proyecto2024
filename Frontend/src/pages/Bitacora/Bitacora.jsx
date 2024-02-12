@@ -101,7 +101,7 @@ function Bitacora() {
                               Objetivo
                           </th>
                           <th scope="col" className="px-6 py-3">
-                              DPI/B.Codigo
+                              NIT/B.Codigo
                           </th>
                       </tr>
                   </thead>
@@ -116,7 +116,7 @@ function Bitacora() {
                                   <td className="px-6 py-4"> {item.usuario}</td>
                                   <td className="px-6 py-4"> {item.movimiento}</td>
                                   <td className="px-6 py-4"> {(item.objetivo==0)?"Usuario":"Bien"}</td>
-                                  <td className="px-6 py-4"> {(item.dpi)?item.dpi:item.bien}</td>
+                                  <td className="px-6 py-4"> {(item.nit)?item.nit:item.bien}</td>
                               </tr>
                           )
                       }

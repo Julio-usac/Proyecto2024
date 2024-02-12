@@ -137,8 +137,8 @@ function Busqueda() {
             </div>
             
             <div>
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6  overflow-y-auto  h-[560px]">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
+                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6  overflow-y-auto  h-[500px]">
+                    <table className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
                                
@@ -146,7 +146,7 @@ function Busqueda() {
                                     Codigo
                                 </th>
                                 <th scope="col" className="px-6 py-3">
-                                    Usuario
+                                    Empleado
                                 </th>
                                 <th scope="col" className="px-6 py-3">
                                     Marca
@@ -178,7 +178,7 @@ function Busqueda() {
                                         <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
                                             {item.codigo}
                                         </th>
-                                        <td className="px-6 py-4"> {(item.dpi)?item.dpi:"No asignado"}</td>
+                                        <td className="px-6 py-4"> {(item.nit)?item.nit:"No asignado"}</td>
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.modelo}</td>
                                         <td className="px-6 py-4"> {item.serie}</td>

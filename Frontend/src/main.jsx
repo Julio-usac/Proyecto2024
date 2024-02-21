@@ -1,4 +1,5 @@
 import React from "react";
+
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
@@ -15,6 +16,7 @@ import SinAsignar from "./pages/SinAsignar/SinAsignar.jsx";
 import DeBaja from "./pages/DeBaja/DeBaja.jsx";
 import Bitacora from "./pages/Bitacora/Bitacora.jsx";
 import AdminUsuario from "./pages/AdminUsuario/AdminUsuario.jsx";
+import AdminEmpleado from "./pages/AdminEmpleado/AdminEmpleado.jsx";
 import Reporte from "./pages/Reporte/Reporte.jsx";
 
 const router = createBrowserRouter([
@@ -33,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: "/AdminUsuario",
         element: <AdminUsuario/>,
+      },
+      {
+        path: "/AdminEmpleado",
+        element: <AdminEmpleado/>,
       },
       {
         path: "/BienUsuario",

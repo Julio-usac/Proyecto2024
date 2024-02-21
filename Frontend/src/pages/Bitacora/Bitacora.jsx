@@ -11,15 +11,22 @@ function Bitacora() {
 
   const [usuarios, setUsuarios] = useState([]);
   const [fecha, setFecha] = useState('');
+  const [fecha2, setFecha2] = useState('');
   const url = useAuth((state) => state.url);
 
 
   //-------------------------------------------Funciones utilizadas----------------------------------------
 
-  //Funcion utilizada para guardar la fecha en el estado fecha
+  //Funcion utilizada para guardar la fecha inicial
 
   const CambiarFecha = (evento) => {
     setFecha(evento.target.value);
+  }
+
+  //Funcion utilizada para guardar la fecha final
+
+  const CambiarFecha2 = (evento) => {
+    setFecha2(evento.target.value);
   }
 
  //Funcion utilizada para llamar al endpoint DescargarBitacora y descargar la bitacora
@@ -42,15 +49,18 @@ function Bitacora() {
   //Funcion utilizada para obtener la bitacora segun la fecha.
 
   const ObtenerBitacora= async() => {
-    if(fecha){
+    if(fecha && fecha2){
       try {
         const response = await axios.get(url+'/ObtenerBitacora/', { params: {
-          fecha: fecha
+          fecha1: fecha,
+          fecha2: fecha2
         }  });
         setUsuarios(response.data.message);
       } catch (error) {
-        console.error('Hubo un error al retornar el saldo');
+        console.error('Hubo un error al retornar la informacion');
       }
+    }else{
+      toast.error('Debe seleccionar un rango de fechas');
     }
   };
 
@@ -63,13 +73,19 @@ function Bitacora() {
       <div className="w-full max-w-screen-xl px-4 xl:p-0 flex flex-col justify-center">
 
         <div>
-        <label className="block mb-2 text-sm font-medium text-gray-900 text-xl dark:text-black mt-6">Seleccione una fecha</label>
+        <label className="block mb-2 text-sm font-medium text-gray-900 text-xl dark:text-black mt-6">Seleccione un rango de fechas</label>
         <div className="py-4 pt-2 flex justify-between items-center">
   
         <div className="flex  items-center" >
-          <input className="appearance-none block w-fit bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" 
+          <input className="appearance-none block w-fit ring-2 bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" 
             type="date" onChange={CambiarFecha} />
-           <button  className="text-white  bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+
+            <span class="mx-4 text-gray-500">a</span>
+
+          <input className="appearance-none block w-fit ring-2 bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" 
+            type="date" onChange={CambiarFecha2} />
+
+           <button  className="text-white ml-6 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
             onClick={ObtenerBitacora}>Buscar</button>
         </div>
           <button
@@ -101,7 +117,7 @@ function Bitacora() {
                               Objetivo
                           </th>
                           <th scope="col" className="px-6 py-3">
-                              DPI/B.Codigo
+                              NIT/B.Codigo
                           </th>
                       </tr>
                   </thead>
@@ -115,8 +131,8 @@ function Bitacora() {
                                   <td className="px-6 py-4"> {item.hora}</td>
                                   <td className="px-6 py-4"> {item.usuario}</td>
                                   <td className="px-6 py-4"> {item.movimiento}</td>
-                                  <td className="px-6 py-4"> {(item.objetivo==0)?"Usuario":"Bien"}</td>
-                                  <td className="px-6 py-4"> {(item.dpi)?item.dpi:item.bien}</td>
+                                  <td className="px-6 py-4"> {(item.objetivo==0)?"Empleado":"Bien"}</td>
+                                  <td className="px-6 py-4"> {(item.nit)?item.nit:item.bien}</td>
                               </tr>
                           )
                       }

@@ -138,7 +138,7 @@ function DeBaja() {
                               Fecha ultima operacion
                           </th>
                           <th scope="col" className="px-6 py-3">
-                              Ultimo usuario
+                              Ultimo empleado
                           </th>
                           <th scope="col" className="px-6 py-3">
                               Codigo

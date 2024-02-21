@@ -22,11 +22,20 @@ const AppLayout = ({ children }) => {
     logout();
   };
 //Funcion para Verificar Rol Administrador
-  const VerificarRol= () => {
-    if (rol == 1){
-      navigate("/AdminUsuario");
+  const VerificarRol= (dir) => {
+    if(dir==1){
+      if (rol == 1){
+        navigate("/AdminUsuario");
+      }else{
+        toast.error("Necesita permisos de Administrador")
+      }
     }else{
-      toast.error("Necesita permisos de Administrador")
+      if (rol == 1){
+        navigate("/AdminEmpleado");
+      }else{
+        toast.error("Necesita permisos de Administrador")
+      }
+
     }
     
   }
@@ -107,9 +116,15 @@ const AppLayout = ({ children }) => {
                     </Link>
                   </li>
                   <li>
-                    <a className="justify-between" onClick={VerificarRol}>
+                    <a className="justify-between" onClick={(e)=>{VerificarRol(1);}}>
                       
                       Administrar usuarios
+                    </a>
+                  </li>
+                  <li>
+                    <a className="justify-between" onClick={(e)=>{VerificarRol(2);}}>
+                      
+                      Administrar Empleados
                     </a>
                   </li>
                   <li>

@@ -8,6 +8,7 @@ import useAuth from "./auth/authStore";
 import { FiUserCheck,FiShoppingBag, FiUsers,FiTrash2,FiSearch,FiInfo } from "react-icons/fi";
 import toast, { Toaster } from 'react-hot-toast';
 
+
 function App() {
 
   //--------------------------------------------Retornar Rol del usuario-----------------------------------------

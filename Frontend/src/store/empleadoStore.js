@@ -19,6 +19,15 @@ const useEmpleado = create(
           nit:nit,
           puesto: puesto,
         });
+      },borrarDatos: () => {
+        set({
+          id:null,
+          nombres:null,
+          apellidos:null,
+          dpi:null,
+          nit:null,
+          puesto: null,
+        });
       },
       
      

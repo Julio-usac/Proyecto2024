@@ -1,4 +1,3 @@
-import { useAsync, useMountEffect } from "@react-hookz/web";
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import ModalImagen from "../../components/ModalImagen";
@@ -7,8 +6,10 @@ import toast, { Toaster } from 'react-hot-toast';
 import useImagen from '../../store/imgStore';
 import useEditar from '../../store/editarStore';
 import { useState } from "react";
-import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
+
+import DataTable from 'datatables.net-dt';
+import $ from "jquery";
 
 function Busqueda() {
 
@@ -86,6 +87,19 @@ function Busqueda() {
         }  });
         if(response.data.success==true){
             setTabla(response.data.message)
+
+            if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+                let table2=$('#myTable2').DataTable();
+                table2.destroy();
+            }
+            setTimeout(function(){
+                
+                if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+                 
+                }else{
+                  new DataTable('#myTable2');
+                }
+              }, 1000);
         }
 
         } catch (error) {
@@ -138,7 +152,7 @@ function Busqueda() {
             
             <div>
                 <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6  overflow-y-auto  h-[500px]">
-                    <table className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
+                    <table id="myTable2" className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
                                

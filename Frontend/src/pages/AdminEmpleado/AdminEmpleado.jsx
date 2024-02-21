@@ -1,25 +1,31 @@
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useEffect } from "react";
 import ModalCrearEmpleado from "../../components/ModalCrearEmpleado";
 import ModalEditarEmpleado from "../../components/ModalEditarEmpleado";
+import ModalHistorial from "../../components/ModalHistorial";
 import useEmpleado from '../../store/empleadoStore';
-import DataTable from 'datatables.net-dt';
-
 import useAuth from "../../auth/authStore";
+import DataTable from 'datatables.net-dt';
+import $ from "jquery";
+import 'datatables.net-responsive-dt';
 
 function AdminEmpleado() {
 
 //--------------------------------------------Declaracion de estados-----------------------------------------
 
-  let table = new DataTable('#myTable');
+ 
+  let nambre='myTable2'
   const [empleado, setEmpleado] = useState([]);
   const [showButton, setShowButton] = useState([]);
   const [actualizar, setactualizar] = useState("");
   const [Buscar, setBuscar] = useState('');
+
+// Estado para habilitar el modal Historial
+
+  const [habilitar, setHabilitar] = useState(false);
 
   //-----------------------------Funcion para guardar la informacion del usuario a editar------------------------
 
@@ -37,14 +43,14 @@ function AdminEmpleado() {
 
   //Funcion para obtener la lista de empleados al entrar al modulo
   useEffect(() => {
-    
+     
       axios.get(url+'/listaPersonal',{ headers: {
         'Authorization': token
       },})
       .then((resp) => {
 
       setEmpleado(resp.data.message);
-
+      
       let userarray =[];
 
       for (let i = 0; i < resp.data.message.length; i++) {
@@ -55,8 +61,11 @@ function AdminEmpleado() {
         }
         
       }
+      
       setShowButton(userarray);
       setactualizar('');
+      
+      
       })
       .catch((error) => {
         if ('token' in error.response.data){
@@ -74,7 +83,7 @@ function AdminEmpleado() {
   
   //Funcion para actualizar el estado del empleado
   const ActualizarEstado = (id) => {
-
+    
     const updatedVisibility = [...showButton];
     let estado=false;
     if (updatedVisibility[id]==true){
@@ -122,19 +131,31 @@ function AdminEmpleado() {
   //Funcion para guardar los datos del usuario a editar
 
   const EditarUsuario= async(id,nombre,apellido,dpi,nit,puesto) => {
+    
     await seteditar(id,nombre,apellido,dpi,nit,puesto);
     window.my_modal_6.showModal();
 
     
   }
 
+  //Funcion para guardar los datos del usuario a editar
+
+  const Historial= async(id) => {
+    setHabilitar(true);
+    await seteditar(id,null,null,null,null,null);
+    window.my_modal_7.showModal();
+    
+  }
+
   const handleChange2 = (event) => {
     setBuscar(event.target.value);
+    
   };
 
    //Funcion para buscar Empleado
 
   const Busqueda = async() => {
+    
     if (Buscar!=''){
         axios.get(url+'/BuscarEmpleado',{ headers: {
           'Authorization': token
@@ -144,7 +165,7 @@ function AdminEmpleado() {
         .then((resp) => {
   
         setEmpleado(resp.data.message);
-  
+
         let userarray =[];
   
         for (let i = 0; i < resp.data.message.length; i++) {
@@ -156,6 +177,30 @@ function AdminEmpleado() {
           
         }
         setShowButton(userarray);
+        if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+          let table2=$('#myTable2').DataTable();
+          table2.destroy();
+        }
+        setTimeout(function(){
+          
+          if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+            //setTimeout(function(){new DataTable('#'+nambre);}, 1000);
+            /*$('#myTable2').DataTable({
+              destroy: true
+            });
+            nambre=Buscar;
+            const element = document.getElementById('myTable2');
+            if (element) {
+              element.remove();
+            }
+            
+            console.log(2);
+            setTimeout(function(){new DataTable('#'+Buscar);}, 1000);*/
+          }else{
+            new DataTable('#myTable2');
+          }
+        }, 1000);
+        
       
         })
         .catch((error) => {
@@ -175,10 +220,13 @@ function AdminEmpleado() {
 //-------------------------------------------------------HTML---------------------------------------------------------
  
   return (
+    
     <AppLayout>
-      
       <ModalCrearEmpleado />
       <ModalEditarEmpleado/>
+      {habilitar&&<ModalHistorial/>}
+      
+      
       <h1 className="text-5xl mt-6"> Administrar Empleados</h1>
 
       <div className="w-full max-w-screen-xl px-4 xl:p-0 flex flex-col justify-center mt-6">
@@ -207,10 +255,10 @@ function AdminEmpleado() {
                 
           </div>
           <div style={{ height: '30px' }} />
-
+ 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-[550px]">
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
-                  <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
+              <table id={nambre} className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                  <thead  className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
                           <th scope="col" className="px-6 py-3">
                               Nombre
@@ -227,12 +275,15 @@ function AdminEmpleado() {
                           <th scope="col" className="px-6 py-3">
                               Editar
                           </th>
+                          <th scope="col" className="px-6 py-3">
+                              Historial
+                          </th>
                       </tr>
                   </thead>
                   <tbody>
                       {
                           empleado.map((item)=>
-                              <tr key={item.empleadoId} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
+                              <tr key={item.empleadoId}  className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
                                   <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
                                       { item.nombre}
                                   </th>
@@ -272,39 +323,21 @@ function AdminEmpleado() {
                                       Editar
                                     </button>
                                   </td>
+                                  <td className="px-6 py-4 text-left">
+                                        
+                                    <button className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                                    onClick={() => {Historial(item.empleadoId);}}>
+                                      Historial
+                                    </button>
+                                    
+                                  </td>
                               </tr>
                           )
                       }
                   </tbody>
               </table>
-              
           </div>
-          <table id="myTable" class="display">
-    <thead>
-        <tr>
-            <th>Column 1</th>
-            <th>Column 2</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>hola</td>
-            <td>lol</td>
-        </tr>
-        <tr>
-            <td>pez</td>
-            <td>res</td>
-        </tr>
-        <tr>
-            <td>ratas</td>
-            <td>pol</td>
-        </tr>
-        <tr>
-            <td>ratas</td>
-            <td>pol</td>
-        </tr>
-    </tbody>
-</table>
+
         </div>
       </div>
       <Toaster />

@@ -24,7 +24,7 @@ var connection = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: 3306
+  port: process.env.PORT,
 });
 
 function encriptar(texto) {
@@ -1677,13 +1677,14 @@ app.post('/IngresarBitacora', async function (req, res) {
 app.get('/ObtenerBitacora', async function (req, res) {
   
   try{
-    let fecha= req.query.fecha;
+    let fecha1= req.query.fecha1;
+    let fecha2= req.query.fecha2;
     let sql = `SELECT m.id, m.fecha, TIME(m.fecha) AS hora, u1.correo AS usuario, t.tipo AS movimiento, m.afectado AS objetivo, u2.nit, bien.codigo AS bien FROM movimiento_bien m
     INNER JOIN usuario u1 ON u1.userId=m.usuario
     LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
     LEFT JOIN bien ON bien.id=m.bien_afectado
     INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento 
-    WHERE DATE(m.fecha)=STR_TO_DATE(DATE_FORMAT("`+fecha+`", "%d/%m/%Y"), '%d/%m/%Y');`;
+    WHERE DATE(m.fecha)>=STR_TO_DATE(DATE_FORMAT("`+fecha1+`", "%d/%m/%Y"), '%d/%m/%Y') AND DATE(m.fecha)<=STR_TO_DATE(DATE_FORMAT("`+fecha2+`", "%d/%m/%Y"), '%d/%m/%Y') ;`;
     
    
     const result = await query(sql);
@@ -2357,4 +2358,41 @@ app.get('/BuscarEmpleado', async function (req, res) {
     res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
     return;
   }
+});
+
+
+//------------------------------------- Obtener historial empleado--------------------------------------
+
+app.get('/HistorialEmpleado', async function (req, res) {
+
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+      res.status(401).json({ token: false });
+      return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
+  try{
+
+    let empleado= req.query.empleado;
+    
+    let sql = `SELECT r.fecha, bien.id, bien.codigo, bien.marca, bien.modelo, bien.serie, bien.descripcion, bien.precio 
+    from empleado, bien, tarjeta_responsabilidad t, responsable_activo r
+    WHERE r.tarjeta=t.id and r.bien=bien.id and t.empleado=empleadoId and r.activo=true and empleadoId = `+empleado+`;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener el Historial"});
+    return;
+  }
+  
 });

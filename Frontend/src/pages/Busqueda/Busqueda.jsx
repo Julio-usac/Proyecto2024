@@ -19,11 +19,13 @@ function Busqueda() {
   const seteditar = useEditar((state) => state.setEditar);
   const {rol } = useAuth((state) => state);
   const url = useAuth((state) => state.url);
+  
+  const { token } = useAuth((state) => state);
 
   //--------------------------------------------Declaracion de estados-----------------------------------------
 
 
-  const [Opcion, setOpcion] = useState(0);
+  const [Opcion, setOpcion] = useState(5);
   const [Buscar, setBuscar] = useState('');
   const [Tabla, setTabla] = useState([]);
 
@@ -75,11 +77,31 @@ function Busqueda() {
     }
   };
 
+  
+  //Funcion para descargar el reporte por usuario en PDF
+  const DescargarPDF = async() => {
+    try {
+      const response = await axios.get(url+'/ReportePDFbienesTotal/',
+      { 
+        responseType: 'blob',
+        headers: {
+          'Authorization': token
+        },  
+    
+      });
+      const url2 = window.URL.createObjectURL(response.data);
+      window.open(url2,'_blank')
+   
+    } catch (error) {
+      console.error('Hubo un error al descargar el archivo: ', error);
+    }
+  };
+
 
   //Funcion para buscar bienes segun las opcion de busqueda seleccionada
 
   const Busqueda = async() => {
-    if (Opcion!=0 && Buscar!=''){
+    if (Buscar!=''){
         try {
         const response = await axios.get(url+'/BuscarBienes/', { params: {
             opcion: Opcion,
@@ -97,7 +119,32 @@ function Busqueda() {
                 if ( $.fn.dataTable.isDataTable('#myTable2') ) {
                  
                 }else{
-                  new DataTable('#myTable2');
+                    new DataTable('#myTable2');
+
+                    const searchInput = document.querySelector('#myTable2_filter input');
+                    const searchlabel = document.querySelector('#myTable2_filter label');
+                    
+                    
+                    // Aplica las clases de Tailwind al label
+                    searchlabel.classList.add(
+                        'font-bold',
+                        'text-xl'
+                    );
+                    
+
+                    // Aplica las clases de Tailwind al cuadro de búsqueda
+                    searchInput.classList.add(
+                        'font-normal',
+                        'border-2',
+                        'py-1',
+                        'mt-2',
+                        'mb-3',
+                        'mx-2',
+                        'input-primary',
+                        'border-black-400',
+                        'focus:outline-none',
+                        'focus:border-blue-500'
+                    );
                 }
               }, 1000);
         }
@@ -123,6 +170,12 @@ function Busqueda() {
                     >
                     Descargar reporte
             </button>
+            <button
+                className="btn btn-error w-fit mx-2"
+                onClick={ DescargarPDF}
+              >
+                Descargar PDF
+              </button>
         </div>
             <div className="flex items-center">
                 <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
@@ -143,44 +196,49 @@ function Busqueda() {
                 <label htmlFor="checkbox1">Marca</label>
                 <input type="radio" name="radio" id="radio3" className="ml-6 mr-5" value={3} onChange={handleChange}/>
                 <label htmlFor="checkbox1">Modelo</label>
-                <input type="radio" name="radio" id="radio3" className="ml-6 mr-5" value={4} onChange={handleChange}/>
+                <input type="radio" name="radio" id="radio4" className="ml-6 mr-5" value={4} onChange={handleChange}/>
                 <label htmlFor="checkbox1">Serie</label>
-                <input type="radio" name="radio" id="radio3" className="ml-6 mr-5" value={5} onChange={handleChange}/>
+                <input type="radio" name="radio" id="radio5" className="ml-6 mr-5" value={5} onChange={handleChange}/>
                 <label htmlFor="checkbox1">Descripcion</label>
+                <input type="radio" name="radio" id="radio6" className="ml-6 mr-5" value={6} onChange={handleChange}/>
+                <label htmlFor="checkbox1">Ubicacion</label>
 
             </div>
             
             <div>
                 <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6  overflow-y-auto  h-[500px]">
-                    <table id="myTable2" className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
+                    <table id="myTable2" className="table table-sm table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900 ">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
                                
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Codigo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800 ">
                                     Empleado
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Marca
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Modelo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Serie
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Descripcion
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
+                                    Ubicacion
+                                </th>
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Saldo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     <span className="sr-only">Editar</span>
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     <span className="sr-only">Imagen</span>
                                 </th>
                             </tr>
@@ -197,6 +255,7 @@ function Busqueda() {
                                         <td className="px-6 py-4"> {item.modelo}</td>
                                         <td className="px-6 py-4"> {item.serie}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
+                                        <td className="px-6 py-4"> {item.ubicacion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
                                         <td className="px-6 py-4 text-right">
                                         <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria,item.imagen)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>

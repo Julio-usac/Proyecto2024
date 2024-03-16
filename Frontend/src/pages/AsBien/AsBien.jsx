@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 
 import useAuth from "../../auth/authStore";
+import DataTable from 'datatables.net-dt';
+import $ from "jquery";
 
 function AsBien() {
 
@@ -37,7 +39,6 @@ function AsBien() {
   //estados utilizados para la visibilidad de las tablas
   const [Vagregar, setVagregar] = useState(true);
   const [Vquitar, setVquitar] = useState(false);
-  const [actualizar, setActualizar] = useState(false);
   
   const [toggleTipo, setToggleTipo] = useState(true);
 
@@ -187,6 +188,43 @@ const handleSearchChange = (event) => {
         
       }
       setShowButton(bienarray);
+
+      if ( $.fn.dataTable.isDataTable('#myTable') ) {
+        let table2=$('#myTable').DataTable();
+        table2.destroy();
+      }
+      setTimeout(function(){
+        
+        if ( $.fn.dataTable.isDataTable('#myTable') ) {
+          
+        }else{
+          new DataTable('#myTable');
+          const searchInput = document.querySelector('#myTable_filter input');
+                    const searchlabel = document.querySelector('#myTable_filter label');
+                    
+                    
+                    // Aplica las clases de Tailwind al label
+                    searchlabel.classList.add(
+                        'font-bold',
+                        'text-xl'
+                    );
+                    
+
+                    // Aplica las clases de Tailwind al cuadro de búsqueda
+                    searchInput.classList.add(
+                        'font-normal',
+                        'border-2',
+                        'py-1',
+                        'mt-2',
+                        'mb-3',
+                        'mx-2',
+                        'input-primary',
+                        'border-black-400',
+                        'focus:outline-none',
+                        'focus:border-blue-500'
+                    );
+        }
+      }, 1000);
       })
       .catch((error) => {
         toast.error('Error al retornar los bienes no asignados')
@@ -215,6 +253,42 @@ const handleSearchChange = (event) => {
               
             }
             setShowButton2(bienarray);
+            if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+              let table2=$('#myTable2').DataTable();
+              table2.destroy();
+            }
+            setTimeout(function(){
+              
+              if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+                
+              }else{
+                new DataTable('#myTable2');
+                const searchInput = document.querySelector('#myTable2_filter input');
+                          const searchlabel = document.querySelector('#myTable2_filter label');
+                          
+                          
+                          // Aplica las clases de Tailwind al label
+                          searchlabel.classList.add(
+                              'font-bold',
+                              'text-xl'
+                          );
+                          
+      
+                          // Aplica las clases de Tailwind al cuadro de búsqueda
+                          searchInput.classList.add(
+                              'font-normal',
+                              'border-2',
+                              'py-1',
+                              'mt-2',
+                              'mb-3',
+                              'mx-2',
+                              'input-primary',
+                              'border-black-400',
+                              'focus:outline-none',
+                              'focus:border-blue-500'
+                          );
+              }
+            }, 1000);
           }else{
             toast.error(resp.data.message)
           }
@@ -372,18 +446,7 @@ const handleSearchChange = (event) => {
                         )}
                     </div>
                         
-                        {/*
-                        <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        required {...register("empleado", { required: true })} value = {opcion} onChange={(e)=>Cambio(e)}>
-                        
-                        <option>Seleccionar</option>
-                          {
-                            empleado.map((item)=>
-                              <option key={item.empleadoId} value={item.empleadoId} >{item.nombre}</option>
-                            )
-                          }
-                          </select>  
-                        */}
+                      
                       </div>
                         
                       {toggleTipo && (<div className="w-fit mt-6">
@@ -458,22 +521,22 @@ const handleSearchChange = (event) => {
                   Asignar activos
                 </h2>}
                 {Vagregar&&<div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-96">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900 table-auto ">
+                    <table id="myTable" className="table table-xs table-pin-rows w-full text-sm text-left text-gray-500 dark:text-gray-900 table-auto ">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Codigo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Marca
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Descripcion
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Saldo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     <span className="sr-only">Accion</span>
                                 </th>
                             </tr>
@@ -522,22 +585,22 @@ const handleSearchChange = (event) => {
                   Desasignar activos
                 </h2>}
                 {Vquitar&&<div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-96">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                    <table id="myTable2" className="table table-xs table-pin-rows w-full text-sm text-left text-gray-500 dark:text-gray-900">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Codigo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Marca
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Descripcion
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     Saldo
                                 </th>
-                                <th scope="col" className="px-6 py-3">
+                                <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     <span className="sr-only">Accion</span>
                                 </th>
                             </tr>

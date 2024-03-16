@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
+
 function InBien() {
 
 //-----------------------------------------Retornar informacion del usuario-----------------------------------------
@@ -151,7 +152,7 @@ function InBien() {
     <AppLayout>
       
       <div className="bg-base-300 w-full h-[100vh] flex justify-center items-center">
-        <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
+        <div className="flex card bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
           
           <div className="card-body p-6 w-full flex flex-col justify-between">
             <div>

@@ -13,14 +13,9 @@ const ModelHistorial = () => {
 
     //--------------------------------------------Retornar datos del usuario-----------------------------------------
     
-    const [bien, setBien] = useState([]);
-
-    const  userid  = useAuth((state) => state.id);
-  
+    const [bien, setBien] = useState([]);  
     const { token,logout} = useAuth((state) => state);
     const url = useAuth((state) => state.url);
-  
-    const [retornar, setRetornar] = useState([]);
     const {borrarDatos}= useEmpleado((state) => state);
 
 
@@ -68,7 +63,7 @@ const ModelHistorial = () => {
         searchInput.classList.add(
             'font-normal',
             'border-2',
-            'py-2',
+            'py-1',
             'mt-2',
             'mb-3',
             'mx-2',

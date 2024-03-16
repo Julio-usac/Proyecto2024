@@ -1,6 +1,7 @@
 import { FiEye, FiEyeOff} from "react-icons/fi";
 import { MdStorage} from "react-icons/md";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 import axios from "axios";
 import useAuth from "../auth/authStore";
@@ -14,7 +15,7 @@ const Login = () => {
 
   //------------------------------- Retornar funciones del Storage -----------------------------------------
 
-
+  const [showPassword,setShowPassword] = useState(false);
   const login = useAuth((state) => state.login);
   const url = useAuth((state) => state.url);
   const isAuthenticated = useAuth((state) => state.isAuthenticated);
@@ -110,56 +111,20 @@ const Login = () => {
               </label>
               <div className="flex gap-1">
                 <input
-                  type="password"
+                  type={showPassword? 'text' : 'password'}
                   required
                   className="input input-primary w-full max-w-xs join-item focus:ring-0 focus"
                   {...register("password", { required: true })}
                 />
                 <label className="btn swap swap-rotate">
-                  <input type="checkbox" />
-                  <FiEye className="swap-off" />
-                  <FiEyeOff className="swap-on" />
+                  <input type="checkbox" onClick={()=> setShowPassword(!showPassword)} />
+                  
+                  <FiEye className="swap-on"/>
+                  <FiEyeOff className="swap-off" />
                 </label>
               </div>
             </div>
-             {/*
-            <div className="form-control">
-              <label className="label cursor-pointer flex gap-4 flex-col w-full justify-start items-start">
-                <span className="label-text">Conexión a grupo:</span>
-                <select
-                  className="select select-bordered w-full max-w-xs"
-                  {...register("url")}
-                  defaultValue={data.g6}
-                >
-                  <option value={data.g1}>Grupo 1</option>
-                  <option value={data.g2}>Grupo 2</option>
-                  <option value={data.g3}>Grupo 3</option>
-                  <option value={data.g4}>Grupo 4</option>
-                  <option value={data.g5}>Grupo 5</option>
-                  <option value={data.g6}>
-                    Grupo 6
-                  </option>
-                  <option value={data.g7}>Grupo 7</option>
-                  <option value={data.g8}>Grupo 8</option>
-                  <option value={data.g9}>Grupo 9</option>
-                  <option value={data.g10}>Grupo 10</option>
-                  <option value={data.g11}>Grupo 11</option>
-                  <option value={data.g12}>Grupo 12</option>
-                  <option value={data.g13}>Grupo 13</option>
-                </select>
-              </label>
-            </div>
-            <div className="form-control">
-              <label className="label cursor-pointer flex w-fit gap-4">
-                <span className="label-text">Proveedor</span>
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-primary checkbox-sm"
-                  {...register("tipoCuenta")}
-                />
-              </label>
-            </div>
-          */}
+             
           <div style={{ height: '100px' }} />
             <div className="card-actions items-center justify-center">
               <button className="btn bg-blue-500 text-white"  type="submit">

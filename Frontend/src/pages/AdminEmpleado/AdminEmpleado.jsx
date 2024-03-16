@@ -16,11 +16,9 @@ function AdminEmpleado() {
 
 //--------------------------------------------Declaracion de estados-----------------------------------------
 
- 
-  let nambre='myTable2'
+
   const [empleado, setEmpleado] = useState([]);
   const [showButton, setShowButton] = useState([]);
-  const [actualizar, setactualizar] = useState("");
   const [Buscar, setBuscar] = useState('');
 
 // Estado para habilitar el modal Historial
@@ -33,8 +31,6 @@ function AdminEmpleado() {
 
   //-----------------------------------------Retornar informacion del usuario-----------------------------------------
 
-
-  const  userid  = useAuth((state) => state.id);
   const { token,logout} = useAuth((state) => state);
   const url = useAuth((state) => state.url);
 
@@ -51,6 +47,7 @@ function AdminEmpleado() {
 
       setEmpleado(resp.data.message);
       
+      
       let userarray =[];
 
       for (let i = 0; i < resp.data.message.length; i++) {
@@ -63,7 +60,42 @@ function AdminEmpleado() {
       }
       
       setShowButton(userarray);
-      setactualizar('');
+      if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+        let table2=$('#myTable2').DataTable();
+        table2.destroy();
+      }
+      setTimeout(function(){
+        
+        if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+          
+        }else{
+          new DataTable('#myTable2');
+          const searchInput = document.querySelector('#myTable2_filter input');
+                    const searchlabel = document.querySelector('#myTable2_filter label');
+                    
+                    
+                    // Aplica las clases de Tailwind al label
+                    searchlabel.classList.add(
+                        'font-bold',
+                        'text-xl'
+                    );
+                    
+
+                    // Aplica las clases de Tailwind al cuadro de búsqueda
+                    searchInput.classList.add(
+                        'font-normal',
+                        'border-2',
+                        'py-1',
+                        'mt-2',
+                        'mb-3',
+                        'mx-2',
+                        'input-primary',
+                        'border-black-400',
+                        'focus:outline-none',
+                        'focus:border-blue-500'
+                    );
+        }
+      }, 1000);
       
       
       })
@@ -77,7 +109,7 @@ function AdminEmpleado() {
 
       });
 
-  },[actualizar]);
+  },[]);
 
 
   
@@ -126,7 +158,6 @@ function AdminEmpleado() {
     window.my_modal_5.showModal();
     
   }
-
 
   //Funcion para guardar los datos del usuario a editar
 
@@ -184,20 +215,33 @@ function AdminEmpleado() {
         setTimeout(function(){
           
           if ( $.fn.dataTable.isDataTable('#myTable2') ) {
-            //setTimeout(function(){new DataTable('#'+nambre);}, 1000);
-            /*$('#myTable2').DataTable({
-              destroy: true
-            });
-            nambre=Buscar;
-            const element = document.getElementById('myTable2');
-            if (element) {
-              element.remove();
-            }
             
-            console.log(2);
-            setTimeout(function(){new DataTable('#'+Buscar);}, 1000);*/
           }else{
             new DataTable('#myTable2');
+            const searchInput = document.querySelector('#myTable2_filter input');
+                    const searchlabel = document.querySelector('#myTable2_filter label');
+                    
+                    
+                    // Aplica las clases de Tailwind al label
+                    searchlabel.classList.add(
+                        'font-bold',
+                        'text-xl'
+                    );
+                    
+
+                    // Aplica las clases de Tailwind al cuadro de búsqueda
+                    searchInput.classList.add(
+                        'font-normal',
+                        'border-2',
+                        'py-1',
+                        'mt-2',
+                        'mb-3',
+                        'mx-2',
+                        'input-primary',
+                        'border-black-400',
+                        'focus:outline-none',
+                        'focus:border-blue-500'
+                    );
           }
         }, 1000);
         
@@ -257,25 +301,25 @@ function AdminEmpleado() {
           <div style={{ height: '30px' }} />
  
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-[550px]">
-              <table id={nambre} className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
-                  <thead  className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
+              <table id="myTable2" className="table table-sm table-pin-rows  w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                  <thead  className="text-sm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3  dark:bg-gray-400 dark:text-gray-800">
                               Nombre
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               DPI
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               NIT
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Estado
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Editar
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Historial
                           </th>
                       </tr>
@@ -284,13 +328,13 @@ function AdminEmpleado() {
                       {
                           empleado.map((item)=>
                               <tr key={item.empleadoId}  className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
-                                  <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
+                                  <th scope="row" className="px-6 py-4  font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
                                       { item.nombre}
                                   </th>
-                                  <td className="px-6 py-4"> 
+                                  <td className="px-6 py-4 "> 
                                     {item.dpi}
                                   </td>
-                                  <td className="px-6 py-4"> 
+                                  <td className="px-6 py-4 "> 
                                     {item.nit}
                                   </td>
 

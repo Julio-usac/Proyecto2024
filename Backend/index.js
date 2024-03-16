@@ -5,6 +5,7 @@ var crypto = require('crypto');
 var mysql = require('mysql');
 var cors = require('cors');
 const excel = require('excel4node');
+const PDFDocument = require('pdfkit');
 require('dotenv').config();
 
 var port = 9095;
@@ -711,6 +712,19 @@ app.post('/AsBien', async function (req, res) {
 
 app.get('/DescargarReporteUsuario', async function (req, res) {
 
+  //Confirmar token
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
   try{
     let empleado= req.query.empleado;
 
@@ -816,17 +830,16 @@ app.get('/BuscarBienes', async function (req, res) {
 
   let buscar = req.query.buscar;
   let opcion = req.query.opcion;
-  
   let sql=""
   switch (opcion) {
     case  "1":
 
-      sql = `SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
       LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-      WHERE bien.activo=True and codigo="`+buscar+`";`;
+      WHERE bien.activo=True and codigo LIKE '%`+buscar+`%';`;
      
       try{
        
@@ -841,12 +854,12 @@ app.get('/BuscarBienes', async function (req, res) {
       break;
     case "2":
       buscar=buscar.toUpperCase()
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
       LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-      WHERE bien.activo=True and marca.nombre="`+buscar+`";`;
+      WHERE bien.activo=True and marca.nombre LIKE '%`+buscar+`%';`;
 
       try{
        
@@ -860,12 +873,12 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "3":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
       LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-      WHERE bien.activo=True and modelo="`+buscar+`";`;
+      WHERE bien.activo=True and modelo LIKE '%`+buscar+`%';`;
       try{
        
         const result = await query(sql);
@@ -878,12 +891,12 @@ app.get('/BuscarBienes', async function (req, res) {
       }
       break;
     case "4":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
       LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-      WHERE bien.activo=True and serie="`+buscar+`";`;
+      WHERE bien.activo=True and serie LIKE '%`+buscar+`%';`;
       try{
        
         const result = await query(sql);
@@ -895,25 +908,44 @@ app.get('/BuscarBienes', async function (req, res) {
         return;
       }
       break;
-    case "5":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,bien.precio FROM bien
-      LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
-      LEFT JOIN marca ON marca.marcaId=bien.marca 
-      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-      LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-      WHERE bien.activo=True and descripcion LIKE '%`+buscar+`%';`;
-    
-      try{
-       
-        const result = await query(sql);
-        
-        res.json({success: true, message: result});
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: error});
-        return;
-      }
-      break;
+      case "6":
+        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+        LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
+        LEFT JOIN marca ON marca.marcaId=bien.marca 
+        LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+        LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+        WHERE bien.activo=True and ubicacion.nombre LIKE '%`+buscar+`%';`;
+      
+        try{
+         
+          const result = await query(sql);
+          
+          res.json({success: true, message: result});
+        }catch (error) {
+          console.log(error);
+          res.status(400).json({success: false, message: error});
+          return;
+        }
+        break;
+      default:
+        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+        LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
+        LEFT JOIN marca ON marca.marcaId=bien.marca 
+        LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+        LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+        WHERE bien.activo=True and descripcion LIKE '%`+buscar+`%';`;
+      
+        try{
+          
+          const result = await query(sql);
+          
+          res.json({success: true, message: result});
+        }catch (error) {
+          console.log(error);
+          res.status(400).json({success: false, message: error});
+          return;
+        }
+        break;
   }
     
 });
@@ -960,8 +992,8 @@ app.get('/DescargarReporteTotal', async function (req, res) {
 
     result.forEach((row, index) => {
       let cast="";
-      if(row.correo){
-        cast=""+row.correo+"";
+      if(row.nit){
+        cast=""+row.nit+"";
       }else{
         cast="No asignado";
       }
@@ -1446,7 +1478,7 @@ app.put('/ActualizarPass', async function (req, res) {
        res.status(401).json({ token: false });
        return;
     }
-    let decoded = verToken(token);
+    verToken(token);
     try{
       let nueva = req.body.nueva;
       let correo = req.body.correo;
@@ -1455,7 +1487,7 @@ app.put('/ActualizarPass', async function (req, res) {
 
       let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE correo='" + correo + "' ;";
 
-      const result = await query(sql);
+      await query(sql);
 
       res.json({success: true});
 
@@ -1480,7 +1512,7 @@ app.put('/ActualizarEstado', function (req, res) {
        res.status(401).json({ token: false });
        return;
     }
-    let decoded = verToken(token);
+     verToken(token);
     let estado = req.body.estado;
     let id = req.body.id;
 
@@ -1780,9 +1812,23 @@ app.get('/DescargarBitacora', async function (req, res) {
 
 
 
-//------------------------------------------------ DESCARGAR BITACORA -------------------------------------
+//------------------------------------------------ DESCARGAR bienes de baja -------------------------------------
 
 app.get('/DescargarBienesBaja', async function (req, res) {
+
+  
+  //Confirmar token
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
 
   try{
 
@@ -1796,7 +1842,7 @@ app.get('/DescargarBienesBaja', async function (req, res) {
     WHERE r.activo=0 and bien.activo=0
     GROUP BY r.bien)
     UNION
-    SELECT bien.id,"Sin usuario","Sin Usuario",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+    SELECT bien.id,"Sin asignacion","Sin asignacion",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
     LEFT JOIN marca ON bien.marca = marca.marcaId
     WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
     WHERE r.activo=0);`;
@@ -2395,4 +2441,595 @@ app.get('/HistorialEmpleado', async function (req, res) {
     return;
   }
   
+});
+
+
+//------------------------------------- Restablecer contraseña --------------------------------------
+
+
+app.put('/RestablecerPass', async function (req, res) {
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
+  try{
+    let userId = req.body.userid;
+    let passCrypto = encriptar("MINECO");
+
+    let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE userId='" + userId + "' ;";
+
+    await query(sql);
+
+    res.json({success: true});
+
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al verificar", error:error});
+    return;
+  }
+});
+
+
+
+
+//------------------------------------- Reporte PDF bienes por usuario --------------------------------------
+
+app.get('/ReportePDFbienesUsuario',  async function(req, res) {
+
+  //Confirmar token
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
+  // Crear una instancia de PDFKit
+  const pdf = new PDFDocument({
+    size: 'LETTER'
+  });
+  // Enviar el PDF al cliente
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  pdf.pipe(res);
+
+  pdf.image('logo.jpg', {
+    fit: [150, 150],
+    x: 400,
+    y: 20
+  });
+
+  pdf.moveDown();
+
+  // Añadir un título al PDF
+  pdf.fontSize(20).text('Bienes por empleado',{
+    align: 'center'
+  })
+
+  // Añadir un espacio
+  pdf.moveDown();
+
+  // Crear un arreglo con los datos de la tabla
+  const data = [
+    ['Fecha_Compra','No.cuenta','Codigo','Cantidad','Descripcion','Ubicacion','Saldo']
+  ];
+
+  // Definir el ancho y el alto de cada celda
+  let cellWidth = 80;
+  let cellHeight = 30;
+
+  // Definir el punto inicial de la tabla
+  let x = 25;
+  let y = 150;
+
+  // Recorrer el arreglo de datos
+  for (let i = 0; i < data.length; i++) {
+    // Recorrer cada fila del arreglo
+    for (let j = 0; j < data[i].length; j++) {
+      if(data[i][j]=="Cantidad"){
+        cellWidth=65
+      }else if(data[i][j]=="Saldo"){
+        cellWidth=70
+      }else if(data[i][j]=="Descripcion"){
+        cellWidth=105
+      }else{
+        cellWidth=80
+      }
+      // Dibujar el borde de la celda
+      pdf.rect(x, y, cellWidth, cellHeight).stroke();
+      // Añadir el texto de la celda
+      
+      pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
+        width: cellWidth - 20,
+        align: 'center'
+      });
+      // Mover el punto x al siguiente valor
+      
+      x += cellWidth;
+      
+    }
+    // Restablecer el punto x al valor inicial
+    x = 25;
+    // Mover el punto y al siguiente valor
+    y += cellHeight;
+  }
+  cellWidth=80
+  //Funcion para ajustar el tamaño de las celdas
+
+  function tamano(texto1,texto2) {
+
+   
+    let texto=(texto1.length > texto2.length) ? texto1 : texto2
+    
+    if(texto.length > 57){
+
+      cellHeight = Math.round((texto.length / 16)*18)
+      cellHeight -= Math.round(texto.length / 3)
+
+    }else if(texto.length<13){
+
+      cellHeight = 20;
+
+    }else if(texto.length > 32 && texto.length < 57){
+
+      cellHeight=50;
+
+    }
+    else if(texto.length > 13 && texto.length < 32){
+
+      cellHeight=30;
+
+    }
+    
+  }
+
+  //Funcion para agregar celdas
+  function celdas(texto) {
+    
+    // Añadir el texto de la celda
+    pdf.rect(x, y, cellWidth, cellHeight).stroke();
+
+    pdf.font('Helvetica').text(texto, x + 5, y + 7, {
+      width: cellWidth - 7,
+      align: 'left'
+    });
+    // Mover el punto x al siguiente valor
+    x += cellWidth;
+
+  }
+
+  try{
+    let empleado= req.query.empleado;
+    
+    let sql = `SELECT IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco, IFNULL(cuenta,'No ingresado') AS cuenta,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(ubicacion.nombre,'No ingresado') AS ubicacion,IFNULL(bien.precio,'No ingresado') AS precio FROM bien
+    INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
+    LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id;`;
+    
+    const result = await query(sql);
+
+   
+// Recorrer cada fila del arreglo
+    for (let i = 0; i < result.length; i++) {
+      
+      tamano(result[i].descripcion+"",result[i].ubicacion+"")
+      // Añadir el texto de la celda
+      celdas(result[i].fechaco)
+      celdas(result[i].cuenta)
+      celdas(result[i].codigo)
+      cellWidth = 65;
+      celdas(result[i].cantidad)
+      cellWidth = 105;
+      celdas(result[i].descripcion)
+      cellWidth = 80;
+      celdas(result[i].ubicacion)
+      cellWidth = 70;
+      celdas(result[i].precio)
+      cellWidth = 80;
+      
+      // Restablecer el punto x al valor inicial
+      x = 25;
+      // Mover el punto y al siguiente valor
+      y += cellHeight;
+
+      if(y>600){
+        pdf.addPage();
+        y=100
+      }
+    }
+    
+    // Finalizar el documento
+    pdf.end();  
+  
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener"});
+    return;
+  }
+
+});
+
+
+//------------------------------------- Reporte PDF total de bienes --------------------------------------
+
+app.get('/ReportePDFbienesTotal',  async function(req, res) {
+  
+  //Confirmar token
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
+  // Crear una instancia de PDFKit
+  const pdf = new PDFDocument({
+    size: 'LETTER'
+  });
+  // Enviar el PDF al cliente
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  pdf.pipe(res);
+
+  pdf.image('logo.jpg', {
+    fit: [150, 150],
+    x: 400,
+    y: 20
+  });
+
+  pdf.moveDown();
+
+  // Añadir un título al PDF
+  pdf.fontSize(20).text('Bienes por empleado',{
+    align: 'center'
+  })
+
+  // Añadir un espacio
+  pdf.moveDown();
+
+  // Crear un arreglo con los datos de la tabla
+  const data = [
+    ['Usuario','Codigo','Marca','Modelo','Serie','Descripcion','Saldo']
+  ];
+
+  // Definir el ancho y el alto de cada celda
+  let cellWidth = 80;
+  let cellHeight = 30;
+
+  // Definir el punto inicial de la tabla
+  let x = 25;
+  let y = 150;
+
+  // Recorrer el arreglo de datos
+  for (let i = 0; i < data.length; i++) {
+    // Recorrer cada fila del arreglo
+    for (let j = 0; j < data[i].length; j++) {
+      if(data[i][j]=="Usuario"){
+        cellWidth=60
+      }else if(data[i][j]=="Descripcion"){
+        cellWidth=105
+      }else{
+        cellWidth=80
+      }
+      // Dibujar el borde de la celda
+      pdf.rect(x, y, cellWidth, cellHeight).stroke();
+      // Añadir el texto de la celda
+      
+      pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
+        width: cellWidth - 20,
+        align: 'center'
+      });
+      // Mover el punto x al siguiente valor
+      x += cellWidth;
+      
+    }
+    // Restablecer el punto x al valor inicial
+    x = 25;
+    // Mover el punto y al siguiente valor
+    y += cellHeight;
+  }
+
+  function tamano(texto1,texto2,texto3) {
+
+    //typeof texto === 'string'
+    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
+    let texto = (calculo.length > texto3.length) ?  calculo : texto3
+    
+    
+    if(texto.length > 57){
+
+      cellHeight = Math.round((texto.length / 16)*18)
+      cellHeight -= Math.round(texto.length / 3)
+
+    }else if(texto.length<13){
+
+      cellHeight = 20;
+
+    }else if(texto.length > 35 && texto.length < 57){
+
+      cellHeight=50;
+
+    }
+    else if(texto.length > 13 && texto.length < 35){
+
+      cellHeight=30;
+
+    }
+    
+  }
+  //Funcion para agregar celdas
+  function celdas(texto) {
+    
+    // Añadir el texto de la celda
+    pdf.rect(x, y, cellWidth, cellHeight).stroke();
+
+    pdf.font('Helvetica').text(texto, x + 5, y + 7, {
+      width: cellWidth - 7,
+      align: 'left'
+    });
+    // Mover el punto x al siguiente valor
+    x += cellWidth;
+
+  }
+
+
+  try{
+    
+    let sql = `SELECT nit,codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien 
+    LEFT JOIN marca ON marca.marcaId=bien.marca 
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+    LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+    WHERE bien.activo=True;`;
+    
+    const result = await query(sql);
+
+   
+// Recorrer cada fila del arreglo
+    for (let i = 0; i < result.length; i++) {
+
+      
+      tamano(result[i].descripcion+"",result[i].serie+"",result[i].modelo+"")
+      
+      // Añadir el texto de la celda
+      cellWidth = 60;
+      celdas(result[i].nit)
+      cellWidth = 80;
+      celdas(result[i].codigo)
+      celdas(result[i].marca)
+      celdas(result[i].modelo)
+      celdas(result[i].serie)
+      cellWidth = 105;
+      celdas(result[i].descripcion)
+      cellWidth = 80;
+      celdas(result[i].precio)
+      
+      // Restablecer el punto x al valor inicial
+      x = 25;
+      // Mover el punto y al siguiente valor
+      y += cellHeight;
+
+      if(y>600){
+        pdf.addPage();
+        y=100
+      }
+    }
+    
+    // Finalizar el documento
+    pdf.end();  
+  
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener"});
+    return;
+  }
+
+});
+
+
+
+//------------------------------------- Reporte PDF bienes de baja --------------------------------------
+
+app.get('/ReportePDFbienesBaja',  async function(req, res) {
+  
+  //Confirmar token
+  try {
+    const token = req.headers['authorization'];
+    if (!token) {
+       res.status(401).json({ token: false });
+       return;
+    }
+    verToken(token);
+  } catch (err) {
+    res.status(401).json({token: false});
+    return;
+  }
+
+  // Crear una instancia de PDFKit
+  const pdf = new PDFDocument({
+    size: 'LETTER'
+  });
+  // Enviar el PDF al cliente
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  pdf.pipe(res);
+
+  pdf.image('logo.jpg', {
+    fit: [150, 150],
+    x: 400,
+    y: 20
+  });
+
+  pdf.moveDown();
+
+  // Añadir un título al PDF
+  pdf.fontSize(20).text('Bienes de Baja',{
+    align: 'center'
+  })
+
+  // Añadir un espacio
+  pdf.moveDown();
+
+  // Crear un arreglo con los datos de la tabla
+  const data = [
+    ['Fecha de baja','Empleado','Codigo','Modelo','Serie','Descripcion','Precio']
+  ];
+
+  // Definir el ancho y el alto de cada celda
+  let cellWidth = 80;
+  let cellHeight = 30;
+
+  // Definir el punto inicial de la tabla
+  let x = 25;
+  let y = 150;
+
+  // Recorrer el arreglo de datos
+  for (let i = 0; i < data.length; i++) {
+    // Recorrer cada fila del arreglo
+    for (let j = 0; j < data[i].length; j++) {
+      if(data[i][j]=="Fecha de baja" || data[i][j]=="Empleado" || data[i][j]=="Precio"){
+        cellWidth=65
+      }else if(data[i][j]=="Descripcion"){
+        cellWidth=105
+      }else{
+        cellWidth=80
+      }
+      // Dibujar el borde de la celda
+      pdf.rect(x, y, cellWidth, cellHeight).stroke();
+      // Añadir el texto de la celda
+      
+      pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
+        width: cellWidth - 20,
+        align: 'center'
+      });
+      // Mover el punto x al siguiente valor
+      x += cellWidth;
+      
+    }
+    // Restablecer el punto x al valor inicial
+    x = 25;
+    // Mover el punto y al siguiente valor
+    y += cellHeight;
+  }
+
+  function tamano(texto1,texto2,texto3) {
+
+    //typeof texto === 'string'
+    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
+    let texto = (calculo.length > texto3.length) ?  calculo : texto3
+    
+    
+    if(texto.length > 57){
+
+      cellHeight = Math.round((texto.length / 16)*18)
+      cellHeight -= Math.round(texto.length / 3)
+
+    }else if(texto.length<13){
+
+      cellHeight = 20;
+
+    }else if(texto.length > 35 && texto.length < 57){
+
+      cellHeight=50;
+
+    }
+    else if(texto.length > 13 && texto.length < 35){
+
+      cellHeight=30;
+
+    }
+    
+  }
+  //Funcion para agregar celdas
+  function celdas(texto) {
+    
+    // Añadir el texto de la celda
+    pdf.rect(x, y, cellWidth, cellHeight).stroke();
+
+    pdf.font('Helvetica').text(texto, x + 5, y + 7, {
+      width: cellWidth - 7,
+      align: 'left'
+    });
+    // Mover el punto x al siguiente valor
+    x += cellWidth;
+
+  }
+
+
+  try{
+    
+    let sql = `SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,u.nit,codigo,marca.nombre AS marca,modelo,serie,descripcion,
+    IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+    INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
+    INNER JOIN bien ON bien.id = r.bien
+    INNER JOIN empleado u ON u.empleadoId = t.empleado
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
+    WHERE r.activo=0 and bien.activo=0
+    GROUP BY r.bien)
+    UNION
+    SELECT bien.id,"Sin Asignacion","Sin Asignacion",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
+    WHERE r.activo=0);`;
+    
+    const result = await query(sql);
+
+   
+// Recorrer cada fila del arreglo
+    for (let i = 0; i < result.length; i++) {
+
+      
+      tamano(result[i].descripcion+"",result[i].serie+"",result[i].modelo+"")
+      
+      // Añadir el texto de la celda
+      cellWidth = 65;
+      celdas(result[i].fecha)
+      celdas(result[i].nit)
+      cellWidth = 80;
+      celdas(result[i].codigo)
+      celdas(result[i].modelo)
+      celdas(result[i].serie)
+      cellWidth = 105;
+      celdas(result[i].descripcion)
+      cellWidth = 65;
+      celdas(result[i].precio)
+      
+      // Restablecer el punto x al valor inicial
+      x = 25;
+      // Mover el punto y al siguiente valor
+      y += cellHeight;
+
+      if(y>600){
+        pdf.addPage();
+        y=100
+      }
+    }
+    
+    // Finalizar el documento
+    pdf.end();  
+  
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener"});
+    return;
+  }
+
 });

@@ -138,7 +138,7 @@ const ModelEditarEmpleado = () => {
            
               <h2 className="card-title font-bold text-4xl text-black justify-center">
           
-                Registrar Empleado
+                Editar Empleado
 
               </h2>
               <div className="divider my-1 mt-2"></div>

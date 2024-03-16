@@ -49,7 +49,7 @@ function App() {
       <div style={{ height: '50px' }} />
       <h1 className="text-5xl">Menu principal</h1>
       <div style={{ height: '60px' }} />
-      <div className="grid grid-cols-3  gap-y-20 gap-x-20">
+      <div className="grid grid-cols-3 flex gap-y-20 gap-x-20">
         
       <Link to="/BienUsuario" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
       text-black font-bold py-2 px-4 border border-gray-400 rounded-xl">

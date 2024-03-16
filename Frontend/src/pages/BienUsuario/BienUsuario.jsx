@@ -14,7 +14,6 @@ function BienUsuario() {
 
 //-----------------------------------------Declaracion de estados-----------------------------------------
 
-  const [empleado, setEmpleado] = useState([]);
   const [opcion, setOpcion] = useState('');
   const [bien, setBien] = useState([]);
   const [saldo, setSaldo] = useState(0);
@@ -54,7 +53,6 @@ const handleSearchChange = (event) => {
       },})
       .then((resp) => {
 
-      setEmpleado(resp.data.message);
       const names=resp.data.message.map(item => item.nombre);
       const iden=resp.data.message.map(item => item.empleadoId);
       setNombres(names);
@@ -126,11 +124,13 @@ const handleSearchChange = (event) => {
   }
 
 //Funcion para descargar el reporte por usuario
-  const Descargar = async() => {
+  const DescargarExcel = async() => {
     try {
       const response = await axios.get(url+'/DescargarReporteUsuario/', { responseType: 'blob',  params: {
         empleado: opcion
-      }  });
+      },   headers: {
+        'Authorization': token
+      }, });
       const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url2;
@@ -138,7 +138,28 @@ const handleSearchChange = (event) => {
       document.body.appendChild(link);
       link.click();
     } catch (error) {
-      console.error('Hubo un error al descargar el archivo: ', error);
+      console.error('Hubo un error al descargar el archivo');
+    }
+  };
+
+  //Funcion para descargar el reporte por usuario en PDF
+  const DescargarPDF = async() => {
+    try {
+      const response = await axios.get(url+'/ReportePDFbienesUsuario/',
+      { 
+        responseType: 'blob',  
+        params: {
+          empleado: opcion
+        },headers: {
+          'Authorization': token
+        },  
+    
+      });
+      const url2 = window.URL.createObjectURL(response.data);
+      window.open(url2,'_blank')
+   
+    } catch (error) {
+      console.error('Hubo un error al descargar el archivo');
     }
   };
   
@@ -192,57 +213,54 @@ const handleSearchChange = (event) => {
           </select>
         )}
     </div>
-        {/*
-        <select id="countries" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-60 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-         value = {opcion} onChange={(e)=> {CambioS(e);}}>
-        
-        <option>Seleccionar</option>
-          {
-            empleado.map((item)=>
-              <option key={item.empleadoId} value={item.empleadoId} >{item.nombre}</option>
-            )
-          }
-          </select> 
-        */}
-
+       
+          <div>
           <button
                 className="btn btn-success w-fit"
-                onClick={ Descargar}
+                onClick={ DescargarExcel}
               >
-                Descargar reporte
+                Descargar Excel
               </button>
+
+              <button
+                className="btn btn-error w-fit mx-2"
+                onClick={ DescargarPDF}
+              >
+                Descargar PDF
+              </button>
+            </div>
           </div>
           <div style={{ height: '30px' }} />
 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-4/6">
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
-                  <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
+              <table className="table table-sm table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                  <thead className="text-sm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Fecha compra
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               No.cuenta
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Codigo
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Cantidad
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Descripcion
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Ubicacion
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               saldo
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               <span className="sr-only">Edit</span>
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               <span className="sr-only">imagen</span>
                           </th>
                       </tr>

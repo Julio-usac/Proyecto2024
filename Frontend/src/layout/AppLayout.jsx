@@ -77,7 +77,6 @@ const AppLayout = ({ children }) => {
   }, []);
 
 
-  // console.log('usuario', usuario);
   return (
     <>
       <header>

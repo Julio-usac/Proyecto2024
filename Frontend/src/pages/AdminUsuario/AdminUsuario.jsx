@@ -1,7 +1,6 @@
 import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useEffect } from "react";
 import ModalCrearUsuario from "../../components/ModalCrearUsuario";
@@ -9,6 +8,9 @@ import ModalEditarUsuario from "../../components/ModalEditarUsuario";
 import useUsuario from '../../store/usuarioStore';
 
 import useAuth from "../../auth/authStore";
+
+import DataTable from 'datatables.net-dt';
+import $ from "jquery";
 
 function AdminUsuario() {
 
@@ -18,6 +20,8 @@ function AdminUsuario() {
   const [usuario, setUsuario] = useState([]);
   const [showButton, setShowButton] = useState([]);
   const [actualizar, setactualizar] = useState("");
+  
+
 
   //-----------------------------Funcion para guardar la informacion del usuario a editar------------------------
 
@@ -54,6 +58,42 @@ function AdminUsuario() {
         
       }
       setShowButton(userarray);
+      if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+        let table2=$('#myTable2').DataTable();
+        table2.destroy();
+      }
+      setTimeout(function(){
+        
+        if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+          
+        }else{
+          new DataTable('#myTable2');
+          const searchInput = document.querySelector('#myTable2_filter input');
+                    const searchlabel = document.querySelector('#myTable2_filter label');
+                    
+                    
+                    // Aplica las clases de Tailwind al label
+                    searchlabel.classList.add(
+                        'font-bold',
+                        'text-xl'
+                    );
+                    
+
+                    // Aplica las clases de Tailwind al cuadro de búsqueda
+                    searchInput.classList.add(
+                        'font-normal',
+                        'border-2',
+                        'py-1',
+                        'mt-2',
+                        'mb-3',
+                        'mx-2',
+                        'input-primary',
+                        'border-black-400',
+                        'focus:outline-none',
+                        'focus:border-blue-500'
+                    );
+        }
+      }, 1000);
       setactualizar('');
       })
       .catch((error) => {
@@ -153,6 +193,35 @@ function AdminUsuario() {
 
   }
 
+  
+  //Funcion para actualizar el estado del usuario
+  const RestablecerPass = (id) => {    
+
+    axios.put(url+"/RestablecerPass", {
+      
+        userid: id,
+      
+    },{ headers: {
+      'Authorization': token
+    },})
+      .then((resp) => {
+        if (resp.data.success === true) {
+          toast.success("Contraseña restablecida exitosamente")
+        }else{
+          toast.error(resp.data.message)
+        }
+      })
+      .catch((error) => {
+        if ('token' in error.response.data){
+          logout();
+        }else{
+          toast.error(error.message);
+        }
+      });
+      
+  };
+
+
 
    //Funcion para mostrar el formulario para crear usuarios
   const CrearUsuario= (e) => {
@@ -169,6 +238,8 @@ function AdminUsuario() {
 
     
   }
+
+  
 //-------------------------------------------------------HTML---------------------------------------------------------
  
   return (
@@ -190,31 +261,35 @@ function AdminUsuario() {
             >
                   Crear usuario
             </button>
+            
                 
           </div>
           <div style={{ height: '30px' }} />
 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-[550px]">
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
-                  <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
+              <table id="myTable2" className="table table-sm table-pin-rows table-pin-cols w-full text-left text-gray-500 dark:text-gray-900">
+                  <thead className="text-sm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Nombre
                           </th>
-                          <th scope="col" className="px-6 py-3">
-                              Correo
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
+                              Usuario
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Rol
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Estado
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Editar
                           </th>
-                          <th scope="col" className="px-6 py-3">
-                              <span className="sr-only">Eliminar</span>
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
+                            contraseña
+                          </th>
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
+                            Eliminar
                           </th>
                       </tr>
                   </thead>
@@ -256,9 +331,16 @@ function AdminUsuario() {
                                   </td>)}
                                   <td className="px-6 py-4 text-left">
                                         
-                                    <button className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                                    <button className="font-medium text-blue-800 dark:text-blue-500 hover:underline"
                                     onClick={() => {EditarUsuario(item.userId,item.nombres,item.apellidos,item.correo,item.rolId);}}>
                                       Editar
+                                    </button>
+                                  </td>
+                                  <td className="px-6 py-4 text-left">
+                                        
+                                    <button className="font-medium  dark:text-blue-400 hover:underline"
+                                    onClick={() => {RestablecerPass(item.userId);}}>
+                                      Restablecer
                                     </button>
                                   </td>
                                   <td className="px-6 py-4 text-left">
@@ -268,6 +350,7 @@ function AdminUsuario() {
                                       Eliminar
                                     </button>
                                   </td>
+                                  
                               </tr>
                           )
                       }

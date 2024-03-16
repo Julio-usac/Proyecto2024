@@ -80,7 +80,7 @@ function Bitacora() {
           <input className="appearance-none block w-fit ring-2 bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" 
             type="date" onChange={CambiarFecha} />
 
-            <span class="mx-4 text-gray-500">a</span>
+            <span className="mx-4 text-gray-500">a</span>
 
           <input className="appearance-none block w-fit ring-2 bg-gray-200 text-gray-700 border rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white" 
             type="date" onChange={CambiarFecha2} />
@@ -98,25 +98,25 @@ function Bitacora() {
           <div style={{ height: '30px' }} />
 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-4/6">
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
-                  <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
+              <table className="table table-sm table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
+                  <thead className="text-sm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Fecha
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Hora
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Usuario
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Movimiento
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Objetivo
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               NIT/B.Codigo
                           </th>
                       </tr>
@@ -125,14 +125,14 @@ function Bitacora() {
                       {
                           usuarios.map((item)=>
                               <tr key={item.id} className="bg-white border-b dark:bg-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-400">
-                                  <th scope="row" className="px-6 py-4 font-medium text-xm text-gray-900 whitespace-nowrap dark:text-black">
+                                  <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-black">
                                       { new Date (item.fecha).toLocaleDateString()}
                                   </th>
-                                  <td className="px-6 py-4"> {item.hora}</td>
-                                  <td className="px-6 py-4"> {item.usuario}</td>
-                                  <td className="px-6 py-4"> {item.movimiento}</td>
-                                  <td className="px-6 py-4"> {(item.objetivo==0)?"Empleado":"Bien"}</td>
-                                  <td className="px-6 py-4"> {(item.nit)?item.nit:item.bien}</td>
+                                  <td className="px-6 py-4 "> {item.hora}</td>
+                                  <td className="px-6 py-4 "> {item.usuario}</td>
+                                  <td className="px-6 py-4 "> {item.movimiento}</td>
+                                  <td className="px-6 py-4 "> {(item.objetivo==0)?"Empleado":"Bien"}</td>
+                                  <td className="px-6 py-4 "> {(item.nit)?item.nit:item.bien}</td>
                               </tr>
                           )
                       }

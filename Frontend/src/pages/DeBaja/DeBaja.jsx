@@ -38,7 +38,7 @@ function DeBaja() {
             opcion: Opcion,
             buscar: Buscar
         }  });
-        console.log(response.data)
+        
         if(response.data.success==true){
             setBien(response.data.message)
         }
@@ -77,15 +77,37 @@ function DeBaja() {
 
 
  //Funcion para descargar todos los bienes dadosd de baja
-  const Descargar = async() => {
+  const DescargarExcel = async() => {
     try {
-      const response = await axios.get(url+'/DescargarBienesBaja/', { responseType: 'blob'  });
+      const response = await axios.get(url+'/DescargarBienesBaja/', { responseType: 'blob',  
+      headers: {
+        'Authorization': token
+      },    });
       const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url2;
       link.setAttribute('download', 'Descarga.xlsx'); 
       document.body.appendChild(link);
       link.click();
+    } catch (error) {
+      console.error('Hubo un error al descargar el archivo: ', error);
+    }
+  };
+
+  //Funcion para descargar el reporte por usuario en PDF
+  const DescargarPDF = async() => {
+    try {
+      const response = await axios.get(url+'/ReportePDFbienesBaja/',
+      { 
+        responseType: 'blob',  
+        headers: {
+          'Authorization': token
+        },  
+    
+      });
+      const url2 = window.URL.createObjectURL(response.data);
+      window.open(url2,'_blank')
+   
     } catch (error) {
       console.error('Hubo un error al descargar el archivo: ', error);
     }
@@ -99,9 +121,15 @@ function DeBaja() {
       <div className="flex justify-end">
             <button
                     className="btn btn-success w-fit "
-                    onClick={ Descargar}
+                    onClick={ DescargarExcel}
                     >
                     Descargar reporte
+            </button>
+            <button
+                className="btn btn-error w-fit mx-2"
+                onClick={ DescargarPDF}
+              >
+                Descargar PDF
             </button>
         </div>
             <div className="flex items-center">
@@ -131,34 +159,34 @@ function DeBaja() {
             </div>
 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-96 mt-6">
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-900">
+              <table className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
                   <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Fecha ultima operacion
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Ultimo empleado
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Codigo
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Marca
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Modelo
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Serie
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Descripcion
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               Saldo
                           </th>
-                          <th scope="col" className="px-6 py-3">
+                          <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               <span className="sr-only">Dar de baja</span>
                           </th>
                       </tr>

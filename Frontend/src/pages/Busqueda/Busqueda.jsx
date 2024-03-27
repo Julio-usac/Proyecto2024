@@ -65,7 +65,10 @@ function Busqueda() {
 
   const Descargar = async() => {
     try {
-      const response = await axios.get(url+'/DescargarReporteTotal/', { responseType: 'blob'  });
+      const response = await axios.get(url+'/DescargarReporteTotal/', { responseType: 'blob',
+      headers: {
+        'Authorization': token
+        }  });
       const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url2;
@@ -106,6 +109,9 @@ function Busqueda() {
         const response = await axios.get(url+'/BuscarBienes/', { params: {
             opcion: Opcion,
             buscar: Buscar
+        },
+        headers: {
+          'Authorization': token
         }  });
         if(response.data.success==true){
             setTabla(response.data.message)

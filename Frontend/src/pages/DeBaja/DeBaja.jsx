@@ -37,7 +37,10 @@ function DeBaja() {
         const response = await axios.get(url+'/DadosdeBaja/', { params: {
             opcion: Opcion,
             buscar: Buscar
-        }  });
+        },
+        headers: {
+          'Authorization': token
+        },  });
         
         if(response.data.success==true){
             setBien(response.data.message)
@@ -57,7 +60,7 @@ function DeBaja() {
     
     const confirmacion = window.confirm('¿Estás seguro de que quieres restaurar este producto?');
     if (confirmacion) {
-      axios.put(url+'/RestaurarBien/'+e,{ headers: {
+      axios.put(url+'/RestaurarBien/'+e,{},{ headers: {
         'Authorization': token
       },})
       .then(response => {

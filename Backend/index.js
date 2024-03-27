@@ -5,28 +5,28 @@ var crypto = require('crypto');
 var mysql = require('mysql');
 var cors = require('cors');
 const excel = require('excel4node');
-const PDFDocument = require('pdfkit');
+var config = require('./database/config.js');
+const checkAuth = require('./middleware/check-auth');
+const users = require('./routes/users');
+const empleados = require('./routes/empleados');
+const reportes = require('./routes/reportes');
+
 require('dotenv').config();
 
-var port = 9095;
+var port = process.env.SERVER_PORT;
 
 var corsOptions = { origin: true, optionsSuccessStatus: 200 };
 
 var app = express();
 app.use(cors(corsOptions));
-app.use(bodyParser.json({ limit: '10mb', extended: true }));
-app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+app.use(bodyParser.json({ limit: '20mb', extended: true }));
+app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
 app.listen(port);
 
-console.log('Listening on port', port);
+console.log('Listening on port');
 
-var connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.PORT,
-});
+var connection = mysql.createConnection(config.dbconnection);
+
 
 function encriptar(texto) {
   const hash = crypto.createHash('sha256');
@@ -36,11 +36,11 @@ function encriptar(texto) {
 }
 
 function getToken(datos) {
-  return jwt.sign(datos, 'MINECO', {expiresIn : '60m'});
+  return jwt.sign(datos, process.env.JWT_CODE, {expiresIn : '60m'});
 }
 
 function verToken(token) {
-  return jwt.verify(token, 'MINECO');
+  return jwt.verify(token, process.env.JWT_CODE);
 }
 
 //--------------------------------------------------Pruebas---------------------------------------
@@ -118,263 +118,158 @@ function query(sql) {
 }
 
 //--------------------------------------------------Endpoints---------------------------------------
-
-
-
-//----------------INICIAR SESION----------------
-
-app.post('/Login', function (req, res) {
-    let correo = req.body.correo;
-    let pass = req.body.pass;
-    let passCrypto = encriptar(pass);
-    let sql = "SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, correo, rol FROM usuario WHERE correo='" + correo + "' AND pass='" + passCrypto+ "' AND estado = 1;";
-    
-    connection.query(sql, async function(error,result){
-      if(error){
-        console.log("Error al conectar");
-        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-      }else{
-        if (result.length == 1) {
-          let respuesta = { success: true,
-                            message: {
-                              Id : "",
-                              Nombre : "",
-                              Correo : "",
-                              Rol: "",
-                            }
-                          }
-          
-
-          respuesta.message.Id = result[0].userId;
-          respuesta.message.Nombre = result[0].nombre;
-          respuesta.message.Correo = result[0].correo;
-          respuesta.message.Rol = result[0].rol;
-
-          let jToken = getToken(respuesta.message);
-
-          res.json({success: true,token: jToken});
-        } else {
-          res.status(400).json({success: false, message: "Credenciales incorrectas"});
-        }
-      }
-    });
-});
-
+app.use(users);
+app.use(empleados);
+app.use(reportes);
 
 //------------------------------------- INGRESAR BIENES--------------------------------------
-app.post('/InBien', async function (req, res) {
-
- 
-  try {
-    //Verificar token
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
+app.post('/InBien', checkAuth, async function (req, res) {
   
+  //inicializar variables
 
-    //inicializar variables
+  let fcompra="";
+  let ingresar=true;
+  //Obtener datos
+  
+  let fechaco = req.body.fechaco;
+  let cuenta = req.body.cuenta;
+  let codigo = req.body.codigo;
+  let marca = req.body.marca;
+  let cantidad = req.body.cantidad;
+  let modelo = req.body.modelo;
+  let serie = req.body.serie;
+  let imagen = req.body.imagen;
+  let precio = req.body.precio;
+  let descripcion = req.body.descripcion;
+  let categoria = req.body.categoria;
+  let tarjeta = req.body.tarjeta;
+  let ubicacion = req.body.ubicacion;
 
-    let fcompra="";
-    let ingresar=true;
-    //Obtener datos
-    
-    let fechaco = req.body.fechaco;
-    let cuenta = req.body.cuenta;
-    let codigo = req.body.codigo;
-    let marca = req.body.marca;
-    let cantidad = req.body.cantidad;
-    let modelo = req.body.modelo;
-    let serie = req.body.serie;
-    let imagen = req.body.imagen;
-    let precio = req.body.precio;
-    let descripcion = req.body.descripcion;
-    let categoria = req.body.categoria;
-    let tarjeta = req.body.tarjeta;
-    let ubicacion = req.body.ubicacion;
-
-    //Convertir fecha de compra
-    if (fechaco){
-      fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
-    }else{
-      fcompra= null;
-    }
-
-    //Convertir cuenta
-
-    if (cuenta){
-      cuenta=`'`+cuenta+`'`;
-    }else{
-      cuenta= null;
-    }
-
-    //Convertir codigo
-
-    if (codigo){
-      codigo=`'`+codigo+`'`;
-    }else{
-      codigo= null;
-    }
-
-    //Convertir modelo
-
-    if (modelo){
-      modelo=`'`+modelo+`'`;
-    }else{
-      modelo= null;
-    }
-
-    //Convertir serie
-
-    if (serie){
-      serie=`'`+serie+`'`;
-    }else{
-      serie= null;
-    }
-
-    //Convertir imagen
-
-    if (imagen){
-      imagen=`'`+imagen+`'`;
-    }else{
-      imagen= null;
-    }
-
-    //Convertir ubicacion
-
-    if (ubicacion && ubicacion!="Seleccionar"){
-      ubicacion=`'`+ubicacion+`'`;
-    }else{
-      ubicacion= null;
-    }
-
-    //Convertir precio
-
-    if (precio){
-      precio=`'`+precio+`'`;
-    }else{
-      precio= null;
-    }
-
-    //Consultar bienes repetidos en base de datos 
-
-    /*
-    try{
-        
-        if (codigo!=""){
-          let sql =`SELECT * FROM bien WHERE codigo="`+codigo+`";`;
-          const result = await query(sql);
-          
-          if (result.length > 0) {
-            res.status(400).json({success: false, message:"No se puede ingresar un bien repetido"});
-            return
-          } else {
-              ingresar=true;
-          }
-        }else{
-          ingresar=true;
-        }
-    }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-    }*/
-
-    //Verificar Marca
-    let idmarca=null;
-    try{
-        
-      if (marca!=''){
-        marca = marca.toUpperCase();
-        let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-        const result = await query(sql);
-        
-        if (result.length > 0) {
-          
-          idmarca=result[0].marcaId;
-
-        } else {
-          let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
-          VALUES (NOW(),"`+marca+`",activo);`;
-          const result1 = await query(sql);
-
-          sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-          const result2 = await query(sql);
-
-          idmarca=result2[0].marcaId;
-        
-        }
-      }
-    }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-        return;
-    }
-
-    
-
-    //Ingresar bien a la base de datos  
-    try{
-      
-        if (ingresar==true){
-          let sql =  `INSERT INTO bien(fecha_mod,fechaco,cuenta,codigo,marca,cantidad,modelo,serie,imagen,precio,activo,descripcion,categoria,tarjeta,ubicacion)
-          VALUES(NOW(),`+fcompra+`,`+cuenta+`,`+codigo+`,`+idmarca+`,`+cantidad+`,
-          `+modelo+`,`+serie+`,`+imagen+`,`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
-          
-          const result2 = await query(sql);
-
-          /*
-
-          Registrar en tabla de ubicaciones
-
-          if(ubicacion){
-            try{
-
-              let sql =`SELECT MAX(id) AS id FROM bien;`;
-              const result1 = await query(sql);
-
-              let sql2 =`INSERT INTO ubicacion_activo(fecha,bien,ubicacion) 
-                VALUES (NOW(),`+result1[0].id+`,`+ubicacion+`);`;
-                const result2 = await query(sql2);
-            } catch (error) {
-              console.log(error);
-              res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-              return;
-            }
-          }*/
-
-          res.json({success: true, message: "Bien ingresado"});
-          return;
-        }else{
-          res.status(400).json({success: false, message: "Error al ingresar"});
-        }
-    }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al ingresar los datos"});
-    }
-
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
+  //Convertir fecha de compra
+  if (fechaco){
+    fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+  }else{
+    fcompra= null;
   }
+
+  //Convertir cuenta
+
+  if (cuenta){
+    cuenta=`'`+cuenta+`'`;
+  }else{
+    cuenta= null;
+  }
+
+  //Convertir codigo
+
+  if (codigo){
+    codigo=`'`+codigo+`'`;
+  }else{
+    codigo= null;
+  }
+
+  //Convertir modelo
+
+  if (modelo){
+    modelo=`'`+modelo+`'`;
+  }else{
+    modelo= null;
+  }
+
+  //Convertir serie
+
+  if (serie){
+    serie=`'`+serie+`'`;
+  }else{
+    serie= null;
+  }
+
+  //Convertir imagen
+
+  if (imagen){
+    imagen=`'`+imagen+`'`;
+  }else{
+    imagen= null;
+  }
+
+  //Convertir ubicacion
+
+  if (ubicacion && ubicacion!="Seleccionar"){
+    ubicacion=`'`+ubicacion+`'`;
+  }else{
+    ubicacion= null;
+  }
+
+  //Convertir precio
+
+
+  if (precio){
+    precio=`'`+precio+`'`;
+  }else{
+    precio= null;
+  }
+
+
+  //Verificar Marca
+  let idmarca=null;
+  try{
+      
+    if (marca!=''){
+      marca = marca.toUpperCase();
+      let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+      const result = await query(sql);
+      
+      if (result.length > 0) {
+        
+        idmarca=result[0].marcaId;
+
+      } else {
+        let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
+        VALUES (NOW(),"`+marca+`",activo);`;
+        const result1 = await query(sql);
+
+        sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+        const result2 = await query(sql);
+
+        idmarca=result2[0].marcaId;
+      
+      }
+    }
+  }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+      return;
+  }
+
+
+  //Ingresar bien a la base de datos  
+  try{
+    
+      if (ingresar==true){
+
+        let sql =  `INSERT INTO bien(fecha_mod,fechaco,cuenta,codigo,marca,cantidad,modelo,serie,imagen,precio,activo,descripcion,categoria,tarjeta,ubicacion)
+        VALUES(NOW(),`+fcompra+`,`+cuenta+`,`+codigo+`,`+idmarca+`,`+cantidad+`,
+        `+modelo+`,`+serie+`,`+imagen+`,`+precio+`,True,"`+descripcion+`",`+categoria+`,`+tarjeta+`,`+ubicacion+`);`;
+        
+        await query(sql);
+
+        res.json({success: true, message: "Bien ingresado"});
+        return;
+      }else{
+        res.status(400).json({success: false, message: "Error al ingresar"});
+      }
+  }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al ingresar los datos"});
+  }
+
+
 
 });
 
 //------------------------------------- OBTENER LISTA DE USUARIOS --------------------------------------
 
-app.get('/listaUsuarios', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-      res.status(401).json({ token: false });
-      return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
+app.get('/listaUsuarios', checkAuth, async function (req, res) {
 
   try{
     let sql =  `SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, correo, rol.rol, estado,rolId FROM usuario
@@ -391,7 +286,7 @@ app.get('/listaUsuarios', async function (req, res) {
 
 //------------------------------------- OBTENER LISTA DE CATEGORIAS --------------------------------------
 
-app.get('/tipo', function (req, res) {
+app.get('/tipo', checkAuth, async function (req, res) {
   let sql = "SELECT catId, nombre FROM categoria;";
   
   connection.query(sql, async function(error,result){
@@ -411,7 +306,7 @@ app.get('/tipo', function (req, res) {
 
 //------------------------------------- OBTENER UBICACIONES --------------------------------------
 
-app.get('/ubicacion', function (req, res) {
+app.get('/ubicacion', checkAuth, async function (req, res) {
   let sql = "SELECT id, nombre FROM ubicacion;";
   
   connection.query(sql, async function(error,result){
@@ -431,7 +326,7 @@ app.get('/ubicacion', function (req, res) {
 
 //------------------------------------- OBTENER BIENES NO ASIGNADOS --------------------------------------
 
-app.get('/BienesNoAsignados', function (req, res) {
+app.get('/BienesNoAsignados', checkAuth, async function (req, res) {
   let sql = `SELECT bien.id,codigo, marca.nombre as marca, descripcion,precio FROM bien 
   LEFT JOIN marca ON marca.marcaId=bien.marca WHERE tarjeta IS NULL and bien.activo=true;`;
   
@@ -453,7 +348,7 @@ app.get('/BienesNoAsignados', function (req, res) {
 
 //------------------------------------- OBTENER BIENES ASIGNADOS (TARJETA DE RESPONSABILIDAD)--------------------------------------
 
-app.post('/bienAsignado', async function (req, res) {
+app.post('/bienAsignado', checkAuth, async function (req, res) {
   try{
     let empleado= req.body.empleado;
     let sql = `SELECT bien.id ,codigo, marca.nombre as marca, descripcion,precio FROM bien
@@ -474,10 +369,10 @@ app.post('/bienAsignado', async function (req, res) {
 });
 
 
-
 //------------------------------------- OBTENER BIENES ASIGNADOS (Bienes por usuario)--------------------------------------
 
-app.post('/bienAsignado2', async function (req, res) {
+app.post('/bienAsignado2', checkAuth, async function (req, res) {
+  
   try{
     let empleado= req.body.empleado;
     let sql = `SELECT bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,marca,codigo,modelo,serie,cantidad,bien.categoria,marca.nombre as marca2,descripcion,ubicacion.nombre as ubicacion,bien.ubicacion as ubicacion2,bien.precio,imagen FROM bien
@@ -499,306 +394,206 @@ app.post('/bienAsignado2', async function (req, res) {
 
 //------------------------------------- ASIGNAR BIENES --------------------------------------
 
-app.post('/AsBien', async function (req, res) {
+app.post('/AsBien', checkAuth,async function (req, res) {
 
-  try {
+  //Obtener datos
 
-    //Verificar token
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    let decoded = verToken(token);
-
-    //Obtener datos
-
-    let op = req.body.op;
-    let tarjeta = req.body.tarjeta;
-    let categoria = req.body.categoria;
-    let empleado = req.body.empleado;
-    let saldo = req.body.saldo;
-    let asignar = req.body.asignar;
-    let quitar = req.body.quitar;
+  let op = req.body.op;
+  let tarjeta = req.body.tarjeta;
+  let categoria = req.body.categoria;
+  let empleado = req.body.empleado;
+  let saldo = req.body.saldo;
+  let asignar = req.body.asignar;
+  let quitar = req.body.quitar;
 
 
 
-    //Asignar nueva tarjeta
-    if(op==true){
-    //Crear tarjeta de responsabilidad
-      try{
-        //Verificar numero de tarjeta
-        let sql =  `SELECT numero_tarjeta from tarjeta_responsabilidad
-        WHERE numero_tarjeta=`+tarjeta+`;`;
+  //Asignar nueva tarjeta
+  if(op==true){
+  //Crear tarjeta de responsabilidad
+    try{
+      //Verificar numero de tarjeta
+      let sql =  `SELECT numero_tarjeta from tarjeta_responsabilidad
+      WHERE numero_tarjeta=`+tarjeta+`;`;
 
-        const result1 = await query(sql);
+      const result1 = await query(sql);
 
-        if (result1.length==0){
-        //Crear tarjeta
-          sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,empleado,categoria)
-          VALUES(`+tarjeta+`,`+saldo+`,`+empleado+`,`+categoria+`);`;
-            
-          const result2 = await query(sql);
-        }else{
-          res.json({success: false, message: "Numero de tarjeta repetido"});
-          return;
-        }
-      
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al crear la tarjeta"});
+      if (result1.length==0){
+      //Crear tarjeta
+        sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,empleado,categoria)
+        VALUES(`+tarjeta+`,`+saldo+`,`+empleado+`,`+categoria+`);`;
+          
+        const result2 = await query(sql);
+      }else{
+        res.json({success: false, message: "Numero de tarjeta repetido"});
         return;
       }
-
-      //Registrar bienes desasignados
-      
-      if (quitar.length>0){  //Verificar si hay bienes para desasignar
-        
-        try{
-          //recuperar id de la tarjeta
-          let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
-          const result2 = await query(sql);
-
-          let idtarjeta = result2[0].tarjeta;
-          
-          //Quitar referencia de la tarjeta a la tabla bienes
-
-          for (var i = 0; i < quitar.length; i++) {
-            let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
-            const result3 = await query(sql);
-          }
-          
-          //Registrar bienes desasignados
-
-          for (var i = 0; i < quitar.length; i++) {
-            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-            VALUES(NOW(),`+idtarjeta+`,`+quitar[i]+`,False);`;
-            const result4 = await query(sql);
-          }
-          
-
-        }catch (error) {
-          console.log(error);
-          res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
-          return;
-        }
-      }
-    //asignar bienes la tarjeta
-      if (asignar.length>0){ //Verificar si hay bienes por asignar
-        try{
-          //recuperar id de la tarjeta
-          let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
-          const result2 = await query(sql);
-
-          let idtarjeta = result2[0].tarjeta;
-
-          //Agregar referencia de la tarjeta a la tabla bienes
-
-          for (var i = 0; i < asignar.length; i++) {
-            let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
-            const result3 = await query(sql);
-          }
-          
-          //asignar bienes
-          
-            for (var i = 0; i < asignar.length; i++) {
-              let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-              VALUES(NOW(),`+idtarjeta+`,`+asignar[i]+`,True);`;
-              const result4 = await query(sql);
-            }
-            
-          
-        }catch (error) {
-          console.log(error);
-          res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
-          return;
-        }
-      }
-    }else{
-
-      //ACTUALIZAR TARJETA
-
-      //Actualizar datos de la tarjeta
-      let tarjetaid=0;
-      try{
-        //Verificar existencia de numero de tarjeta
-        let sql =  `SELECT id from tarjeta_responsabilidad
-        WHERE numero_tarjeta=`+tarjeta+` and empleado=`+empleado+`;`;
-
-        const result1 = await query(sql);
-
-        if (result1.length==1){
-
-          tarjetaid= result1[0].id;
-          let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
-          const result2 = await query(sql);
-
-        }else{
-          res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
-          return;
-        }
-      
-      }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error al verificar tarjeta"});
-        return;
-      }
-
-      
-      //Registrar bienes desasignados
-      
-      if (quitar.length>0){  //Verificar si hay bienes para desasignar
-        
-        try{
-          
-          //Quitar referencia de la tarjeta a la tabla bienes
-
-          for (var i = 0; i < quitar.length; i++) {
-            let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
-            const result3 = await query(sql);
-          }
-
-          //Registrar bienes desasignados
-
-          for (var i = 0; i < quitar.length; i++) {
-            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-            VALUES(NOW(),`+tarjetaid+`,`+quitar[i]+`,False);`;
-            const result4 = await query(sql);
-          }
-          
-
-        }catch (error) {
-          console.log(error);
-          res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
-          return;
-        }
-      }
-
-      if (asignar.length>0){ //Verificar si hay bienes por asignar
-        try{
-          //Agregar referencia de la tarjeta a la tabla bienes
-
-          for (var i = 0; i < asignar.length; i++) {
-            let sql =   `UPDATE bien SET tarjeta =`+tarjetaid+`  WHERE id =`+asignar[i]+`;`;
-            const result3 = await query(sql);
-          }
-          
-          //asignar bienes
-          
-            for (var i = 0; i < asignar.length; i++) {
-              let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
-              VALUES(NOW(),`+tarjetaid+`,`+asignar[i]+`,True);`;
-              const result4 = await query(sql);
-            }
-            
-          
-        }catch (error) {
-          console.log(error);
-          res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
-          return;
-        }
-      }
-
-    }
-
-    res.json({success: true, message: "Operacion exitosa"});
-    return;
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
-
-
-app.get('/DescargarReporteUsuario', async function (req, res) {
-
-  //Confirmar token
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-
-  try{
-    let empleado= req.query.empleado;
-
-    let sql = `SELECT IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco, IFNULL(cuenta,'No ingresado') AS cuenta,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(ubicacion.nombre,'No ingresado') AS ubicacion,IFNULL(bien.precio,'No ingresado') AS precio FROM bien
-    INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
-    LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id;`;
     
-    const result = await query(sql);
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear la tarjeta"});
+      return;
+    }
 
-    sql=`SELECT empleadoId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM empleado WHERE empleadoId=`+empleado+`;`;
+    //Registrar bienes desasignados
+    
+    if (quitar.length>0){  //Verificar si hay bienes para desasignar
+      
+      try{
+        //recuperar id de la tarjeta
+        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+        const result2 = await query(sql);
 
-    const result2 = await query(sql);
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Users');
+        let idtarjeta = result2[0].tarjeta;
+        
+        //Quitar referencia de la tarjeta a la tabla bienes
 
-    // titulo
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //Registrar bienes desasignados
 
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+          VALUES(NOW(),`+idtarjeta+`,`+quitar[i]+`,False);`;
+          const result4 = await query(sql);
+        }
+        
+
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+        return;
       }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
+    }
+  //asignar bienes la tarjeta
+    if (asignar.length>0){ //Verificar si hay bienes por asignar
+      try{
+        //recuperar id de la tarjeta
+        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+        const result2 = await query(sql);
 
-          size: 16
+        let idtarjeta = result2[0].tarjeta;
+
+        //Agregar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < asignar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //asignar bienes
+        
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+            VALUES(NOW(),`+idtarjeta+`,`+asignar[i]+`,True);`;
+            const result4 = await query(sql);
+          }
+          
+        
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+        return;
       }
-    });
+    }
+  }else{
 
-    worksheet.cell(2, 1).string("Reporte de bienes por usuario").style(myStyle2);
-    worksheet.cell(4, 1).string("Empleado:").style(myStyle);
-    worksheet.cell(4, 2).string(result2[0].nombre);
-    worksheet.cell(6, 1).string("fecha de compra").style(myStyle);
-    worksheet.cell(6, 2).string("No. cuenta").style(myStyle);
-    worksheet.cell(6, 3).string("Codigo de inventario").style(myStyle);
-    worksheet.cell(6, 4).string("Cantidad").style(myStyle);
-    worksheet.cell(6, 5).string("Descripcion").style(myStyle);
-    worksheet.cell(6, 6).string("Ubicacion").style(myStyle);
-    worksheet.cell(6, 7).string("Precio").style(myStyle);
+    //ACTUALIZAR TARJETA
 
-    result.forEach((row, index) => {
-      let cast=""+row.fechaco+""
-      worksheet.cell(index + 8, 1).string(cast);
-      cast=""+row.cuenta+""
-      worksheet.cell(index + 8, 2).string(cast);
-      cast=""+row.codigo+""
-      worksheet.cell(index + 8, 3).string(cast);
-      cast=""+row.cantidad+""
-      worksheet.cell(index + 8, 4).string(cast);
-      cast=""+row.descripcion+""
-      worksheet.cell(index + 8, 5).string(cast);
-      cast=""+row.ubicacion+""
-      worksheet.cell(index + 8, 6).string(cast);
-      cast=""+row.precio+""
-      worksheet.cell(index + 8, 7).string(cast);
-    });
+    //Actualizar datos de la tarjeta
+    let tarjetaid=0;
+    try{
+      //Verificar existencia de numero de tarjeta
+      let sql =  `SELECT id from tarjeta_responsabilidad
+      WHERE numero_tarjeta=`+tarjeta+` and empleado=`+empleado+`;`;
 
+      const result1 = await query(sql);
 
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al descargar"});
-    return;
+      if (result1.length==1){
+
+        tarjetaid= result1[0].id;
+        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
+        const result2 = await query(sql);
+
+      }else{
+        res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
+        return;
+      }
+    
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al verificar tarjeta"});
+      return;
+    }
+
+    
+    //Registrar bienes desasignados
+    
+    if (quitar.length>0){  //Verificar si hay bienes para desasignar
+      
+      try{
+        
+        //Quitar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+          const result3 = await query(sql);
+        }
+
+        //Registrar bienes desasignados
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+          VALUES(NOW(),`+tarjetaid+`,`+quitar[i]+`,False);`;
+          const result4 = await query(sql);
+        }
+        
+
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+        return;
+      }
+    }
+
+    if (asignar.length>0){ //Verificar si hay bienes por asignar
+      try{
+        //Agregar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < asignar.length; i++) {
+          let sql =   `UPDATE bien SET tarjeta =`+tarjetaid+`  WHERE id =`+asignar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //asignar bienes
+        
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+            VALUES(NOW(),`+tarjetaid+`,`+asignar[i]+`,True);`;
+            const result4 = await query(sql);
+          }
+          
+        
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+        return;
+      }
+    }
+
   }
+
+  res.json({success: true, message: "Operacion exitosa"});
+  return;
+  
 });
+
 
 //------------------------------------Endpoint para retornar Saldo total del usuario----------------------------------
-app.get('/saldoUsuario', async function (req, res) {
+app.get('/saldoUsuario', checkAuth, async function (req, res) {
   try{
     let empleado= req.query.empleado;
     
@@ -824,7 +619,7 @@ app.get('/saldoUsuario', async function (req, res) {
 
 
 //------------------------------------Endpoint para Buscar bienes----------------------------------
-app.get('/BuscarBienes', async function (req, res) {
+app.get('/BuscarBienes', checkAuth, async function (req, res) {
 
   //Extraer datos
 
@@ -950,92 +745,9 @@ app.get('/BuscarBienes', async function (req, res) {
     
 });
 
-//------------------------------------------------ REPORTE TOTAL DE BIENES -------------------------------------
-app.get('/DescargarReporteTotal', async function (req, res) {
-
-  try{
-
-    let sql = `SELECT nit,codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien 
-    LEFT JOIN marca ON marca.marcaId=bien.marca 
-    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-    LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-    WHERE bien.activo=True;`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Reporte total de Bienes").style(myStyle2);
-    worksheet.cell(6, 1).string("Usuario").style(myStyle);
-    worksheet.cell(6, 2).string("Codigo").style(myStyle);
-    worksheet.cell(6, 3).string("Marca").style(myStyle);
-    worksheet.cell(6, 4).string("Modelo").style(myStyle);
-    worksheet.cell(6, 5).string("Serie").style(myStyle);
-    worksheet.cell(6, 6).string("Descripcion").style(myStyle);
-    worksheet.cell(6, 7).string("Precio").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast="";
-      if(row.nit){
-        cast=""+row.nit+"";
-      }else{
-        cast="No asignado";
-      }
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.codigo+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.marca+""
-      worksheet.cell(index + 7, 3).string(cast);
-      cast=""+row.modelo+""
-      worksheet.cell(index + 7, 4).string(cast);
-      cast=""+row.serie+""
-      worksheet.cell(index + 7, 5).string(cast);
-      cast=""+row.descripcion+""
-      worksheet.cell(index + 7, 6).string(cast);
-      if(row.precio){
-        cast=""+row.precio+"";
-      }else{
-        cast="No ingresado";
-      }
-      worksheet.cell(index + 7, 7).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al Descargar"});
-    return;
-  }
-});
-
-
-
-
 //------------------------------------- OBTENER BIENES SIN ASIGNAR--------------------------------------
 
-app.get('/SinAsignar', async function (req, res) {
+app.get('/SinAsignar', checkAuth, async function (req, res) {
   try{
     
     let sql = `SELECT bien.id,fechaco,codigo,marca.nombre as marca,modelo,serie,descripcion,bien.precio FROM bien
@@ -1057,7 +769,7 @@ app.get('/SinAsignar', async function (req, res) {
 
 //------------------------------------- RETORNAR BIENES DADOS DE BAJA --------------------------------------
 
-app.get('/DadosdeBaja', async function (req, res) {
+app.get('/DadosdeBaja', checkAuth, async function (req, res) {
 
   //Extraer datos
 
@@ -1214,7 +926,7 @@ app.get('/DadosdeBaja', async function (req, res) {
 
 //------------------------------------- OBTENER Roles--------------------------------------
 
-app.get('/ObtenerRoles', async function (req, res) {
+app.get('/ObtenerRoles', checkAuth, async function (req, res) {
   try{
     
     let sql = `SELECT rolId, rol from rol where activo = True;`;
@@ -1233,208 +945,143 @@ app.get('/ObtenerRoles', async function (req, res) {
 
 
 
-//------------------------------------- Comparar contraseña --------------------------------------
 
-
-app.post('/VerificarPass', function (req, res) {
-  let correo = req.body.correo;
-  let pass = req.body.pass;
-  let passCrypto = encriptar(pass);
-  let sql = "SELECT pass FROM usuario WHERE correo='" + correo + "' AND pass='" + passCrypto + "';";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-    }else{
-      if (result.length == 1) {
-      
-        res.json({success: true});
-
-      } else {
-        res.status(400).json({success: false, message: "Contraseña incorrecta"});
-      }
-    }
-  });
-});
 
 
 //------------------------------------------EDITAR BIENES----------------------------------
-app.post('/EditarBien', async function (req, res) {
+app.post('/EditarBien', checkAuth, async function (req, res) {
 
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
+  //fecha actual
+  const fecha = new Date();
+  const añoActual = fecha.getFullYear();
+  const hoy = fecha.getDate();
+  const mes = fecha.getMonth() + 1; 
+  let fechaActual= hoy+"/"+mes+"/"+ añoActual
+
+  let id = req.body.id;
+  let fechaco = req.body.fechaco;
+  let cuenta = req.body.cuenta;
+  let codigo = req.body.codigo;
+  let marca = req.body.marca;
+  let cantidad = req.body.cantidad;
+  let modelo = req.body.modelo;
+  let serie = req.body.serie;
+  let imagen = req.body.imagen;
+  let precio = req.body.precio;
+  let descripcion = req.body.descripcion;
+  let categoria = req.body.categoria;
+  let ubicacion = req.body.ubicacion;
+
+
+  //Convertir fecha de compra
+
+  if (fechaco!=null && fechaco!="No ingresado"){
+    if(fechaco.includes('-')){
+      fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+    }else{
+      
+      fcompra= `STR_TO_DATE("`+fechaco+`", "%d/%m/%Y")`;
     }
-    let decoded = verToken(token);
-    //fecha actual
-    const fecha = new Date();
-    const añoActual = fecha.getFullYear();
-    const hoy = fecha.getDate();
-    const mes = fecha.getMonth() + 1; 
-    let fechaActual= hoy+"/"+mes+"/"+ añoActual
+  }else{
+    fcompra= null;
+  }
+  //Convertir cuenta
 
-    let id = req.body.id;
-    let fechaco = req.body.fechaco;
-    let cuenta = req.body.cuenta;
-    let codigo = req.body.codigo;
-    let marca = req.body.marca;
-    let cantidad = req.body.cantidad;
-    let modelo = req.body.modelo;
-    let serie = req.body.serie;
-    let imagen = req.body.imagen;
-    let precio = req.body.precio;
-    let descripcion = req.body.descripcion;
-    let categoria = req.body.categoria;
-    let ubicacion = req.body.ubicacion;
+  if (cuenta){
+    cuenta=`'`+cuenta+`'`;
+  }else{
+    cuenta= null;
+  }
 
-    
+  //Convertir codigo
 
-    //Convertir fecha de compra
+  if (codigo){
+    codigo=`'`+codigo+`'`;
+  }else{
+    codigo= null;
+  }
 
-    if (fechaco!=null && fechaco!="No ingresado"){
-      if(fechaco.includes('-')){
-        fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
-      }else{
+  //Convertir modelo
+
+  if (modelo){
+    modelo=`'`+modelo+`'`;
+  }else{
+    modelo= null;
+  }
+
+  //Convertir serie
+
+  if (serie){
+    serie=`'`+serie+`'`;
+  }else{
+    serie= null;
+  }
+
+  //Convertir imagen
+
+  if (imagen){
+    imagen=`'`+imagen+`'`;
+  }else{
+    imagen= null;
+  }
+  
+  let idmarca=null;
+  try{
+      
+    if (marca!='' && marca!=null){
+      marca = marca.toUpperCase();
+      let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+      const result = await query(sql);
+      
+      if (result.length > 0) {
         
-        fcompra= `STR_TO_DATE("`+fechaco+`", "%d/%m/%Y")`;
-      }
-    }else{
-      fcompra= null;
-    }
-    //Convertir cuenta
+        idmarca=result[0].marcaId;
 
-    if (cuenta){
-      cuenta=`'`+cuenta+`'`;
-    }else{
-      cuenta= null;
-    }
-
-    //Convertir codigo
-
-    if (codigo){
-      codigo=`'`+codigo+`'`;
-    }else{
-      codigo= null;
-    }
-
-    //Convertir modelo
-
-    if (modelo){
-      modelo=`'`+modelo+`'`;
-    }else{
-      modelo= null;
-    }
-
-    //Convertir serie
-
-    if (serie){
-      serie=`'`+serie+`'`;
-    }else{
-      serie= null;
-    }
-
-    //Convertir imagen
-
-    if (imagen){
-      imagen=`'`+imagen+`'`;
-    }else{
-      imagen= null;
-    }
-    
-    let idmarca=null;
-    try{
-        
-      if (marca!='' && marca!=null){
-        marca = marca.toUpperCase();
-        let sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-        const result = await query(sql);
-        
-        if (result.length > 0) {
-          
-          idmarca=result[0].marcaId;
-
-        } else {
-          let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
-          VALUES (NOW(),"`+marca+`",activo);`;
-          const result1 = await query(sql);
-
-          sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
-          const result2 = await query(sql);
-
-          idmarca=result2[0].marcaId;
-        
-        }
-      }
-    }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
-        return;
-    }
-    /*
-    if(ubicacion){
-      try{
-
-        let sql =`SELECT ubicacion FROM bien WHERE id = `+id+`;`;
+      } else {
+        let sql =`INSERT INTO marca(fecha_mod,nombre,activo) 
+        VALUES (NOW(),"`+marca+`",activo);`;
         const result1 = await query(sql);
-        if(result1[0].ubicacion!=ubicacion){
 
-          let sql2 =`INSERT INTO ubicacion_activo(fecha,bien,ubicacion) 
-          VALUES (NOW(),`+id+`,`+ubicacion+`);`;
-          const result2 = await query(sql2);
-          
-        }
-       
-      } catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "Error en la operacion"});
-        return;
+        sql =`SELECT marcaId FROM marca WHERE nombre="`+marca+`";`;
+        const result2 = await query(sql);
+
+        idmarca=result2[0].marcaId;
+      
       }
-    }*/
-
-    try{
-      let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = `+cuenta+`, codigo=`+codigo+`, marca = `+idmarca+`,
-      cantidad = `+cantidad+`, modelo = `+modelo+`, serie = `+serie+`, imagen = `+imagen+`, precio = `+precio+`, descripcion = "`+descripcion+`",
-      categoria = `+categoria+`, ubicacion = `+ubicacion+`   WHERE id =`+id+`;`;
-      const result3 = await query(sql);
-
-      res.json({success: true, message: "Edicion exitosa"});
-      return;
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al editar",error:error});
-      return;
     }
-  } catch (err) {
-    res.status(401).json({token: false});
+  }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos",error:error});
+      return;
+  }
+
+  try{
+    let sql =  `UPDATE bien SET fechaco =`+fcompra+`, cuenta = `+cuenta+`, codigo=`+codigo+`, marca = `+idmarca+`,
+    cantidad = `+cantidad+`, modelo = `+modelo+`, serie = `+serie+`, imagen = `+imagen+`, precio = `+precio+`, descripcion = "`+descripcion+`",
+    categoria = `+categoria+`, ubicacion = `+ubicacion+`   WHERE id =`+id+`;`;
+    await query(sql);
+
+    res.json({success: true, message: "Edicion exitosa"});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error al editar",error:error});
     return;
   }
+
 });
 
 //------------------------------------- DAR DE BAJA UN BIEN --------------------------------------
 
-app.delete('/DardeBaja/:id', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    let decoded = verToken(token);
-    try{
-      let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
-      const result = await query(sql);
-      res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
-      return;
-    }
-  } catch (err) {
-    console.log(err)
-    res.status(401).json({token: false});
+app.delete('/DardeBaja/:id', checkAuth, async function (req, res) {
+  
+  try{
+    let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
+    const result = await query(sql);
+    res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
     return;
   }
   
@@ -1443,217 +1090,47 @@ app.delete('/DardeBaja/:id', async function (req, res) {
 
 //------------------------------------- DAR DE BAJA UN USUARIO--------------------------------------
 
-app.delete('/EliminarUsuario/:id', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    let decoded = verToken(token);
-    try{
-      let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
-      const result = await query(sql);
-      res.json({success: true, message: "Usuario eliminado satisfactoriamente"});
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
-      return;
-    }
-  } catch (err) {
-    console.log(err)
-    res.status(401).json({token: false});
+app.delete('/EliminarUsuario/:id', checkAuth, async function (req, res) {
+  
+  try{
+    let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
+    await query(sql);
+    res.json({success: true, message: "Usuario eliminado satisfactoriamente"});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
     return;
   }
 });
 
-
-//------------------------------------- Actualizar contraseña --------------------------------------
-
-
-app.put('/ActualizarPass', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-    try{
-      let nueva = req.body.nueva;
-      let correo = req.body.correo;
-
-      let passCrypto = encriptar(nueva);
-
-      let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE correo='" + correo + "' ;";
-
-      await query(sql);
-
-      res.json({success: true});
-
-      return;
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al verificar", error:error});
-      return;
-    }
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
 
 //------------------------------------- Actualizar estado --------------------------------------
 
-app.put('/ActualizarEstado', function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-     verToken(token);
-    let estado = req.body.estado;
-    let id = req.body.id;
+app.put('/ActualizarEstado', checkAuth, function (req, res) {
+ 
+  let estado = req.body.estado;
+  let id = req.body.id;
 
-    let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
-    
-    connection.query(sql, async function(error,result){
-      if(error){
-        console.log("Error al conectar");
-        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-      }else{
-        
-        res.json({success: true});
-
-      }
-    });
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
-
-
-
-//------------------------------------- CREAR/INGRESAR USUARIOS --------------------------------------
-
-app.post('/CrearUsuario', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    let decoded = verToken(token);
-    try{
-      let correo= req.body.correo;
-
-      let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
-      
-      const result1 = await query(sql);
-      
-      if (result1.length>0){
-        res.status(400).json({success: false, message: "Correo repetido"});
-        return;
-      }
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al crear usuario", error:error});
-      return;
-    }
-
-    try{
-      let nombres= req.body.nombres;
-      let apellidos= req.body.apellidos;
-      let correo= req.body.correo;
-      let rol= req.body.rol;
-
-      let passCrypto = encriptar('MINECO');
-
-      let sql = `INSERT INTO usuario(fecha_mod,nombres,apellidos,correo,rol,estado,pass)
-      VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`',`+rol+`,1,'`+passCrypto+`') ;`;
-      
-      const result2 = await query(sql);
-      
-      res.json({success: true});
-      return;
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al crear usuario", error:error});
-      return;
-    }
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
-
-
-
-//------------------------------------- Actualizar usuario --------------------------------------
-
-app.put('/EditarUsuario', async function (req, res) {
-
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    let decoded = verToken(token);
-    try{
-      let correo= req.body.correo;
-      
-      let id = req.body.id;
-
-      let sql = `SELECT * FROM usuario WHERE correo='`+correo+`';`;
-      
-      const result1 = await query(sql);
-      
-      if (result1.length>0){
-        if(result1[0].userId==id){
-          //El id no pertenece a otro usuario
-        }else{
-          
-          res.status(400).json({success: false, message: "Correo repetido"});
-          return;
-        }
-      }
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al editar usuario"});
-      return;
-    }
+  let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
   
-    try{
-      let id = req.body.id;
-      let nombres = req.body.nombres;
-      let apellidos = req.body.apellidos;
-      let correo = req.body.correo;
-      let rol = req.body.rol;
-
-      let sql =  `UPDATE usuario SET nombres='` + nombres + `',apellidos='` + apellidos + `',
-      correo='` + correo + `',rol='`+rol+`' WHERE userId= ` + id +  ` ; `;
-      await query(sql);
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+    }else{
       
       res.json({success: true});
-      return;
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al editar usuario", error:error});
-      return;
+
     }
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
+  });
 });
+
+
 
 
 //------------------------------------- INGRESAR INFORMACION A BITACORA --------------------------------------
 
-app.post('/IngresarBitacora', async function (req, res) {
+app.post('/IngresarBitacora', checkAuth, async function (req, res) {
 
   try{
 
@@ -1706,7 +1183,7 @@ app.post('/IngresarBitacora', async function (req, res) {
 
 //------------------------------------- OBTENER INFORMACION DE BICATORA SEGUN FECHA --------------------------------------
 
-app.get('/ObtenerBitacora', async function (req, res) {
+app.get('/ObtenerBitacora', checkAuth, async function (req, res) {
   
   try{
     let fecha1= req.query.fecha1;
@@ -1730,201 +1207,9 @@ app.get('/ObtenerBitacora', async function (req, res) {
   }
 });
 
-
-
-//------------------------------------------------ DESCARGAR BITACORA -------------------------------------
-
-app.get('/DescargarBitacora', async function (req, res) {
-
-  try{
-
-    let sql = `SELECT m.id, DATE_FORMAT(m.fecha, '%d/%m/%Y') as fecha, TIME(m.fecha) as hora,u1.correo as usuario, t.tipo as movimiento, m.afectado as objetivo, COALESCE(u2.nit, bien.codigo) as identificador FROM movimiento_bien m
-    INNER JOIN usuario u1 ON u1.userId=m.usuario
-    LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
-    LEFT JOIN bien ON bien.id=m.bien_afectado
-    INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento;`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Bitacora").style(myStyle2);
-    worksheet.cell(6, 1).string("Fecha").style(myStyle);
-    worksheet.cell(6, 2).string("Hora").style(myStyle);
-    worksheet.cell(6, 3).string("Usuario").style(myStyle);
-    worksheet.cell(6, 4).string("Movimiento").style(myStyle);
-    worksheet.cell(6, 5).string("Objeto").style(myStyle);
-    worksheet.cell(6, 6).string("N.Usuario/B.Codigo").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.fecha+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.hora+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.usuario+""
-      worksheet.cell(index + 7, 3).string(cast);
-      cast=""+row.movimiento+""
-      worksheet.cell(index + 7, 4).string(cast);
-      if(row.objetivo==0){
-        cast="Usuario";
-      }else{
-        cast="Bien";
-      }
-      worksheet.cell(index + 7, 5).string(cast);
-      if(row.identificador){
-        cast=""+row.identificador+"";
-      }else{
-        cast="";
-      }
-      
-      worksheet.cell(index + 7, 6).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
-    return;
-  }
-});
-
-
-
-//------------------------------------------------ DESCARGAR bienes de baja -------------------------------------
-
-app.get('/DescargarBienesBaja', async function (req, res) {
-
-  
-  //Confirmar token
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-
-  try{
-
-    let sql = `SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS empleado,codigo,marca.nombre AS marca,modelo,serie,descripcion,
-    IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
-    INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
-    INNER JOIN bien ON bien.id = r.bien
-    INNER JOIN empleado u ON u.empleadoId = t.empleado
-    LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
-    WHERE r.activo=0 and bien.activo=0
-    GROUP BY r.bien)
-    UNION
-    SELECT bien.id,"Sin asignacion","Sin asignacion",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
-    LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
-    WHERE r.activo=0);`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Bienes dados de baja").style(myStyle2);
-    worksheet.cell(6, 1).string("Fecha").style(myStyle);
-    worksheet.cell(6, 2).string("Empleado").style(myStyle);
-    worksheet.cell(6, 3).string("Codigo").style(myStyle);
-    worksheet.cell(6, 4).string("Marca").style(myStyle);
-    worksheet.cell(6, 5).string("Modelo").style(myStyle);
-    worksheet.cell(6, 6).string("Serie").style(myStyle);
-    worksheet.cell(6, 7).string("Descripcion").style(myStyle);
-    worksheet.cell(6, 8).string("Precio").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.fecha+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.empleado+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.codigo+""
-      worksheet.cell(index + 7, 3).string(cast);
-      cast=""+row.marca+""
-      worksheet.cell(index + 7, 4).string(cast);
-      cast=""+row.modelo+""
-      worksheet.cell(index + 7, 5).string(cast);
-      cast=""+row.serie+""
-      worksheet.cell(index + 7, 6).string(cast);
-      cast=""+row.descripcion+""
-      worksheet.cell(index + 7, 7).string(cast);
-      cast=""+row.precio+""
-      worksheet.cell(index + 7, 8).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
-    return;
-  }
-});
-
 //------------------------------------- RESTAURAR BIEN --------------------------------------
 
-app.put('/RestaurarBien/:id', async function (req, res) {
-  try {
-    const token = req.body.headers['Authorization'];
-    
-    if (!token) {
-      res.status(401).json({ token: false });
-      return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
+app.put('/RestaurarBien/:id', checkAuth, async function (req, res) {
 
   try{
     let sql =  `UPDATE bien SET activo = true WHERE id =`+req.params.id+`;`;
@@ -1940,7 +1225,7 @@ app.put('/RestaurarBien/:id', async function (req, res) {
 
 //------------------------------------- OBTENER tarjetas asignadas --------------------------------------
 
-app.get('/tarjetasAsignadas/:id', async function (req, res) {
+app.get('/tarjetasAsignadas/:id', checkAuth, async function (req, res) {
   
   try{
     let id= req.params.id;
@@ -1959,18 +1244,7 @@ app.get('/tarjetasAsignadas/:id', async function (req, res) {
 
 //------------------------------------- OBTENER LISTA DE PERSONAL --------------------------------------
 
-app.get('/listaPersonal', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-      res.status(401).json({ token: false });
-      return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
+app.get('/listaPersonal', checkAuth, async function (req, res) {
 
   try{
     let sql =  `SELECT empleadoId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, nit, dpi, puesto.nombre as puesto, empleado.activo,puestoId FROM empleado
@@ -1985,411 +1259,9 @@ app.get('/listaPersonal', async function (req, res) {
   }
 });
 
-
-//------------------------------------- Descargar numero de bienes por usuario --------------------------------------
-
-
-app.get('/DescargarBienesUsuario', async function (req, res) {
-
-  try{
-
-    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) as nombre, u.nit, COUNT(bien.id) as cantidad FROM bien, tarjeta_responsabilidad t, empleado u  
-    WHERE t.id=bien.tarjeta AND bien.activo=True AND u.empleadoId=t.empleado
-    GROUP BY t.empleado;`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Total de bienes por usuario").style(myStyle2);
-    worksheet.cell(6, 1).string("Nombre").style(myStyle);
-    worksheet.cell(6, 2).string("Usuario").style(myStyle);
-    worksheet.cell(6, 3).string("Bienes asignados").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.nombre+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.nit+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.cantidad+""
-      worksheet.cell(index + 7, 3).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
-    return;
-  }
-});
-
-
-
-//------------------------------------- Descargar bienes por ubicacion --------------------------------------
-
-
-app.get('/DescargarBienesUbicacion', async function (req, res) {
-
-  try{
-
-    let sql = `SELECT u.nombre, COUNT(bien.id) as cantidad FROM bien, ubicacion u
-    WHERE bien.ubicacion=u.id AND bien.activo=True
-    GROUP BY u.nombre;`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Total de bienes por Ubicacion").style(myStyle2);
-    worksheet.cell(6, 1).string("Ubicacion").style(myStyle);
-    worksheet.cell(6, 2).string("Bienes").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.nombre+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.cantidad+""
-      worksheet.cell(index + 7, 2).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
-    return;
-  }
-});
-
-
-//------------------------------------- Descargar cantidad de tarjetas por usuario --------------------------------------
-
-
-app.get('/DescargarUsuariosTarjetas', async function (req, res) {
-
-  try{
-
-    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) AS nombre, u.nit, COUNT(*) AS tarjetas  FROM empleado u, tarjeta_responsabilidad
-    WHERE u.empleadoId=tarjeta_responsabilidad.empleado
-    GROUP BY u.empleadoId;`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Cantidad de tarjetas por empleado").style(myStyle2);
-    worksheet.cell(6, 1).string("Nombre").style(myStyle);
-    worksheet.cell(6, 2).string("Empleado").style(myStyle);
-    worksheet.cell(6, 2).string("Tarjetas asignadas").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.nombre+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.nit+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.tarjetas+""
-      worksheet.cell(index + 7, 3).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
-    return;
-  }
-});
-
-
-//------------------------------------- CREAR/INGRESAR EMPLEADOS --------------------------------------
-
-app.post('/CrearEmpleado', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-
-    let nombres= req.body.nombres;
-    let apellidos= req.body.apellidos;
-    let correo= req.body.dpi;
-    let nit= req.body.nit;
-    let puesto = req.body.puesto;
-
-    try{
-      
-      let sql = `SELECT * FROM empleado WHERE nit='`+nit+`';`;
-      
-      const result1 = await query(sql);
-      
-      if (result1.length>0){
-        res.status(400).json({success: false, message: "NIT repetido"});
-        return;
-      }
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al crear empleado"});
-      return;
-    }
-
-
-    //Verificar puesto
-    let idpuesto=null;
-    try{
-        
-      if (puesto!=''){
-        puesto= puesto.toUpperCase();
-        let sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
-        const result = await query(sql);
-        
-        if (result.length > 0) {
-          
-          idpuesto=result[0].puestoId;
-
-        } else {
-          let sql =`INSERT INTO puesto(fecha_mod,nombre,activo) 
-          VALUES (NOW(),"`+puesto+`",activo);`;
-          await query(sql);
-
-          sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
-          const result2 = await query(sql);
-
-          idpuesto=result2[0].puestoId;
-        
-        }
-      }
-    }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-        return;
-    }
-
-    try{
-      
-
-      let sql = `INSERT INTO empleado(fecha_mod,nombres,apellidos,dpi,nit,activo,puesto)
-      VALUES(NOW(),'`+nombres+`','`+apellidos+`','`+correo+`','`+nit+`',true,`+idpuesto+`) ;`;
-      
-      await query(sql);
-      
-      res.json({success: true});
-      return;
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al crear Empleado"});
-      return;
-    }
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
-
-//------------------------------------- EDITAR EMPLEADOS --------------------------------------
-
-app.put('/EditarEmpleado', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-
-    let id = req.body.id;
-    let nombres= req.body.nombres;
-    let apellidos= req.body.apellidos;
-    let dpi= req.body.dpi;
-    let nit= req.body.nit;
-    let puesto = req.body.puesto;
-
-    try{
-      
-      let sql = `SELECT * FROM empleado WHERE nit='`+nit+`';`;
-      
-      const result1 = await query(sql);
-      
-      if (result1.length > 0){
-
-        if(result1[0].empleadoId == id){
-          //El mismo id
-        }else{
-          res.status(400).json({success: false, message: "NIT repetido"});
-          return;
-        }
-        
-      }
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al crear empleado"});
-      return;
-    }
-
-
-    //Verificar puesto
-    let idpuesto=null;
-    try{
-        
-      if (puesto!=''){
-        puesto= puesto.toUpperCase();
-        let sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
-        const result = await query(sql);
-        
-        if (result.length > 0) {
-          
-          idpuesto=result[0].puestoId;
-
-        } else {
-          let sql =`INSERT INTO puesto(fecha_mod,nombre,activo) 
-          VALUES (NOW(),"`+puesto+`",activo);`;
-          await query(sql);
-
-          sql =`SELECT puestoId FROM puesto WHERE nombre="`+puesto+`";`;
-          const result2 = await query(sql);
-
-          idpuesto=result2[0].puestoId;
-        
-        }
-      }
-    }catch (error) {
-        console.log(error);
-        res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-        return;
-    }
-
-    try{
-      
-
-      let sql =  `UPDATE empleado SET nombres='` + nombres + `',apellidos='` + apellidos + `',
-      dpi='` + dpi + `',nit='`+nit+`', puesto =`+idpuesto+` WHERE empleadoId= ` + id +  ` ; `;
-      
-      await query(sql);
-      
-      res.json({success: true});
-      return;
-    }catch (error) {
-      console.log(error);
-      res.status(400).json({success: false, message: "Error al editar Empleado"});
-      return;
-    }
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
-
-
-//------------------------------------- Actualizar estado del Empleado --------------------------------------
-
-app.put('/ActualizarEstadoEmpleado', function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-    let estado = req.body.estado;
-    let id = req.body.id;
-
-    let sql = "UPDATE empleado SET activo="+ estado +" WHERE empleadoId=" + id + " ;";
-    
-    connection.query(sql, async function(error,result){
-      if(error){
-        console.log("Error al conectar");
-        res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
-      }else{
-        
-        res.json({success: true});
-
-      }
-    });
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-});
-
-
 //------------------------------------- Buscar empleado --------------------------------------
 
-app.get('/BuscarEmpleado', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-      res.status(401).json({ token: false });
-      return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
+app.get('/BuscarEmpleado', checkAuth, async function (req, res) {
 
   try{
     let buscar = req.query.buscar;
@@ -2401,7 +1273,7 @@ app.get('/BuscarEmpleado', async function (req, res) {
     res.json({success: true, message: result});
   }catch (error) {
     console.log(error);
-    res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
+    res.status(400).json({success: false, message: "No fue posible retornar la informacion"});
     return;
   }
 });
@@ -2409,19 +1281,7 @@ app.get('/BuscarEmpleado', async function (req, res) {
 
 //------------------------------------- Obtener historial empleado--------------------------------------
 
-app.get('/HistorialEmpleado', async function (req, res) {
-
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-      res.status(401).json({ token: false });
-      return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
+app.get('/HistorialEmpleado', checkAuth, async function (req, res) {
 
   try{
 
@@ -2441,595 +1301,4 @@ app.get('/HistorialEmpleado', async function (req, res) {
     return;
   }
   
-});
-
-
-//------------------------------------- Restablecer contraseña --------------------------------------
-
-
-app.put('/RestablecerPass', async function (req, res) {
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-
-  try{
-    let userId = req.body.userid;
-    let passCrypto = encriptar("MINECO");
-
-    let sql = "UPDATE usuario SET pass='" + passCrypto + "' WHERE userId='" + userId + "' ;";
-
-    await query(sql);
-
-    res.json({success: true});
-
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al verificar", error:error});
-    return;
-  }
-});
-
-
-
-
-//------------------------------------- Reporte PDF bienes por usuario --------------------------------------
-
-app.get('/ReportePDFbienesUsuario',  async function(req, res) {
-
-  //Confirmar token
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-
-  // Crear una instancia de PDFKit
-  const pdf = new PDFDocument({
-    size: 'LETTER'
-  });
-  // Enviar el PDF al cliente
-  
-  res.setHeader('Content-Type', 'application/pdf');
-  pdf.pipe(res);
-
-  pdf.image('logo.jpg', {
-    fit: [150, 150],
-    x: 400,
-    y: 20
-  });
-
-  pdf.moveDown();
-
-  // Añadir un título al PDF
-  pdf.fontSize(20).text('Bienes por empleado',{
-    align: 'center'
-  })
-
-  // Añadir un espacio
-  pdf.moveDown();
-
-  // Crear un arreglo con los datos de la tabla
-  const data = [
-    ['Fecha_Compra','No.cuenta','Codigo','Cantidad','Descripcion','Ubicacion','Saldo']
-  ];
-
-  // Definir el ancho y el alto de cada celda
-  let cellWidth = 80;
-  let cellHeight = 30;
-
-  // Definir el punto inicial de la tabla
-  let x = 25;
-  let y = 150;
-
-  // Recorrer el arreglo de datos
-  for (let i = 0; i < data.length; i++) {
-    // Recorrer cada fila del arreglo
-    for (let j = 0; j < data[i].length; j++) {
-      if(data[i][j]=="Cantidad"){
-        cellWidth=65
-      }else if(data[i][j]=="Saldo"){
-        cellWidth=70
-      }else if(data[i][j]=="Descripcion"){
-        cellWidth=105
-      }else{
-        cellWidth=80
-      }
-      // Dibujar el borde de la celda
-      pdf.rect(x, y, cellWidth, cellHeight).stroke();
-      // Añadir el texto de la celda
-      
-      pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
-        width: cellWidth - 20,
-        align: 'center'
-      });
-      // Mover el punto x al siguiente valor
-      
-      x += cellWidth;
-      
-    }
-    // Restablecer el punto x al valor inicial
-    x = 25;
-    // Mover el punto y al siguiente valor
-    y += cellHeight;
-  }
-  cellWidth=80
-  //Funcion para ajustar el tamaño de las celdas
-
-  function tamano(texto1,texto2) {
-
-   
-    let texto=(texto1.length > texto2.length) ? texto1 : texto2
-    
-    if(texto.length > 57){
-
-      cellHeight = Math.round((texto.length / 16)*18)
-      cellHeight -= Math.round(texto.length / 3)
-
-    }else if(texto.length<13){
-
-      cellHeight = 20;
-
-    }else if(texto.length > 32 && texto.length < 57){
-
-      cellHeight=50;
-
-    }
-    else if(texto.length > 13 && texto.length < 32){
-
-      cellHeight=30;
-
-    }
-    
-  }
-
-  //Funcion para agregar celdas
-  function celdas(texto) {
-    
-    // Añadir el texto de la celda
-    pdf.rect(x, y, cellWidth, cellHeight).stroke();
-
-    pdf.font('Helvetica').text(texto, x + 5, y + 7, {
-      width: cellWidth - 7,
-      align: 'left'
-    });
-    // Mover el punto x al siguiente valor
-    x += cellWidth;
-
-  }
-
-  try{
-    let empleado= req.query.empleado;
-    
-    let sql = `SELECT IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco, IFNULL(cuenta,'No ingresado') AS cuenta,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(ubicacion.nombre,'No ingresado') AS ubicacion,IFNULL(bien.precio,'No ingresado') AS precio FROM bien
-    INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
-    LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id;`;
-    
-    const result = await query(sql);
-
-   
-// Recorrer cada fila del arreglo
-    for (let i = 0; i < result.length; i++) {
-      
-      tamano(result[i].descripcion+"",result[i].ubicacion+"")
-      // Añadir el texto de la celda
-      celdas(result[i].fechaco)
-      celdas(result[i].cuenta)
-      celdas(result[i].codigo)
-      cellWidth = 65;
-      celdas(result[i].cantidad)
-      cellWidth = 105;
-      celdas(result[i].descripcion)
-      cellWidth = 80;
-      celdas(result[i].ubicacion)
-      cellWidth = 70;
-      celdas(result[i].precio)
-      cellWidth = 80;
-      
-      // Restablecer el punto x al valor inicial
-      x = 25;
-      // Mover el punto y al siguiente valor
-      y += cellHeight;
-
-      if(y>600){
-        pdf.addPage();
-        y=100
-      }
-    }
-    
-    // Finalizar el documento
-    pdf.end();  
-  
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al obtener"});
-    return;
-  }
-
-});
-
-
-//------------------------------------- Reporte PDF total de bienes --------------------------------------
-
-app.get('/ReportePDFbienesTotal',  async function(req, res) {
-  
-  //Confirmar token
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-
-  // Crear una instancia de PDFKit
-  const pdf = new PDFDocument({
-    size: 'LETTER'
-  });
-  // Enviar el PDF al cliente
-  
-  res.setHeader('Content-Type', 'application/pdf');
-  pdf.pipe(res);
-
-  pdf.image('logo.jpg', {
-    fit: [150, 150],
-    x: 400,
-    y: 20
-  });
-
-  pdf.moveDown();
-
-  // Añadir un título al PDF
-  pdf.fontSize(20).text('Bienes por empleado',{
-    align: 'center'
-  })
-
-  // Añadir un espacio
-  pdf.moveDown();
-
-  // Crear un arreglo con los datos de la tabla
-  const data = [
-    ['Usuario','Codigo','Marca','Modelo','Serie','Descripcion','Saldo']
-  ];
-
-  // Definir el ancho y el alto de cada celda
-  let cellWidth = 80;
-  let cellHeight = 30;
-
-  // Definir el punto inicial de la tabla
-  let x = 25;
-  let y = 150;
-
-  // Recorrer el arreglo de datos
-  for (let i = 0; i < data.length; i++) {
-    // Recorrer cada fila del arreglo
-    for (let j = 0; j < data[i].length; j++) {
-      if(data[i][j]=="Usuario"){
-        cellWidth=60
-      }else if(data[i][j]=="Descripcion"){
-        cellWidth=105
-      }else{
-        cellWidth=80
-      }
-      // Dibujar el borde de la celda
-      pdf.rect(x, y, cellWidth, cellHeight).stroke();
-      // Añadir el texto de la celda
-      
-      pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
-        width: cellWidth - 20,
-        align: 'center'
-      });
-      // Mover el punto x al siguiente valor
-      x += cellWidth;
-      
-    }
-    // Restablecer el punto x al valor inicial
-    x = 25;
-    // Mover el punto y al siguiente valor
-    y += cellHeight;
-  }
-
-  function tamano(texto1,texto2,texto3) {
-
-    //typeof texto === 'string'
-    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
-    let texto = (calculo.length > texto3.length) ?  calculo : texto3
-    
-    
-    if(texto.length > 57){
-
-      cellHeight = Math.round((texto.length / 16)*18)
-      cellHeight -= Math.round(texto.length / 3)
-
-    }else if(texto.length<13){
-
-      cellHeight = 20;
-
-    }else if(texto.length > 35 && texto.length < 57){
-
-      cellHeight=50;
-
-    }
-    else if(texto.length > 13 && texto.length < 35){
-
-      cellHeight=30;
-
-    }
-    
-  }
-  //Funcion para agregar celdas
-  function celdas(texto) {
-    
-    // Añadir el texto de la celda
-    pdf.rect(x, y, cellWidth, cellHeight).stroke();
-
-    pdf.font('Helvetica').text(texto, x + 5, y + 7, {
-      width: cellWidth - 7,
-      align: 'left'
-    });
-    // Mover el punto x al siguiente valor
-    x += cellWidth;
-
-  }
-
-
-  try{
-    
-    let sql = `SELECT nit,codigo, marca.nombre as marca,modelo,serie,descripcion,precio FROM bien 
-    LEFT JOIN marca ON marca.marcaId=bien.marca 
-    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-    LEFT JOIN empleado ON t.empleado=empleado.empleadoId
-    WHERE bien.activo=True;`;
-    
-    const result = await query(sql);
-
-   
-// Recorrer cada fila del arreglo
-    for (let i = 0; i < result.length; i++) {
-
-      
-      tamano(result[i].descripcion+"",result[i].serie+"",result[i].modelo+"")
-      
-      // Añadir el texto de la celda
-      cellWidth = 60;
-      celdas(result[i].nit)
-      cellWidth = 80;
-      celdas(result[i].codigo)
-      celdas(result[i].marca)
-      celdas(result[i].modelo)
-      celdas(result[i].serie)
-      cellWidth = 105;
-      celdas(result[i].descripcion)
-      cellWidth = 80;
-      celdas(result[i].precio)
-      
-      // Restablecer el punto x al valor inicial
-      x = 25;
-      // Mover el punto y al siguiente valor
-      y += cellHeight;
-
-      if(y>600){
-        pdf.addPage();
-        y=100
-      }
-    }
-    
-    // Finalizar el documento
-    pdf.end();  
-  
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al obtener"});
-    return;
-  }
-
-});
-
-
-
-//------------------------------------- Reporte PDF bienes de baja --------------------------------------
-
-app.get('/ReportePDFbienesBaja',  async function(req, res) {
-  
-  //Confirmar token
-  try {
-    const token = req.headers['authorization'];
-    if (!token) {
-       res.status(401).json({ token: false });
-       return;
-    }
-    verToken(token);
-  } catch (err) {
-    res.status(401).json({token: false});
-    return;
-  }
-
-  // Crear una instancia de PDFKit
-  const pdf = new PDFDocument({
-    size: 'LETTER'
-  });
-  // Enviar el PDF al cliente
-  
-  res.setHeader('Content-Type', 'application/pdf');
-  pdf.pipe(res);
-
-  pdf.image('logo.jpg', {
-    fit: [150, 150],
-    x: 400,
-    y: 20
-  });
-
-  pdf.moveDown();
-
-  // Añadir un título al PDF
-  pdf.fontSize(20).text('Bienes de Baja',{
-    align: 'center'
-  })
-
-  // Añadir un espacio
-  pdf.moveDown();
-
-  // Crear un arreglo con los datos de la tabla
-  const data = [
-    ['Fecha de baja','Empleado','Codigo','Modelo','Serie','Descripcion','Precio']
-  ];
-
-  // Definir el ancho y el alto de cada celda
-  let cellWidth = 80;
-  let cellHeight = 30;
-
-  // Definir el punto inicial de la tabla
-  let x = 25;
-  let y = 150;
-
-  // Recorrer el arreglo de datos
-  for (let i = 0; i < data.length; i++) {
-    // Recorrer cada fila del arreglo
-    for (let j = 0; j < data[i].length; j++) {
-      if(data[i][j]=="Fecha de baja" || data[i][j]=="Empleado" || data[i][j]=="Precio"){
-        cellWidth=65
-      }else if(data[i][j]=="Descripcion"){
-        cellWidth=105
-      }else{
-        cellWidth=80
-      }
-      // Dibujar el borde de la celda
-      pdf.rect(x, y, cellWidth, cellHeight).stroke();
-      // Añadir el texto de la celda
-      
-      pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
-        width: cellWidth - 20,
-        align: 'center'
-      });
-      // Mover el punto x al siguiente valor
-      x += cellWidth;
-      
-    }
-    // Restablecer el punto x al valor inicial
-    x = 25;
-    // Mover el punto y al siguiente valor
-    y += cellHeight;
-  }
-
-  function tamano(texto1,texto2,texto3) {
-
-    //typeof texto === 'string'
-    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
-    let texto = (calculo.length > texto3.length) ?  calculo : texto3
-    
-    
-    if(texto.length > 57){
-
-      cellHeight = Math.round((texto.length / 16)*18)
-      cellHeight -= Math.round(texto.length / 3)
-
-    }else if(texto.length<13){
-
-      cellHeight = 20;
-
-    }else if(texto.length > 35 && texto.length < 57){
-
-      cellHeight=50;
-
-    }
-    else if(texto.length > 13 && texto.length < 35){
-
-      cellHeight=30;
-
-    }
-    
-  }
-  //Funcion para agregar celdas
-  function celdas(texto) {
-    
-    // Añadir el texto de la celda
-    pdf.rect(x, y, cellWidth, cellHeight).stroke();
-
-    pdf.font('Helvetica').text(texto, x + 5, y + 7, {
-      width: cellWidth - 7,
-      align: 'left'
-    });
-    // Mover el punto x al siguiente valor
-    x += cellWidth;
-
-  }
-
-
-  try{
-    
-    let sql = `SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,u.nit,codigo,marca.nombre AS marca,modelo,serie,descripcion,
-    IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
-    INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
-    INNER JOIN bien ON bien.id = r.bien
-    INNER JOIN empleado u ON u.empleadoId = t.empleado
-    LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE r.fecha IN (SELECT max(r.fecha) FROM responsable_activo r
-    WHERE r.activo=0 and bien.activo=0
-    GROUP BY r.bien)
-    UNION
-    SELECT bien.id,"Sin Asignacion","Sin Asignacion",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
-    LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
-    WHERE r.activo=0);`;
-    
-    const result = await query(sql);
-
-   
-// Recorrer cada fila del arreglo
-    for (let i = 0; i < result.length; i++) {
-
-      
-      tamano(result[i].descripcion+"",result[i].serie+"",result[i].modelo+"")
-      
-      // Añadir el texto de la celda
-      cellWidth = 65;
-      celdas(result[i].fecha)
-      celdas(result[i].nit)
-      cellWidth = 80;
-      celdas(result[i].codigo)
-      celdas(result[i].modelo)
-      celdas(result[i].serie)
-      cellWidth = 105;
-      celdas(result[i].descripcion)
-      cellWidth = 65;
-      celdas(result[i].precio)
-      
-      // Restablecer el punto x al valor inicial
-      x = 25;
-      // Mover el punto y al siguiente valor
-      y += cellHeight;
-
-      if(y>600){
-        pdf.addPage();
-        y=100
-      }
-    }
-    
-    // Finalizar el documento
-    pdf.end();  
-  
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al obtener"});
-    return;
-  }
-
 });

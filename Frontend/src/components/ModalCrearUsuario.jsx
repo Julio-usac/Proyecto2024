@@ -38,7 +38,9 @@ const ModelCrearUsuario = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/ObtenerRoles");
+      let result = await fetch(url+"/ObtenerRoles",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setRoles(result.message)
     };
@@ -68,23 +70,7 @@ const ModelCrearUsuario = () => {
         if (resp.data.success === true) {
           toast.success("Registro exitoso")
 
-          //Si la creacion es exitosa, se registra la operacion en la bitacora
-          /*
-          try {
-            const resp = await axios({
-              url: "http://localhost:9095/IngresarBitacora",
-              method: "post",
-              data: {
-                usuario: id,
-                empleado: null,
-                bienaf: null,
-                tipo: 1,
-                afectado:false,
-              },
-            });
-          } catch (error) {
-            console.log(error)
-          }*/
+         
           window.my_modal_3.close();
           setTimeout(function(){ window.location.reload(); }, 1000);
         }else{

@@ -24,7 +24,9 @@ function SinAsignar() {
   //Obtener bienes sin asignar
   useEffect(() => {
     
-      axios.get(url+'/SinAsignar')
+      axios.get(url+'/SinAsignar', {headers: {
+        'Authorization': token
+      },})
       .then((resp) => {
 
         setBien(resp.data.message);
@@ -50,7 +52,7 @@ function SinAsignar() {
       },})
       .then(async response => {
         try {
-          const resp = await axios({
+          await axios({
             url: url+"/IngresarBitacora",
             method: "post",
             data: {
@@ -59,6 +61,9 @@ function SinAsignar() {
               bienaf: e,
               tipo: 3,
               afectado: true,
+            },
+            headers: {
+              'Authorization': token
             },
           });
         } catch (error) {

@@ -53,6 +53,42 @@ const handleSearchChange = (event) => {
   //funcion para cambiar el estado de los botones al agregar un bien
 
   const fVagregar = (e) => {
+    if ( $.fn.dataTable.isDataTable('#myTable') ) {
+      let table2=$('#myTable').DataTable();
+      table2.destroy();
+    }
+    setTimeout(function(){
+      
+      if ( $.fn.dataTable.isDataTable('#myTable') ) {
+        
+      }else{
+        new DataTable('#myTable');
+        const searchInput = document.querySelector('#myTable_filter input');
+        const searchlabel = document.querySelector('#myTable_filter label');
+        
+        
+        // Aplica las clases de Tailwind al label
+        searchlabel.classList.add(
+            'font-bold',
+            'text-xl'
+        );
+        
+
+        // Aplica las clases de Tailwind al cuadro de búsqueda
+        searchInput.classList.add(
+            'font-normal',
+            'border-2',
+            'py-1',
+            'mt-2',
+            'mb-3',
+            'mx-2',
+            'input-primary',
+            'border-black-400',
+            'focus:outline-none',
+            'focus:border-blue-500'
+        );
+      }
+    }, 1000);
     setVagregar(true);
     setVquitar(false);
   };
@@ -60,6 +96,42 @@ const handleSearchChange = (event) => {
   //funcion para cambiar el estado de los botones al quitar un bien
 
   const fVeliminar = (e) => {
+    if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+      let table2=$('#myTable2').DataTable();
+      table2.destroy();
+    }
+    setTimeout(function(){
+      
+      if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+        
+      }else{
+        new DataTable('#myTable2');
+          const searchInput = document.querySelector('#myTable2_filter input');
+          const searchlabel = document.querySelector('#myTable2_filter label');
+          
+          
+          // Aplica las clases de Tailwind al label
+          searchlabel.classList.add(
+              'font-bold',
+              'text-xl'
+          );
+          
+
+          // Aplica las clases de Tailwind al cuadro de búsqueda
+          searchInput.classList.add(
+              'font-normal',
+              'border-2',
+              'py-1',
+              'mt-2',
+              'mb-3',
+              'mx-2',
+              'input-primary',
+              'border-black-400',
+              'focus:outline-none',
+              'focus:border-blue-500'
+          );
+      }
+    }, 1000);
     setVquitar(true);
     setVagregar(false);
   };
@@ -137,7 +209,9 @@ const handleSearchChange = (event) => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/tipo");
+      let result = await fetch(url+"/tipo",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setTipo(result.message)
     };
@@ -175,7 +249,9 @@ const handleSearchChange = (event) => {
   useEffect(() => {
  
 
-    axios.get(url+'/BienesNoAsignados')
+    axios.get(url+'/BienesNoAsignados',{headers: {
+      'Authorization': token
+    },})
       .then((resp) => {
 
       setBien(resp.data.message);
@@ -241,7 +317,9 @@ const handleSearchChange = (event) => {
       axios.post(url+"/bienAsignado", {
           empleado: opcion,
         
-      })
+      },{headers: {
+        'Authorization': token
+      },})
         .then((resp) => {
           if (resp.data.success === true) {
             setBien2(resp.data.message);
@@ -253,6 +331,7 @@ const handleSearchChange = (event) => {
               
             }
             setShowButton2(bienarray);
+            /*
             if ( $.fn.dataTable.isDataTable('#myTable2') ) {
               let table2=$('#myTable2').DataTable();
               table2.destroy();
@@ -263,32 +342,32 @@ const handleSearchChange = (event) => {
                 
               }else{
                 new DataTable('#myTable2');
-                const searchInput = document.querySelector('#myTable2_filter input');
-                          const searchlabel = document.querySelector('#myTable2_filter label');
-                          
-                          
-                          // Aplica las clases de Tailwind al label
-                          searchlabel.classList.add(
-                              'font-bold',
-                              'text-xl'
-                          );
-                          
-      
-                          // Aplica las clases de Tailwind al cuadro de búsqueda
-                          searchInput.classList.add(
-                              'font-normal',
-                              'border-2',
-                              'py-1',
-                              'mt-2',
-                              'mb-3',
-                              'mx-2',
-                              'input-primary',
-                              'border-black-400',
-                              'focus:outline-none',
-                              'focus:border-blue-500'
-                          );
+                  const searchInput = document.querySelector('#myTable2_filter input');
+                  const searchlabel = document.querySelector('#myTable2_filter label');
+                  
+                  
+                  // Aplica las clases de Tailwind al label
+                  searchlabel.classList.add(
+                      'font-bold',
+                      'text-xl'
+                  );
+                  
+
+                  // Aplica las clases de Tailwind al cuadro de búsqueda
+                  searchInput.classList.add(
+                      'font-normal',
+                      'border-2',
+                      'py-1',
+                      'mt-2',
+                      'mb-3',
+                      'mx-2',
+                      'input-primary',
+                      'border-black-400',
+                      'focus:outline-none',
+                      'focus:border-blue-500'
+                  );
               }
-            }, 1000);
+            }, 1000);*/
           }else{
             toast.error(resp.data.message)
           }
@@ -297,7 +376,9 @@ const handleSearchChange = (event) => {
           console.error(error);
         });
       if (!toggleTipo){
-        axios.get(url+'/tarjetasAsignadas/'+opcion)
+        axios.get(url+'/tarjetasAsignadas/'+opcion, {headers: {
+          'Authorization': token
+        }  })
           .then((resp) => {
     
           setTarjetas(resp.data.message);
@@ -354,7 +435,10 @@ const handleSearchChange = (event) => {
                   bienaf: null,
                   tipo: 4,
                   afectado:false,
+                },headers: {
+                  'Authorization': token
                 },
+                
               });
             } catch (error) {
               console.log(error)
@@ -504,7 +588,7 @@ const handleSearchChange = (event) => {
                           fVagregar();
                         }}
                     >
-                        AGREGAR
+                        Asignar
                     </button>
                     <button
                         className="btn bg-red-500 text-white w-fit mx-6"
@@ -584,7 +668,9 @@ const handleSearchChange = (event) => {
           
                   Desasignar activos
                 </h2>}
-                {Vquitar&&<div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-96">
+                {Vquitar&&<div>
+                
+                <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-4 overflow-y-auto h-96">
                     <table id="myTable2" className="table table-xs table-pin-rows w-full text-sm text-left text-gray-500 dark:text-gray-900">
                         <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                             <tr>
@@ -644,6 +730,7 @@ const handleSearchChange = (event) => {
                         </tbody>
                     </table>
                     
+                </div>
                 </div>}
             </div>
                 </div>

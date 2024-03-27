@@ -74,13 +74,14 @@ const handleSearchChange = (event) => {
 
   useEffect(() => {
     if (opcion) {
-      
 
       axios.post(url+"/bienAsignado2", {
         
           empleado: opcion,
         
-      })
+      },{headers: {
+        'Authorization': token
+      },})
         .then((resp) => {
           if (resp.data.success === true) {
             setBien(resp.data.message);
@@ -126,11 +127,14 @@ const handleSearchChange = (event) => {
 //Funcion para descargar el reporte por usuario
   const DescargarExcel = async() => {
     try {
-      const response = await axios.get(url+'/DescargarReporteUsuario/', { responseType: 'blob',  params: {
-        empleado: opcion
-      },   headers: {
+      const response = await axios.get(url+'/DescargarReporteUsuario/', { 
+        responseType: 'blob',  
+        params: {
+          empleado: opcion
+        },   
+        headers: {
         'Authorization': token
-      }, });
+        }, });
       const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url2;
@@ -167,9 +171,14 @@ const handleSearchChange = (event) => {
   //Funcion para retornar el saldo total
   const Saldo = async() => {
     try {
-      const response = await axios.get(url+'/saldoUsuario/', { params: {
-        empleado: opcion
-      }  });
+      const response = await axios.get(url+'/saldoUsuario/', { 
+        params: {
+        empleado: opcion,
+        },
+        headers: {
+          'Authorization': token
+        },
+      }  );
       setSaldo(response.data.message);
     } catch (error) {
       console.error('Hubo un error al retornar el saldo: ', error);

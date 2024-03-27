@@ -14,6 +14,7 @@ function Bitacora() {
   const [fecha2, setFecha2] = useState('');
   const url = useAuth((state) => state.url);
 
+  const { token} = useAuth((state) => state);
 
   //-------------------------------------------Funciones utilizadas----------------------------------------
 
@@ -33,7 +34,9 @@ function Bitacora() {
 
   const Descargar = async() => {
     try {
-      const response = await axios.get(url+'/DescargarBitacora/', { responseType: 'blob'});
+      const response = await axios.get(url+'/DescargarBitacora/', { responseType: 'blob', headers: {
+        'Authorization': token
+      },});
       const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url2;
@@ -54,7 +57,10 @@ function Bitacora() {
         const response = await axios.get(url+'/ObtenerBitacora/', { params: {
           fecha1: fecha,
           fecha2: fecha2
-        }  });
+        },
+        headers: {
+          'Authorization': token
+        },  });
         setUsuarios(response.data.message);
       } catch (error) {
         console.error('Hubo un error al retornar la informacion');

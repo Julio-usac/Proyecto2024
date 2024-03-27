@@ -57,7 +57,7 @@ function App() {
         
         <FiUsers  className="text-9xl"/>
         
-        <span className=" text-3xl">Activos por usuario</span>
+        <span className=" text-3xl">Activos por empleado</span>
         </button>
       </Link>
       <a  className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 

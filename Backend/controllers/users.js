@@ -239,3 +239,38 @@ exports.editar = async (req, res, next) => {
   }
 
 };
+
+
+//------------------------------------- ELIMINAR USUARIO--------------------------------------
+
+exports.eliminar = async (req, res, next) => {
+  try{
+    let sql =  `UPDATE usuario SET estado = 3 WHERE userId =`+req.params.id+`;`;
+    await query(sql);
+    res.json({success: true, message: "Usuario eliminado satisfactoriamente"});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible dar de baja el bien", error: error});
+    return;
+  }
+};
+
+//------------------------------------- Actualizar estado --------------------------------------
+
+exports.estado = async (req, res, next) => {
+  let estado = req.body.estado;
+  let id = req.body.id;
+
+  let sql = "UPDATE usuario SET estado=" + estado +" WHERE userId=" + id + " ;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No hay conexion con la base de datos"});
+    }else{
+      
+      res.json({success: true});
+
+    }
+  });
+};

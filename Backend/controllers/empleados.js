@@ -1,19 +1,6 @@
-var jwt = require('jsonwebtoken');
-var crypto = require('crypto');
 var mysql = require('mysql');
 var config = require('../database/config.js');
 
-
-function encriptar(texto) {
-    const hash = crypto.createHash('sha256');
-    hash.update(texto);
-  
-    return hash.digest('hex');
-}
-
-function getToken(datos) {
-    return jwt.sign(datos, process.env.JWT_CODE, {expiresIn : '60m'});
-}
 
 var connection = mysql.createConnection(config.dbconnection);
 

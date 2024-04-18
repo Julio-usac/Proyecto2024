@@ -265,12 +265,14 @@ exports.excel3 = async (req, res, next) => {
 exports.excel4 = async (req, res, next) => {
 
   try{
-
+    let fecha1= req.query.fecha1;
+    let fecha2= req.query.fecha2;
     let sql = `SELECT m.id, DATE_FORMAT(m.fecha, '%d/%m/%Y') as fecha, TIME(m.fecha) as hora,u1.correo as usuario, t.tipo as movimiento, m.afectado as objetivo, COALESCE(u2.nit, bien.codigo) as identificador FROM movimiento_bien m
     INNER JOIN usuario u1 ON u1.userId=m.usuario
     LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
     LEFT JOIN bien ON bien.id=m.bien_afectado
-    INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento;`;
+    INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento
+    WHERE DATE(m.fecha)>=STR_TO_DATE(DATE_FORMAT("`+fecha1+`", "%d/%m/%Y"), '%d/%m/%Y') AND DATE(m.fecha)<=STR_TO_DATE(DATE_FORMAT("`+fecha2+`", "%d/%m/%Y"), '%d/%m/%Y') ;`;
     
     const result = await query(sql);
 

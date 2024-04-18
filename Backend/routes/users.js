@@ -10,7 +10,9 @@ router.put("/ActualizarPass", checkAuth,userController.actualizar);
 router.put("/RestablecerPass", checkAuth,userController.restablecer);
 
 router.post("/CrearUsuario", checkAuth,userController.crear);
+router.put("/ActualizarEstado", checkAuth,userController.estado);
 router.put("/EditarUsuario", checkAuth,userController.editar);
+router.delete("/EliminarUsuario/:id", checkAuth,userController.eliminar);
 
 
 module.exports = router;

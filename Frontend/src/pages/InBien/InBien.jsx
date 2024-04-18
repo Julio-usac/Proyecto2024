@@ -46,7 +46,9 @@ function InBien() {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/tipo");
+      let result = await fetch(url+"/tipo",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setTipo(result.message)
     };
@@ -57,7 +59,9 @@ function InBien() {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/ubicacion");
+      let result = await fetch(url+"/ubicacion",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setUb(result.message)
     };
@@ -111,7 +115,7 @@ function InBien() {
           if (resp.data.success === true) {
             toast.success("Ingreso exitoso!")
             try {
-              const resp = await axios({
+              await axios({
                 url: url+"/IngresarBitacora",
                 method: "post",
                 data: {
@@ -120,6 +124,8 @@ function InBien() {
                   bienaf: null,
                   tipo: 1,
                   afectado:true,
+                },headers: {
+                  'Authorization': token
                 },
               });
             } catch (error) {

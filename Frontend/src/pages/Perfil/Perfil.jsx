@@ -4,7 +4,6 @@ import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
 function Perfil() {
@@ -39,7 +38,9 @@ function Perfil() {
           correo: correo,
           pass: Pass,
         
-      })
+      },{headers: {
+        'Authorization': token
+      },})
         .then((resp) => {
           if (resp.data.success === true) {
             toast.success("verificado")
@@ -83,6 +84,7 @@ function Perfil() {
         toast.error(resp.data.message);
       }
     } catch (error) {
+      
       if ('token' in error.response.data){
         logout();
       }else{

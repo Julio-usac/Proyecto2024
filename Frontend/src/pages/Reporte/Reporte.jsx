@@ -7,10 +7,19 @@ import useAuth from "../../auth/authStore";
 function Reporte() {
  
   const url2 = useAuth((state) => state.url);
+  
+  const { token} = useAuth((state) => state);
+
+
 //Funcion para descargar el reporte por usuario
 const Descargar = async() => {
   try {
-    const response = await axios.get(url2+'/DescargarBienesUsuario/', { responseType: 'blob' });
+    const response = await axios.get(url2+'/DescargarBienesUsuario/', { 
+      responseType: 'blob',
+      headers: {
+        'Authorization': token
+        },
+     });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -25,7 +34,10 @@ const Descargar = async() => {
 //Funcion para descargar el reporte por ubicacion
 const Descargar2 = async() => {
   try {
-    const response = await axios.get(url2+'/DescargarBienesUbicacion/', { responseType: 'blob' });
+    const response = await axios.get(url2+'/DescargarBienesUbicacion/', { responseType: 'blob',
+    headers: {
+      'Authorization': token
+      }, });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -40,7 +52,10 @@ const Descargar2 = async() => {
 //Funcion para descargar el reporte de tarjetas por usuario
 const Descargar3 = async() => {
   try {
-    const response = await axios.get(url2+'/DescargarUsuariosTarjetas/', { responseType: 'blob' });
+    const response = await axios.get(url2+'/DescargarUsuariosTarjetas/', { responseType: 'blob',
+    headers: {
+      'Authorization': token
+      }, });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;

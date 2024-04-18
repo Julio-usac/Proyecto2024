@@ -14,6 +14,7 @@ function Bitacora() {
   const [fecha2, setFecha2] = useState('');
   const url = useAuth((state) => state.url);
 
+  const { token} = useAuth((state) => state);
 
   //-------------------------------------------Funciones utilizadas----------------------------------------
 
@@ -32,16 +33,27 @@ function Bitacora() {
  //Funcion utilizada para llamar al endpoint DescargarBitacora y descargar la bitacora
 
   const Descargar = async() => {
-    try {
-      const response = await axios.get(url+'/DescargarBitacora/', { responseType: 'blob'});
-      const url2 = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url2;
-      link.setAttribute('download', 'Descarga.xlsx'); 
-      document.body.appendChild(link);
-      link.click();
-    } catch (error) {
-      console.error('Hubo un error al descargar el archivo');
+    if(fecha && fecha2){
+      try {
+        const response = await axios.get(url+'/DescargarBitacora/', { responseType: 'blob',
+        params: {
+          fecha1: fecha,
+          fecha2: fecha2
+        },
+        headers: {
+          'Authorization': token
+        },});
+        const url2 = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url2;
+        link.setAttribute('download', 'Descarga.xlsx'); 
+        document.body.appendChild(link);
+        link.click();
+      } catch (error) {
+        console.error('Hubo un error al descargar el archivo');
+      }
+    }else{
+      toast.error('Debe seleccionar un rango de fechas');
     }
   };
   
@@ -54,7 +66,10 @@ function Bitacora() {
         const response = await axios.get(url+'/ObtenerBitacora/', { params: {
           fecha1: fecha,
           fecha2: fecha2
-        }  });
+        },
+        headers: {
+          'Authorization': token
+        },  });
         setUsuarios(response.data.message);
       } catch (error) {
         console.error('Hubo un error al retornar la informacion');

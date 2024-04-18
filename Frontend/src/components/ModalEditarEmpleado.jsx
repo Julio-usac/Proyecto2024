@@ -46,7 +46,9 @@ const ModelEditarEmpleado = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/ObtenerRoles");
+      let result = await fetch(url+"/ObtenerRoles",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setRoles(result.message)
     };
@@ -89,6 +91,9 @@ const ModelEditarEmpleado = () => {
                 bienaf: null,
                 tipo: 2,
                 afectado:false,
+              },
+              headers: {
+                'Authorization': token
               },
             });
           } catch (error) {

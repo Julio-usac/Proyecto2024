@@ -68,7 +68,9 @@ const ModelEditar = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/tipo");
+      let result = await fetch(url+"/tipo",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setTipo(result.message)
     };
@@ -79,7 +81,9 @@ const ModelEditar = () => {
 
   useEffect(() => {
     const load = async () => {
-      let result = await fetch(url+"/ubicacion");
+      let result = await fetch(url+"/ubicacion",{headers: {
+        'Authorization': token
+      },});
       result = await result.json();
       setUb(result.message)
     };
@@ -142,6 +146,9 @@ const ModelEditar = () => {
                   bienaf: mid,
                   tipo: 2,
                   afectado:true,
+                },
+                headers: {
+                  'Authorization': token
                 },
               });
             } catch (error) {

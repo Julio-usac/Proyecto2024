@@ -160,22 +160,7 @@ function AdminUsuario() {
         'Authorization': token
       },})
       .then( async response => {
-        /*
-        try {
-          await axios({
-            url: url+"/IngresarBitacora",
-            method: "post",
-            data: {
-              usuario:  userid,
-              empleado: null,
-              bienaf: null,
-              tipo: 3,
-              afectado:false,
-            },
-          });
-        } catch (error) {
-          console.log("Error en la Bitacora")
-        }*/
+       
         toast.success(response.data.message);
         setactualizar('a');
         setTimeout(function(){  }, 2000);

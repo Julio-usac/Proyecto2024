@@ -249,7 +249,7 @@ const handleSearchChange = (event) => {
   useEffect(() => {
  
 
-    axios.get(url+'/BienesNoAsignados',{headers: {
+    axios.get(url+'/SinAsignar',{headers: {
       'Authorization': token
     },})
       .then((resp) => {
@@ -407,7 +407,7 @@ const handleSearchChange = (event) => {
       if (agregar.length!=0 || quitar.length!=0){
         try {
           const resp = await axios({
-            url: url+"/AsBien",
+            url: url+"/AsignarBien",
             method: "post",
             data: {
               op: toggleTipo,

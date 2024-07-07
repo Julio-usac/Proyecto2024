@@ -8,7 +8,9 @@ router.get("/DescargarReporteUsuario",checkAuth, userController.excel1);
 router.get("/DescargarReporteTotal",checkAuth, userController.excel2);
 router.get("/DescargarBienesBaja",checkAuth, userController.excel3);
 router.get("/DescargarBitacora",checkAuth, userController.excel4);
-router.get("/DescargarBienesUsuario",checkAuth, userController.excel5);
+
+router.get("/DescargarBienesActivos",checkAuth, userController.excel5);
+//router.get("/DescargarBienesUsuario",checkAuth, userController.excel5);
 router.get("/DescargarBienesUbicacion",checkAuth, userController.excel6);
 router.get("/DescargarUsuariosTarjetas",checkAuth, userController.excel7);
 

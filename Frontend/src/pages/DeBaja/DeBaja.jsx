@@ -17,6 +17,7 @@ function DeBaja() {
 
   const { token,logout} = useAuth((state) => state);
   const url = useAuth((state) => state.url);
+  const  userid  = useAuth((state) => state.id);
     //----------------------------Funciones para manejar cambios de estado -------------------------
 
   //Funcion para manejar el cambio de estado de las elecciones de busqueda
@@ -82,7 +83,11 @@ function DeBaja() {
  //Funcion para descargar todos los bienes dadosd de baja
   const DescargarExcel = async() => {
     try {
-      const response = await axios.get(url+'/DescargarBienesBaja/', { responseType: 'blob',  
+      const response = await axios.get(url+'/DescargarBienesBaja/', { 
+      responseType: 'blob',  
+      params: {
+        usuario: userid
+      },
       headers: {
         'Authorization': token
       },    });
@@ -103,6 +108,9 @@ function DeBaja() {
       const response = await axios.get(url+'/ReportePDFbienesBaja/',
       { 
         responseType: 'blob',  
+        params: {
+          usuario: userid
+        },
         headers: {
           'Authorization': token
         },  

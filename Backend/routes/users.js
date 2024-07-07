@@ -9,6 +9,8 @@ router.post("/VerificarPass", checkAuth,userController.comparar);
 router.put("/ActualizarPass", checkAuth,userController.actualizar);
 router.put("/RestablecerPass", checkAuth,userController.restablecer);
 
+
+router.get("/listaUsuarios", checkAuth,userController.lista);
 router.post("/CrearUsuario", checkAuth,userController.crear);
 router.put("/ActualizarEstado", checkAuth,userController.estado);
 router.put("/EditarUsuario", checkAuth,userController.editar);

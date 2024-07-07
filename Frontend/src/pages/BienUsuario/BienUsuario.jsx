@@ -28,10 +28,11 @@ function BienUsuario() {
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
 
-  //-----------------------------------------Retornar rol de usuario-----------------------------------------
+  //-----------------------------------------Retornar informacion del usuario-----------------------------------------
   const {rol } = useAuth((state) => state);
   const { token,logout} = useAuth((state) => state);
   const url = useAuth((state) => state.url);
+  const  userid  = useAuth((state) => state.id);
 
 
 //---------------------------------------Funciones utilizadas----------------------------------------
@@ -126,44 +127,62 @@ const handleSearchChange = (event) => {
 
 //Funcion para descargar el reporte por usuario
   const DescargarExcel = async() => {
-    try {
-      const response = await axios.get(url+'/DescargarReporteUsuario/', { 
-        responseType: 'blob',  
-        params: {
-          empleado: opcion
-        },   
-        headers: {
-        'Authorization': token
-        }, });
-      const url2 = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url2;
-      link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
-      document.body.appendChild(link);
-      link.click();
-    } catch (error) {
-      console.error('Hubo un error al descargar el archivo');
+    if(opcion){
+      try {
+        const response = await axios.get(url+'/DescargarReporteUsuario/', { 
+          responseType: 'blob',  
+          params: {
+            empleado: opcion,
+            usuario: userid
+          },   
+          headers: {
+          'Authorization': token
+          }, });
+
+       
+        const url2 = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url2;
+        link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
+        document.body.appendChild(link);
+        link.click();
+
+        
+        
+      } catch (error) {
+        console.error('Hubo un error al descargar el archivo');
+      }
+    }else{
+      toast.error("Debe elegir un empleado")
     }
   };
 
   //Funcion para descargar el reporte por usuario en PDF
   const DescargarPDF = async() => {
-    try {
-      const response = await axios.get(url+'/ReportePDFbienesUsuario/',
-      { 
-        responseType: 'blob',  
-        params: {
-          empleado: opcion
-        },headers: {
-          'Authorization': token
-        },  
+
+    if(opcion){
+      try {
+        const response = await axios.get(url+'/ReportePDFbienesUsuario/',
+        { 
+          responseType: 'blob',  
+          params: {
+            empleado: opcion,
+            usuario: userid
+          },headers: {
+            'Authorization': token
+          },  
+      
+        });
+       
+        const url2 = window.URL.createObjectURL(response.data);
+        window.open(url2,'_blank')
+        
     
-      });
-      const url2 = window.URL.createObjectURL(response.data);
-      window.open(url2,'_blank')
-   
-    } catch (error) {
-      console.error('Hubo un error al descargar el archivo');
+      } catch (error) {
+        console.error('Hubo un error al descargar el archivo');
+      }
+    }else{
+      toast.error("Debe elegir un empleado");
     }
   };
   

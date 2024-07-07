@@ -13,15 +13,16 @@ import $ from "jquery";
 
 function Busqueda() {
 
-  //-------------------------------Retornar rol del usuario y estados para guardar informacion -----------------------------------------
+  //-------------------------------Retornar informacion del usuario y estados para guardar informacion -----------------------------------------
 
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
-  const {rol } = useAuth((state) => state);
+
   const url = useAuth((state) => state.url);
   
   const { token } = useAuth((state) => state);
-
+  const {rol } = useAuth((state) => state);
+  const  userid  = useAuth((state) => state.id);
   //--------------------------------------------Declaracion de estados-----------------------------------------
 
 
@@ -61,14 +62,19 @@ function Busqueda() {
 
   }
 
-  //Funcion para descargar el reporte total de bienes
+  //Funcion para descargar el reporte total de bienes en Excel
 
   const Descargar = async() => {
     try {
-      const response = await axios.get(url+'/DescargarReporteTotal/', { responseType: 'blob',
-      headers: {
-        'Authorization': token
-        }  });
+      const response = await axios.get(url+'/DescargarReporteTotal/', 
+        { responseType: 'blob',
+          params: {
+            usuario: userid
+          },
+          headers: {
+           'Authorization': token
+          }  });
+      
       const url2 = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url2;
@@ -87,6 +93,9 @@ function Busqueda() {
       const response = await axios.get(url+'/ReportePDFbienesTotal/',
       { 
         responseType: 'blob',
+        params: {
+          usuario: userid
+        },
         headers: {
           'Authorization': token
         },  

@@ -273,7 +273,9 @@ exports.baja = async (req, res, next) => {
 
   try{
     let sql =  `UPDATE bien SET activo = false WHERE id =`+req.params.id+`;`;
-    const result = await query(sql);
+    await query(sql);
+    sql =  `UPDATE bien SET fecha_mod = NOW() WHERE id =`+req.params.id+`;`;
+    await query(sql);
     res.json({success: true, message: "Bien dado de baja satisfactoriamente"});
   }catch (error) {
     console.log(error);
@@ -580,5 +582,251 @@ exports.buscarbaja = async (req, res, next) => {
       }
       break;
   }
+
+};
+
+
+//------------------------------------- ASIGNAR BIENES --------------------------------------
+
+exports.asignar = async (req, res, next) => {
+
+  //Obtener datos
+
+  let op = req.body.op;
+  let tarjeta = req.body.tarjeta;
+  let categoria = req.body.categoria;
+  let empleado = req.body.empleado;
+  let saldo = req.body.saldo;
+  let asignar = req.body.asignar;
+  let quitar = req.body.quitar;
+
+
+
+  //Asignar nueva tarjeta
+  if(op==true){
+  //Crear tarjeta de responsabilidad
+    try{
+      //Verificar numero de tarjeta
+      let sql =  `SELECT numero_tarjeta from tarjeta_responsabilidad
+      WHERE numero_tarjeta=`+tarjeta+`;`;
+
+      const result1 = await query(sql);
+
+      if (result1.length==0){
+      //Crear tarjeta
+        sql =  `INSERT INTO tarjeta_responsabilidad(numero_tarjeta,saldo,empleado,categoria)
+        VALUES(`+tarjeta+`,`+saldo+`,`+empleado+`,`+categoria+`);`;
+          
+        const result2 = await query(sql);
+      }else{
+        res.json({success: false, message: "Numero de tarjeta repetido"});
+        return;
+      }
+    
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al crear la tarjeta"});
+      return;
+    }
+
+    //Registrar bienes desasignados
+    
+    if (quitar.length>0){  //Verificar si hay bienes para desasignar
+      
+      try{
+        //recuperar id de la tarjeta
+        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+        const result2 = await query(sql);
+
+        let idtarjeta = result2[0].tarjeta;
+        
+        //Quitar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //Registrar bienes desasignados
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+          VALUES(NOW(),`+idtarjeta+`,`+quitar[i]+`,False);`;
+          const result4 = await query(sql);
+        }
+        
+
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+        return;
+      }
+    }
+  //asignar bienes la tarjeta
+    if (asignar.length>0){ //Verificar si hay bienes por asignar
+      try{
+        //recuperar id de la tarjeta
+        let sql =  `SELECT max(id) as tarjeta FROM tarjeta_responsabilidad;`;
+        const result2 = await query(sql);
+
+        let idtarjeta = result2[0].tarjeta;
+
+        //Agregar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < asignar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta =`+idtarjeta+`  WHERE id =`+asignar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //asignar bienes
+        
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+            VALUES(NOW(),`+idtarjeta+`,`+asignar[i]+`,True);`;
+            const result4 = await query(sql);
+          }
+          
+        
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+        return;
+      }
+    }
+  }else{
+
+    //ACTUALIZAR TARJETA
+
+    //Actualizar datos de la tarjeta
+    let tarjetaid=0;
+    try{
+      //Verificar existencia de numero de tarjeta
+      let sql =  `SELECT id from tarjeta_responsabilidad
+      WHERE numero_tarjeta=`+tarjeta+` and empleado=`+empleado+`;`;
+
+      const result1 = await query(sql);
+
+      if (result1.length==1){
+
+        tarjetaid= result1[0].id;
+        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
+        const result2 = await query(sql);
+
+      }else{
+        res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
+        return;
+      }
+    
+    }catch (error) {
+      console.log(error);
+      res.status(400).json({success: false, message: "Error al verificar tarjeta"});
+      return;
+    }
+
+    
+    //Registrar bienes desasignados
+    
+    if (quitar.length>0){  //Verificar si hay bienes para desasignar
+      
+      try{
+        
+        //Quitar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `UPDATE bien SET tarjeta = NULL WHERE id =`+quitar[i]+`;`;
+          const result3 = await query(sql);
+        }
+
+        //Registrar bienes desasignados
+
+        for (var i = 0; i < quitar.length; i++) {
+          let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+          VALUES(NOW(),`+tarjetaid+`,`+quitar[i]+`,False);`;
+          const result4 = await query(sql);
+        }
+        
+
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al desasignar bienes a la tarjeta"});
+        return;
+      }
+    }
+
+    if (asignar.length>0){ //Verificar si hay bienes por asignar
+      try{
+        //Agregar referencia de la tarjeta a la tabla bienes
+
+        for (var i = 0; i < asignar.length; i++) {
+          let sql =   `UPDATE bien SET tarjeta =`+tarjetaid+`  WHERE id =`+asignar[i]+`;`;
+          const result3 = await query(sql);
+        }
+        
+        //asignar bienes
+        
+          for (var i = 0; i < asignar.length; i++) {
+            let sql =  `INSERT INTO responsable_activo(fecha,tarjeta,bien,activo)
+            VALUES(NOW(),`+tarjetaid+`,`+asignar[i]+`,True);`;
+            const result4 = await query(sql);
+          }
+          
+        
+      }catch (error) {
+        console.log(error);
+        res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
+        return;
+      }
+    }
+
+  }
+
+  res.json({success: true, message: "Operacion exitosa"});
+  return;
+
+
+};
+
+//------------------------------------- OBTENER BIENES SIN ASIGNAR--------------------------------------
+
+
+exports.sinasignar = async (req, res, next) => {
+  try{
+    
+    let sql = `SELECT bien.id,fechaco,codigo,marca.nombre as marca,modelo,serie,descripcion,bien.precio FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE bien.tarjeta IS NULL and bien.activo=true;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los bienes"});
+    return;
+  }
+};
+
+//------------------------------------- OBTENER BIENES ASIGNADOS (TARJETA DE RESPONSABILIDAD)--------------------------------------
+
+
+exports.asignado = async (req, res, next) => {
+  try{
+    let empleado= req.body.empleado;
+    let sql = `SELECT bien.id ,codigo, marca.nombre as marca, descripcion,precio FROM bien
+    LEFT JOIN marca ON marca.marcaId=bien.marca 
+    INNER JOIN tarjeta_responsabilidad ON tarjeta_responsabilidad.id= bien.tarjeta
+    WHERE tarjeta_responsabilidad.empleado = `+empleado+` ;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los bienes asignados"});
+    return;
+  }
+  
 
 };

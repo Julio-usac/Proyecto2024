@@ -274,3 +274,20 @@ exports.estado = async (req, res, next) => {
     }
   });
 };
+
+//------------------------------------- OBTENER LISTA DE USUARIOS --------------------------------------
+
+exports.lista = async (req, res, next) => {
+
+  try{
+    let sql =  `SELECT userId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, correo, rol.rol, estado,rolId FROM usuario
+    INNER JOIN rol ON rol.rolId=usuario.rol 
+    WHERE estado!=3;`;
+    const result = await query(sql);
+    res.json({success: true, message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
+    return;
+  }
+};

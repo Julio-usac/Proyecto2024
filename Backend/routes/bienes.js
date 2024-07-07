@@ -7,7 +7,9 @@ const router = express.Router();
 router.post("/InBien", checkAuth,userController.crear);
 router.post("/EditarBien", checkAuth,userController.editar);
 router.delete("/DardeBaja/:id", checkAuth,userController.baja);
-
+router.get("/SinAsignar", checkAuth,userController.sinasignar);
+router.post("/bienAsignado", checkAuth,userController.asignado);
+router.post("/AsignarBien", checkAuth,userController.asignar);
 router.get("/BuscarBienes", checkAuth,userController.buscar);
 router.get("/DadosdeBaja", checkAuth,userController.buscarbaja);
 router.put("/RestaurarBien/:id", checkAuth,userController.restaurar);

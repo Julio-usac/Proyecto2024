@@ -40,7 +40,7 @@ const Login = () => {
  //Condicion para verificar si el usuario ya se encuentra logeado
 
   if (isAuthenticated) {
-    console.log("isAuthenticated", isAuthenticated);
+    //console.log("isAuthenticated", isAuthenticated);
     return <Navigate to="/" />;
   }
 
@@ -86,7 +86,7 @@ const Login = () => {
           
             <h2 className="card-title font-semibold text-3xl text-blue-500 ">
               
-              Inicio de Sesion
+              Inicio de Sesión
             </h2>
             <div className="divider my-1 mt-2"></div>
           </div>

@@ -3,7 +3,11 @@ import AppLayout from "../../layout/AppLayout";
 import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 
+import ModalDescargar from "../../components/ModalDescargar";
+
+import useUrl from '../../store/urlStore';
 import useAuth from "../../auth/authStore";
+
 function Reporte() {
  
   const url2 = useAuth((state) => state.url);
@@ -11,24 +15,13 @@ function Reporte() {
   const { token} = useAuth((state) => state);
 
 
+  const seturl = useUrl((state) => state.setUrl);
+
+
 //Funcion para descargar el reporte por usuario
 const Descargar = async() => {
-  try {
-    const response = await axios.get(url2+'/DescargarBienesUsuario/', { 
-      responseType: 'blob',
-      headers: {
-        'Authorization': token
-        },
-     });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'Descarga.xlsx'); // o el nombre de archivo que desees
-    document.body.appendChild(link);
-    link.click();
-  } catch (error) {
-    console.error('Hubo un error al descargar el archivo: ', error);
-  }
+  await seturl("/DescargarBienesActivos")
+  window.my_modal_8.showModal();
 };
 
 //Funcion para descargar el reporte por ubicacion
@@ -70,7 +63,7 @@ const Descargar3 = async() => {
 
   return (
     <AppLayout>
-   
+   <ModalDescargar />
    <div className="bg-base-300 w-full h-[90vh] flex justify-center items-center">
         <div className="card w-[500px] bg-base-100 shadow-xl  lg:h-fit">
           

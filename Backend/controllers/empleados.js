@@ -199,3 +199,134 @@ exports.estado = async (req, res, next) => {
   });
 
 };
+
+
+//------------------------------------- Obtener historial empleado--------------------------------------
+
+
+exports.historial = async (req, res, next) => {
+
+  try{
+
+    let empleado= req.query.empleado;
+    
+    let sql = `SELECT r.fecha, bien.id, bien.codigo, bien.marca, bien.modelo, bien.serie, bien.descripcion, bien.precio 
+    from empleado, bien, tarjeta_responsabilidad t, responsable_activo r
+    WHERE r.tarjeta=t.id and r.bien=bien.id and t.empleado=empleadoId and r.activo=true and empleadoId = `+empleado+`;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener el Historial"});
+    return;
+  }
+};
+
+//------------------------------------- BUSCAR EMPLEADO --------------------------------------
+
+exports.buscar= async (req, res, next) => {
+
+  try{
+    let buscar = req.query.buscar;
+    let sql =  `SELECT empleadoId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, nit, dpi, puesto.nombre as puesto, empleado.activo,puestoId FROM empleado
+    INNER JOIN puesto ON puesto.puestoId=empleado.puesto 
+    WHERE CONCAT_WS(' ', nombres, apellidos) LIKE '%`+buscar+`%';`;
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible retornar la informacion"});
+    return;
+  }
+
+};
+
+//------------------------------------- OBTENER LISTA DE EMPLEADOS --------------------------------------
+exports.lista= async (req, res, next) => {
+
+  try{
+    let sql =  `SELECT empleadoId, CONCAT_WS(' ', nombres, apellidos) as nombre, nombres, apellidos, nit, dpi, puesto.nombre as puesto, empleado.activo,puestoId FROM empleado
+    INNER JOIN puesto ON puesto.puestoId=empleado.puesto 
+    WHERE empleado.activo = true;`;
+    const result = await query(sql);
+    res.json({success: true, message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible retornar la informacion", error: error});
+    return;
+  }
+
+};
+
+//------------------------------------- OBTENER tarjetas asignadas --------------------------------------
+
+exports.tarjetas= async (req, res, next) => {
+  try{
+    let id= req.params.id;
+    let sql = `SELECT id, numero_tarjeta AS tarjeta FROM tarjeta_responsabilidad WHERE empleado=`+id+`;`;
+   
+    const result = await query(sql);
+    
+    res.json({success: true,message: result});
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error", error:error});
+    return;
+  }
+};
+
+
+//------------------------------------- OBTENER BIENES ASIGNADOS (Bienes por empleado)--------------------------------------
+
+exports.asignado2 = async (req, res, next) => {
+  
+  try{
+    let empleado= req.body.empleado;
+    let sql = `SELECT bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,marca,codigo,modelo,serie,cantidad,bien.categoria,marca.nombre as marca2,descripcion,ubicacion.nombre as ubicacion,bien.ubicacion as ubicacion2,bien.precio,imagen FROM bien
+    INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
+    LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
+    LEFT JOIN marca ON bien.marca = marca.marcaId;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los bienes"});
+    return;
+  }
+  
+
+};
+
+//------------------------------------Endpoint para retornar Saldo total del empleado----------------------------------
+exports.saldo = async (req, res, next) => {
+
+  try{
+    let empleado= req.query.empleado;
+    
+    let sql = `SELECT saldo FROM tarjeta_responsabilidad WHERE empleado=`+empleado+` ORDER BY id DESC LIMIT 1;`;
+   
+    const result = await query(sql);
+    
+    if (result.length>0){
+
+      let saldo=result[0].saldo;
+      res.json({success: true, message: saldo});
+      return;
+    }else{
+      res.json({success: true, message: "Saldo no disponible"});
+      return;
+    }
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "Error"});
+    return;
+  }
+  
+};

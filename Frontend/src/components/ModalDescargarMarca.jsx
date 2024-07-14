@@ -1,18 +1,17 @@
 import toast, { Toaster } from 'react-hot-toast';
-import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useState } from "react";
-import { useEffect } from "react";
 import useUrl from '../store/urlStore';
 import useAuth from "../auth/authStore";
 
 
-const ModelDescargar = () => {
+const ModelDescargarMarca = () => {
     
 //--------------------------------------------Declaracion de estados-----------------------------------------
 
   const [fecha, setFecha] = useState('');
   const [fecha2, setFecha2] = useState('');
+  const [marca, setMarca] = useState('');
 //--------------------------------------------Retornar url-----------------------------------------
 
 const url = useAuth((state) => state.url);
@@ -39,16 +38,24 @@ const url = useAuth((state) => state.url);
   const CambiarFecha2 = (evento) => {
     setFecha2(evento.target.value);
   }
+
+  //Funcion utilizada para guardar la marca
+
+  const CambiarMarca = (evento) => {
+    setMarca(evento.target.value);
+  }
+
 //-------------------------------------Funcion enviar los datos del formulario-----------------------------------------
  
   const Descargar = async () => {
-    if(fecha && fecha2){
+    if(fecha && fecha2 && marca){
       try {
         const response = await axios.get(url+endpointName, { 
         responseType: 'blob',
         params: {
           fecha1: fecha,
           fecha2: fecha2,
+          marca: marca,
           usuario: userid
         },
         headers: {
@@ -65,13 +72,13 @@ const url = useAuth((state) => state.url);
         toast.error('Error al descargar el archivo');
       }
     }else{
-      toast.error('Debe seleccionar un rango de fechas');
+      toast.error('Debe llenar todos los campos');
     }
   };
 //-------------------------------------------------------HTML---------------------------------------------------------
  
   return (
-    <dialog id="my_modal_8" className="modal">
+    <dialog id="my_modal_9" className="modal">
       <div className="card  bg-base-100 shadow-xl max-w-screen-2xl lg:h-fit">
         <div className="card w-[500px] bg-base-100 shadow-xl  lg:h-fit">
             
@@ -80,7 +87,7 @@ const url = useAuth((state) => state.url);
                           className="flex bg-red-500 text-white px-4 py-2 rounded w-fit"
                           onClick={(e) => {
                             e.preventDefault()
-                            window.my_modal_8.close();
+                            window.my_modal_9.close();
                           }}
                       >
                           X
@@ -105,11 +112,20 @@ const url = useAuth((state) => state.url);
                     
                   
                 <div className="flex flex-col -mx-1 mb-11">
+
+                <h1 className="mt-2 px-4 mb-3 font-semibold text-xl">Ingresar Marca</h1>
+
+                  <div className="py-4 pt-2 mx-5 flex justify-between items-center">
+                      <input className="appearance-none block w-fit ring-2 bg-gray-200 text-gray-700 border rounded py-2 px-1 leading-tight focus:outline-none focus:bg-white" 
+                       type="text" onChange={CambiarMarca} />
+                  </div>
                         
-                      
-                  <h1 className="mt-10 px-4 mb-5 font-semibold text-xl">Ingresar rango de fechas</h1>
+                  <h1 className="mt-2 px-4 mb-5 font-semibold text-xl">Ingresar Rango de Fechas</h1>
+                  
 
                   <div className="py-4 pt-2 flex justify-between items-center">
+
+                    
 
                     <div className="flex  items-center" >
 
@@ -127,10 +143,11 @@ const url = useAuth((state) => state.url);
                     </div>
             
                   </div>
-                        
+                  
+                  
                   <div className="flex justify-center">
-                        
-                    <button className="btn bg-blue-500 text-white w-fit mt-10 "  onClick={ Descargar}>
+                    
+                    <button className="btn bg-blue-500 text-white w-fit mt-10 "  onClick={Descargar}>
                       Aceptar
                     </button>
                   </div>
@@ -148,4 +165,4 @@ const url = useAuth((state) => state.url);
   );
 };
 
-export default ModelDescargar;
+export default ModelDescargarMarca;

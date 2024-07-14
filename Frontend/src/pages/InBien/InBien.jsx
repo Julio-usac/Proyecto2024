@@ -103,7 +103,7 @@ function InBien() {
               serie:  data.serie,
               imagen:  imageData,
               precio:  data.precio,
-              descripcion:  data.descripcion,
+              descripcion:  data.descripcion.replace(/"/g,"'"),
               categoria:  data.categoria,
               tarjeta:  data.tarjeta,
               ubicacion:  data.ubicacion,

@@ -80,7 +80,7 @@ exports.obtener= async (req, res, next) => {
     LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
     LEFT JOIN bien ON bien.id=m.bien_afectado
     INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento 
-    WHERE DATE(m.fecha)>=STR_TO_DATE(DATE_FORMAT("`+fecha1+`", "%d/%m/%Y"), '%d/%m/%Y') AND DATE(m.fecha)<=STR_TO_DATE(DATE_FORMAT("`+fecha2+`", "%d/%m/%Y"), '%d/%m/%Y') ;`;
+    WHERE DATE(m.fecha)>=STR_TO_DATE("`+fecha1+`","%Y-%m-%d") AND DATE(m.fecha)<=STR_TO_DATE("`+fecha2+`","%Y-%m-%d") ORDER BY fecha DESC ;`;
     
    
     const result = await query(sql);

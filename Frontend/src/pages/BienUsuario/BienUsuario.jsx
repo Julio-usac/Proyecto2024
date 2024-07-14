@@ -26,6 +26,7 @@ function BienUsuario() {
 //-----------------------------------------Retornar funciones del Storage-----------------------------------------
 
   const setimag = useImagen((state) => state.setImagen);
+  const setImagen = useEditar((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
 
   //-----------------------------------------Retornar informacion del usuario-----------------------------------------
@@ -105,19 +106,49 @@ const handleSearchChange = (event) => {
     setOpcion(event.target.value);
   };
 
-  //Funcion para retornar la imagen del bien
-  const FImagen = async (e) => {
-    await setimag(e);
-    window.my_modal_1.showModal();
+  //Funcion para retornar la imagen del bien seleccionado
 
+  const FImagen = async (id) => {
+    try {
+      const response = await axios.get(url+'/RetornarImagen/'+id, { 
+      headers: {
+        'Authorization': token
+      },});
+      if (response.data.success==true){
+        await setimag(response.data.imagen)
+      }else{
+        await setimag(null)
+      }
+      
+      window.my_modal_1.showModal();
+    } catch (error) {
+      toast.error('Error al retornar la imagen');
+    }
+    
   }
 
 
   //Funcion para retornar el modulo de edicion de activos
 
-  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo) => {
+   
     if (rol!=3){
-      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion);
+      try {
+        const response = await axios.get(url+'/RetornarImagen/'+id, { 
+        headers: {
+          'Authorization': token
+        },});
+        if (response.data.success==true){
+          await setImagen(response.data.imagen)
+          
+        }else{
+          await setImagen(null)
+        }
+
+      } catch (error) {
+        await setImagen(null)
+      }
       window.my_modal_2.showModal();
     }else{
       toast.error("No cuenta con los permisos para realizar esta operacion")
@@ -307,11 +338,11 @@ const handleSearchChange = (event) => {
                                   <td className="px-6 py-4"> {item.ubicacion}</td>
                                   <td className="px-6 py-4"> {item.precio}</td>
                                   <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, item.fechaco,item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria,item.imagen)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, item.fechaco,item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                   <td className="px-6 py-4 text-right">
                                         
-                                    <button  onClick={() => {FImagen(item.imagen);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Imagen</button>
+                                    <button  onClick={() => {FImagen(item.id);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Imagen</button>
                                   </td>
                               </tr>
                           )
@@ -322,28 +353,7 @@ const handleSearchChange = (event) => {
           </div>
 
           <h1 className="text-3xl mt-6">Saldo total:  Q {saldo} </h1>
-          {/* 
-          <button
-              className="join-item btn"
-              onClick={() => {
-                if (Page > 1) {
-                  setPage(Page - 1);
-                }
-              }}
-            >
-              «
-            </button>
-            <button className="join-item btn">Pagina {Page}</button>
-            <button
-              className="join-item btn"
-              onClick={() => {
-                if (Page >= 1 && Page < state.result.data.mensaje.length / 7) {
-                  setPage(Page + 1);
-                }
-              }}
-            >
-              »
-            </button>*/}
+          
         </div>
         
       </div>

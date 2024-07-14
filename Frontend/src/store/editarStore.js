@@ -17,7 +17,7 @@ const useEditar = create(
       cantidad: null,
       descripcion: null,
       imagen: null,
-      setEditar: (id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen) => {
+      setEditar: (id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion) => {
         set({
           id:id,
           codigo: codigo,
@@ -30,9 +30,12 @@ const useEditar = create(
           ubicacion: ubicacion,
           tipo: tipo,
           cantidad: cantidad,
-          descripcion: descripcion,
-          imagen: imagen,
+          descripcion: descripcion
         });
+      },setImagen:(image) => {
+        set({
+          imagen: image
+        })
       },borrarDatos: () => {
         set({
           id:null,

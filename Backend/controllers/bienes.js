@@ -1,19 +1,6 @@
-var jwt = require('jsonwebtoken');
-var crypto = require('crypto');
 var mysql = require('mysql');
 var config = require('../database/config.js');
 
-
-function encriptar(texto) {
-    const hash = crypto.createHash('sha256');
-    hash.update(texto);
-  
-    return hash.digest('hex');
-}
-
-function getToken(datos) {
-    return jwt.sign(datos, process.env.JWT_CODE, {expiresIn : '60m'});
-}
 
 var connection = mysql.createConnection(config.dbconnection);
 
@@ -55,11 +42,14 @@ exports.crear = async (req, res, next) => {
   let ubicacion = req.body.ubicacion;
 
   //Convertir fecha de compra
+  
   if (fechaco){
-    fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+    fcompra= `STR_TO_DATE("`+fechaco+`","%Y-%m-%d")`;
   }else{
     fcompra= null;
   }
+
+
 
   //Convertir cuenta
 
@@ -179,12 +169,6 @@ exports.crear = async (req, res, next) => {
 
 exports.editar = async (req, res, next) => {
 
-  //fecha actual
-  const fecha = new Date();
-  const añoActual = fecha.getFullYear();
-  const hoy = fecha.getDate();
-  const mes = fecha.getMonth() + 1; 
-  let fechaActual= hoy+"/"+mes+"/"+ añoActual
 
   let id = req.body.id;
   let fechaco = req.body.fechaco;
@@ -204,8 +188,9 @@ exports.editar = async (req, res, next) => {
   //Convertir fecha de compra
 
   if (fechaco!=null && fechaco!="No ingresado"){
+    
     if(fechaco.includes('-')){
-      fcompra= `STR_TO_DATE(DATE_FORMAT("`+fechaco+`", "%d/%m/%Y"),"%d/%m/%Y")`;
+      fcompra= `STR_TO_DATE("`+fechaco+`","%Y-%m-%d")`;
     }else{
       
       fcompra= `STR_TO_DATE("`+fechaco+`", "%d/%m/%Y")`;
@@ -300,6 +285,30 @@ exports.restaurar = async (req, res, next) => {
 
 };
 
+
+
+//------------------------------------- RETORNAR IMAGEN --------------------------------------
+
+exports.imagen = async (req, res, next) => {
+  
+  try{
+    let sql =  `SELECT imagen FROM bien WHERE id=`+req.params.id+`;`;
+    
+    const result=await query(sql);
+    if (result.length==0){
+      res.json({success: false});
+      return;
+    }
+    res.json({success: true, imagen: result[0].imagen});
+    
+  }catch (error) {
+    console.log(error);
+    res.status(400).json({success: false, message: "No fue posible retornar la imagen"});
+    return;
+  }
+
+};
+
 //------------------------------------Endpoint para Buscar bienes----------------------------------
 
 exports.buscar = async (req, res, next) => {
@@ -313,7 +322,7 @@ exports.buscar = async (req, res, next) => {
   switch (opcion) {
     case  "1":
 
-      sql = `SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+      sql = `SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -333,7 +342,7 @@ exports.buscar = async (req, res, next) => {
       break;
     case "2":
       buscar=buscar.toUpperCase()
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -352,7 +361,7 @@ exports.buscar = async (req, res, next) => {
       }
       break;
     case "3":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -370,7 +379,7 @@ exports.buscar = async (req, res, next) => {
       }
       break;
     case "4":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -388,7 +397,7 @@ exports.buscar = async (req, res, next) => {
       }
       break;
       case "6":
-        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
         LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
         LEFT JOIN marca ON marca.marcaId=bien.marca 
         LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
@@ -407,7 +416,7 @@ exports.buscar = async (req, res, next) => {
         }
         break;
       default:
-        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,imagen,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
         LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
         LEFT JOIN marca ON marca.marcaId=bien.marca 
         LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta

@@ -17,6 +17,7 @@ function Busqueda() {
 
   const setimag = useImagen((state) => state.setImagen);
   const seteditar = useEditar((state) => state.setEditar);
+  const setImagen = useEditar((state) => state.setImagen);
 
   const url = useAuth((state) => state.url);
   
@@ -42,19 +43,47 @@ function Busqueda() {
   };
  
 
-  //Funcion para guardar la imagen del bien seleccionado
+  //Funcion para retornar la imagen del bien seleccionado
 
-  const FImagen = async (e) => {
+  const FImagen = async (id) => {
+    try {
+      const response = await axios.get(url+'/RetornarImagen/'+id, { 
+      headers: {
+        'Authorization': token
+      },});
+      if (response.data.success==true){
+        await setimag(response.data.imagen)
+      }else{
+        await setimag(null)
+      }
+      
+      window.my_modal_1.showModal();
+    } catch (error) {
+      toast.error('Error al retornar la imagen');
+    }
     
-    await setimag(e)
-    window.my_modal_1.showModal();
   }
 
   //Funcion para guardar la informacion del bien seleccionado
 
-  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo,imagen) => {
+  const Feditar = async (id,codigo,cuenta,fecha,marca,modelo,serie,precio,cantidad,descripcion,ubicacion,tipo) => {
     if (rol!=3){
-      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion,imagen);
+      await seteditar(id,codigo,cuenta,fecha,marca,modelo,serie,precio,ubicacion,tipo,cantidad,descripcion);
+      try {
+        const response = await axios.get(url+'/RetornarImagen/'+id, { 
+        headers: {
+          'Authorization': token
+        },});
+        if (response.data.success==true){
+          await setImagen(response.data.imagen)
+          
+        }else{
+          await setImagen(null)
+        }
+
+      } catch (error) {
+        await setImagen(null)
+      }
       window.my_modal_2.showModal();
     }else{
       toast.error("No cuenta con los permisos para realizar esta operacion")
@@ -273,11 +302,11 @@ function Busqueda() {
                                         <td className="px-6 py-4"> {item.ubicacion}</td>
                                         <td className="px-6 py-4"> {item.precio}</td>
                                         <td className="px-6 py-4 text-right">
-                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria,item.imagen)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
+                                        <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>
                                         <td className="px-6 py-4 text-right">
                                         
-                                            <button  onClick={() => {FImagen(item.imagen);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Imagen</button>
+                                            <button  onClick={() => {FImagen(item.id);}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Imagen</button>
                                         </td>
                                     </tr>
                                 )

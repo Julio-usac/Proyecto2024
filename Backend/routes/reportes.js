@@ -10,9 +10,11 @@ router.get("/DescargarBienesBaja",checkAuth, userController.excel3);
 router.get("/DescargarBitacora",checkAuth, userController.excel4);
 
 router.get("/DescargarBienesActivos",checkAuth, userController.excel5);
+router.get("/DescargarBienesFungibles",checkAuth, userController.excel6);
+router.get("/DescargarBienesMarca",checkAuth, userController.excel7);
 //router.get("/DescargarBienesUsuario",checkAuth, userController.excel5);
-router.get("/DescargarBienesUbicacion",checkAuth, userController.excel6);
-router.get("/DescargarUsuariosTarjetas",checkAuth, userController.excel7);
+//router.get("/DescargarBienesUbicacion",checkAuth, userController.excel6);
+//router.get("/DescargarUsuariosTarjetas",checkAuth, userController.excel7);
 
 router.get("/ReportePDFbienesUsuario",checkAuth, userController.pdf1);
 router.get("/ReportePDFbienesTotal",checkAuth, userController.pdf2);

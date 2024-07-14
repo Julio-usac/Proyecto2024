@@ -125,7 +125,7 @@ const ModelEditar = () => {
               serie:  (data.serie!="")? data.serie:mserie,
               imagen:   (imageData)? imageData:mimage,
               precio:  (data.precio)? data.precio:mprecio,
-              descripcion:  (data.descripcion!="")? data.descripcion:mdescripcion,
+              descripcion:  (data.descripcion!="")? data.descripcion.replace(/"/g,"'"):mdescripcion,
               categoria:  (data.categoria && data.categoria!="Seleccionar")? data.categoria:mcategoria,
               ubicacion:  (data.ubicacion && data.ubicacion!="Seleccionar")? data.ubicacion:mubicacion,
             }, headers: {

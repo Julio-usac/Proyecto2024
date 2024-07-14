@@ -620,7 +620,7 @@ exports.excel4 = async (req, res, next) => {
     LEFT JOIN empleado u2 ON u2.empleadoId=m.empleado_afectado
     LEFT JOIN bien ON bien.id=m.bien_afectado
     INNER JOIN tipo_movimiento t ON t.id=m.tipo_movimiento
-    WHERE DATE(m.fecha)>=STR_TO_DATE(DATE_FORMAT("`+fecha1+`", "%d/%m/%Y"), '%d/%m/%Y') AND DATE(m.fecha)<=STR_TO_DATE(DATE_FORMAT("`+fecha2+`", "%d/%m/%Y"), '%d/%m/%Y') ;`;
+    WHERE DATE(m.fecha)>=STR_TO_DATE("`+fecha1+`","%Y-%m-%d") AND DATE(m.fecha)<=STR_TO_DATE("`+fecha2+`","%Y-%m-%d") ORDER BY fecha DESC;`;
     
     const result = await query(sql);
 
@@ -699,13 +699,13 @@ exports.excel5 = async (req, res, next) => {
   try{
 
     let usuario= req.query.usuario;
-    let fecha1=req.query.fecha1;
-    let fecha2=req.query.fecha2;
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
     //Retornar datos del bien
 
-    let sql = `SELECT  IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
     LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE bien.categoria=1 and (fechaco BETWEEN STR_TO_DATE(`+fecha1+`, '%m/%d/%Y') and STR_TO_DATE(`+fecha2+`, '%m/%d/%Y')) OR fechaco is null
+    WHERE bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
     ORDER BY fechaco;`;
     
     const result = await query(sql);
@@ -719,7 +719,7 @@ exports.excel5 = async (req, res, next) => {
 
     //Se crea el archivo de Excel
     const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Users');
+    const worksheet = workbook.addWorksheet('Reporte de bienes Activos');
 
   
     // Inserta la imagen en la celda A1
@@ -809,8 +809,8 @@ exports.excel5 = async (req, res, next) => {
 
     worksheet.cell(5, 5).string("INVENTARIO GENERAL DE BIENES ACTIVOS ").style(myStyle2);
     worksheet.cell(7, 1).string("Usuario: " + result3[0].nombre);
-    worksheet.cell(9, 1).string("Fecha inicio: " + fecha1);
-    worksheet.cell(9, 6).string("Fecha fin: " + fecha2);
+    worksheet.cell(9, 1).string("Fecha inicio: " + req.query.fecha1);
+    worksheet.cell(9, 6).string("Fecha fin: " + req.query.fecha2);
     worksheet.cell(11, 1).string("No.").style(myStyle);
     worksheet.cell(11, 2).string("IdMineco").style(myStyle);
     worksheet.cell(11, 3).string("Cantidad").style(myStyle);
@@ -856,7 +856,362 @@ exports.excel5 = async (req, res, next) => {
 
     workbook.writeToBuffer().then((buffer) => {
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+            res.setHeader('Content-Disposition', 'attachment; filename=Reporte de bienes Activos.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al descargar"});
+    return;
+  }
+
+};
+
+
+//------------------------------------------------ Reporte Bienes fungibles -------------------------------------
+
+exports.excel6 = async (req, res, next) => {
+
+  try{
+
+    let usuario= req.query.usuario;
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+    //Retornar datos del bien
+
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE bien.categoria=2 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
+    
+    const result = await query(sql);
+
+    //Retornar datos del usuario
+
+    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM usuario
+    WHERE userId=`+usuario+`;`;
+
+    const result3 = await query(sql);
+
+    //Se crea el archivo de Excel
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Reporte de bienes Fungibles');
+
+  
+    // Inserta la imagen en la celda A1
+
+    worksheet.addImage({
+      path: 'logo.jpg',
+      type: 'picture',
+      position: {
+          type: 'twoCellAnchor',
+          from: {
+              col: 1, // Columna de la celda
+              row: 1, // Fila de la celda
+          },
+          to: {
+            col: 4, // Columna de la celda inferior derecha
+            row: 4, // Fila de la celda inferior derecha
+        },
+
+      },
+      
+    });
+
+
+    // estilo para titulos de columnas de la tabla
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true,
+          
+      },
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      },
+      alignment: {
+        horizontal: 'center',
+        shrinkToFit: true,
+        wrapText: true
+      }
+    });
+
+    // estilo para el titulo del reporte
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 20
+      }
+    });
+
+    // estilo para centrar los datos y colocar bordes
+    var myStyle3 = workbook.createStyle({
+      alignment: {
+        horizontal: 'center',
+        shrinkToFit: true,
+        wrapText: true
+      },
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      }
+    });
+
+    // Estilo para colocar bordes
+    var myStyle4 = workbook.createStyle({
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      },
+      
+      alignment: {
+          shrinkToFit: true,
+          wrapText: true
+      }
+    });
+
+    //Ancho de la columna "Descripcion"
+    worksheet.column(7).setWidth(60);
+    //Ancho de la columna "No."
+    worksheet.column(1).setWidth(4);
+
+    worksheet.cell(5, 5).string("INVENTARIO GENERAL DE BIENES FUNGIBLES ").style(myStyle2);
+    worksheet.cell(7, 1).string("Usuario: " + result3[0].nombre);
+    worksheet.cell(9, 1).string("Fecha inicio: " + req.query.fecha1);
+    worksheet.cell(9, 6).string("Fecha fin: " + req.query.fecha2);
+    worksheet.cell(11, 1).string("No.").style(myStyle);
+    worksheet.cell(11, 2).string("IdMineco").style(myStyle);
+    worksheet.cell(11, 3).string("Cantidad").style(myStyle);
+    worksheet.cell(11, 4).string("Marca").style(myStyle);
+    worksheet.cell(11, 5).string("Modelo").style(myStyle);
+    worksheet.cell(11, 6).string("Serie").style(myStyle);
+    worksheet.cell(11, 7).string("Descripcion").style(myStyle);
+
+    //Variable para contar registros
+
+    let Ncontar= 0;
+
+    result.forEach((row, index) => {
+      //No.
+      Ncontar+=1;
+      worksheet.cell(index + 12, 1).number(Ncontar).style(myStyle3);
+
+      //IdMineco
+      let cast=""+row.codigo+""
+      worksheet.cell(index + 12, 2).string(cast).style(myStyle3);
+
+      //Cantidad
+      cast=row.cantidad
+      worksheet.cell(index + 12, 3).number(cast).style(myStyle3);
+
+      //Marca
+      cast = row.marca+""
+      worksheet.cell(index + 12, 4).string(cast).style(myStyle3);
+
+      //Modelo
+      cast=""+row.modelo+""
+      worksheet.cell(index + 12, 5).string(cast).style(myStyle3);
+
+      //Serie
+      cast=""+row.serie+""
+      worksheet.cell(index + 12, 6).string(cast).style(myStyle3);
+
+      //Descripcion
+      cast=""+row.descripcion+""
+      worksheet.cell(index + 12, 7).string(cast).style(myStyle4);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=Reporte de bienes Fungibles.xlsx');
+            res.send(buffer);
+        });
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al descargar"});
+    return;
+  }
+
+};
+
+
+//------------------------------------------------ Reporte Bienes fungibles -------------------------------------
+
+exports.excel7 = async (req, res, next) => {
+
+  try{
+
+    let usuario = req.query.usuario;
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+    let marca =  req.query.marca;
+    //Retornar datos del bien
+
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    WHERE marca.nombre LIKE '%`+marca+`%' and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
+    
+    const result = await query(sql);
+
+    //Retornar datos del usuario
+
+    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM usuario
+    WHERE userId=`+usuario+`;`;
+
+    const result3 = await query(sql);
+
+    //Se crea el archivo de Excel
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Reporte de bienes Fungibles');
+
+  
+    // Inserta la imagen en la celda A1
+
+    worksheet.addImage({
+      path: 'logo.jpg',
+      type: 'picture',
+      position: {
+          type: 'twoCellAnchor',
+          from: {
+              col: 1, // Columna de la celda
+              row: 1, // Fila de la celda
+          },
+          to: {
+            col: 4, // Columna de la celda inferior derecha
+            row: 4, // Fila de la celda inferior derecha
+        },
+
+      },
+      
+    });
+
+
+    // estilo para titulos de columnas de la tabla
+
+    var myStyle = workbook.createStyle({
+      font: {
+          bold: true,
+          
+      },
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      },
+      alignment: {
+        horizontal: 'center',
+        shrinkToFit: true,
+        wrapText: true
+      }
+    });
+
+    // estilo para el titulo del reporte
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+
+          size: 20
+      }
+    });
+
+    // estilo para centrar los datos y colocar bordes
+    var myStyle3 = workbook.createStyle({
+      alignment: {
+        horizontal: 'center',
+        shrinkToFit: true,
+        wrapText: true
+      },
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      }
+    });
+
+    // Estilo para colocar bordes
+    var myStyle4 = workbook.createStyle({
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      },
+      
+      alignment: {
+          shrinkToFit: true,
+          wrapText: true
+      }
+    });
+
+    //Ancho de la columna "Descripcion"
+    worksheet.column(7).setWidth(60);
+    //Ancho de la columna "No."
+    worksheet.column(1).setWidth(4);
+
+    worksheet.cell(5, 5).string("INVENTARIO GENERAL DE BIENES FUNGIBLES ").style(myStyle2);
+    worksheet.cell(7, 1).string("Usuario: " + result3[0].nombre);
+    worksheet.cell(9, 1).string("Fecha inicio: " + req.query.fecha1);
+    worksheet.cell(9, 6).string("Fecha fin: " + req.query.fecha2);
+    worksheet.cell(11, 1).string("No.").style(myStyle);
+    worksheet.cell(11, 2).string("IdMineco").style(myStyle);
+    worksheet.cell(11, 3).string("Cantidad").style(myStyle);
+    worksheet.cell(11, 4).string("Marca").style(myStyle);
+    worksheet.cell(11, 5).string("Modelo").style(myStyle);
+    worksheet.cell(11, 6).string("Serie").style(myStyle);
+    worksheet.cell(11, 7).string("Descripcion").style(myStyle);
+
+    //Variable para contar registros
+
+    let Ncontar= 0;
+
+    result.forEach((row, index) => {
+      //No.
+      Ncontar+=1;
+      worksheet.cell(index + 12, 1).number(Ncontar).style(myStyle3);
+
+      //IdMineco
+      let cast=""+row.codigo+""
+      worksheet.cell(index + 12, 2).string(cast).style(myStyle3);
+
+      //Cantidad
+      cast=row.cantidad
+      worksheet.cell(index + 12, 3).number(cast).style(myStyle3);
+
+      //Marca
+      cast = row.marca+""
+      worksheet.cell(index + 12, 4).string(cast).style(myStyle3);
+
+      //Modelo
+      cast=""+row.modelo+""
+      worksheet.cell(index + 12, 5).string(cast).style(myStyle3);
+
+      //Serie
+      cast=""+row.serie+""
+      worksheet.cell(index + 12, 6).string(cast).style(myStyle3);
+
+      //Descripcion
+      cast=""+row.descripcion+""
+      worksheet.cell(index + 12, 7).string(cast).style(myStyle4);
+    });
+
+
+    workbook.writeToBuffer().then((buffer) => {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', 'attachment; filename=Reporte de bienes Fungibles.xlsx');
             res.send(buffer);
         });
     return;
@@ -1652,7 +2007,7 @@ exports.excel5 = async (req, res, next) => {
 */
 //------------------------------------- Descargar bienes por ubicacion --------------------------------------
 
-
+/*
 exports.excel6 = async (req, res, next) => {
 
   
@@ -1708,10 +2063,10 @@ exports.excel6 = async (req, res, next) => {
 
 };
 
-
+*/
 //------------------------------------- Descargar cantidad de tarjetas por usuario --------------------------------------
 
-
+/*
 exports.excel7 = async (req, res, next) => {
 
   try{
@@ -1767,3 +2122,4 @@ exports.excel7 = async (req, res, next) => {
     return;
   }
 };
+*/

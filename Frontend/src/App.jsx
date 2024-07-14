@@ -57,7 +57,7 @@ function App() {
         
         <FiUsers  className="text-9xl"/>
         
-        <span className=" text-3xl">Activos por empleado</span>
+        <span className=" text-3xl">Bienes por empleado</span>
         </button>
       </Link>
       <a  className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
@@ -66,7 +66,7 @@ function App() {
         
         <FiShoppingBag  className="text-9xl"/>
         
-        <span className=" text-3xl">Ingresar Activos</span>
+        <span className=" text-3xl">Ingresar Bienes</span>
         </button>
       </a>
       <a className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
@@ -75,7 +75,7 @@ function App() {
         
         <FiUserCheck className="text-9xl"/>
         
-        <span className=" text-3xl">Asignar activos</span>
+        <span className=" text-3xl">Asignar Bienes</span>
         </button>
       </a>
       <Link to="/busqueda" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
@@ -84,7 +84,7 @@ function App() {
       
       <FiSearch  className="text-9xl"/>
       
-      <span className=" text-3xl">Buscar Activos</span>
+      <span className=" text-3xl">Buscar Bienes</span>
       </button>
       </Link>
       <Link to="/SinAsignar" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 
@@ -93,7 +93,7 @@ function App() {
       
       <FiTrash2  className="text-9xl"/>
       
-      <span className=" text-3xl">Activos de baja</span>
+      <span className=" text-3xl">Bienes de baja</span>
       </button>
       </Link>
       <Link to="/Bitacora" className=" flex flex-col items-center py-5 px-20 m-1 bg-gray-100 hover:bg-gray-400 

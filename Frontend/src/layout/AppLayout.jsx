@@ -128,7 +128,7 @@ const AppLayout = ({ children }) => {
                   </li>
                   <li>
                     <Link className="justify-between" to="/reporte">
-                      Otros reportes
+                      Reportes
                     </Link>
                   </li>
                   <li>

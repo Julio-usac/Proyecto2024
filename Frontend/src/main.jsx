@@ -10,6 +10,9 @@ import Perfil from "./pages/Perfil/Perfil.jsx";
 import Token from "./pages/Token.jsx";
 import Busqueda from "./pages/Busqueda/Busqueda.jsx";
 import BienUsuario from "./pages/BienUsuario/BienUsuario.jsx";
+import BienesActivos from "./pages/BienesActivos/BienesActivos.jsx";
+import BienesFungibles from "./pages/BienesFungibles/BienesFungibles.jsx";
+import BienesMarca from "./pages/BienesMarca/BienesMarca.jsx";
 import InBien from "./pages/InBien/InBien.jsx";
 import AsBien from "./pages/AsBien/AsBien.jsx";
 import SinAsignar from "./pages/SinAsignar/SinAsignar.jsx";
@@ -77,9 +80,22 @@ const router = createBrowserRouter([
         element: <Token />,
       },
       {
+        path: "/BienesActivos",
+        element: <BienesActivos />,
+      },
+      {
+        path: "/BienesFungibles",
+        element: <BienesFungibles />,
+      },
+      {
+        path: "/BienesMarca",
+        element: <BienesMarca />,
+      },
+      {
         path: "/reporte",
         element: <Reporte />,
       },
+      
     ],
   },
 ]);

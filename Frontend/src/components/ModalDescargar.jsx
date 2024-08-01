@@ -21,6 +21,7 @@ const url = useAuth((state) => state.url);
   
   const  userid  = useAuth((state) => state.id);
   const  endpointName = useUrl((state) => state.url);
+  const  busqueda = useUrl((state) => state.buscar);
   const { token} = useAuth((state) => state);
 
 //-------------------------------------Llamadas a endpoints que se ejecutaran al ingresar al modulo-----------------------------------------
@@ -49,17 +50,14 @@ const url = useAuth((state) => state.url);
         params: {
           fecha1: fecha,
           fecha2: fecha2,
-          usuario: userid
+          usuario: userid,
+          busqueda: busqueda
         },
         headers: {
           'Authorization': token
         },});
-        const url2 = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url2;
-        link.setAttribute('download', 'Descarga.xlsx'); 
-        document.body.appendChild(link);
-        link.click();
+        const url2 = window.URL.createObjectURL(response.data);
+        window.open(url2,'_blank')
 
       } catch (error) {
         toast.error('Error al descargar el archivo');

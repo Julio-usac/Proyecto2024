@@ -49,8 +49,6 @@ exports.crear = async (req, res, next) => {
     fcompra= null;
   }
 
-
-
   //Convertir cuenta
 
   if (cuenta){
@@ -838,4 +836,95 @@ exports.asignado = async (req, res, next) => {
   }
   
 
+};
+
+//------------------------------------- OBTENER BIENES ACTIVOS POR FECHA--------------------------------------
+
+
+exports.BienesActivos = async (req, res, next) => {
+  try{
+    
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+
+    //Retornar datos del bien
+
+    let sql = `SELECT bien.id, IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los bienes"});
+    return;
+  }
+};
+
+
+//------------------------------------- OBTENER BIENES FUNGIBLES POR FECHA--------------------------------------
+
+
+exports.BienesFungibles = async (req, res, next) => {
+  try{
+    
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+
+    //Retornar datos del bien
+
+    let sql = `SELECT bien.id, IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and bien.categoria=2 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los bienes"});
+    return;
+  }
+};
+
+
+//------------------------------------- OBTENER BIENES por Marca--------------------------------------
+
+
+exports.BienesMarca = async (req, res, next) => {
+  try{
+    
+    let marca=req.query.busqueda
+
+    //Retornar datos del bien
+
+    let sql = `SELECT bien.id, IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and (marca.nombre LIKE '%`+marca+`%')
+    ORDER BY fechaco DESC;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los bienes"});
+    return;
+  }
 };

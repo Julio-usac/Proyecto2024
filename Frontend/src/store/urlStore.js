@@ -5,8 +5,12 @@ const useUrl = create(
     persist(
         (set) => ({
             url:null,
+            buscar:null,
             setUrl: (url) => {
                 set({ url: url });
+            },
+            setBuscar: (buscar) => {
+                set({ buscar: buscar });
             },
         }),
         {

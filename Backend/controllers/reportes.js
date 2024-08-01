@@ -703,9 +703,12 @@ exports.excel5 = async (req, res, next) => {
     let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
     //Retornar datos del bien
 
-    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
     LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
     ORDER BY fechaco;`;
     
     const result = await query(sql);
@@ -818,6 +821,7 @@ exports.excel5 = async (req, res, next) => {
     worksheet.cell(11, 5).string("Modelo").style(myStyle);
     worksheet.cell(11, 6).string("Serie").style(myStyle);
     worksheet.cell(11, 7).string("Descripcion").style(myStyle);
+    worksheet.cell(11, 8).string("Asignado a:").style(myStyle);
 
     //Variable para contar registros
 
@@ -851,6 +855,10 @@ exports.excel5 = async (req, res, next) => {
       //Descripcion
       cast=""+row.descripcion+""
       worksheet.cell(index + 12, 7).string(cast).style(myStyle4);
+
+      //empleado
+      cast=""+row.empleado+""
+      worksheet.cell(index + 12, 8).string(cast).style(myStyle3);
     });
 
 
@@ -880,9 +888,12 @@ exports.excel6 = async (req, res, next) => {
     let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
     //Retornar datos del bien
 
-    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
     LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE bien.categoria=2 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and bien.categoria=2 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
     ORDER BY fechaco;`;
     
     const result = await query(sql);
@@ -995,6 +1006,7 @@ exports.excel6 = async (req, res, next) => {
     worksheet.cell(11, 5).string("Modelo").style(myStyle);
     worksheet.cell(11, 6).string("Serie").style(myStyle);
     worksheet.cell(11, 7).string("Descripcion").style(myStyle);
+    worksheet.cell(11, 8).string("Asignado a:").style(myStyle);
 
     //Variable para contar registros
 
@@ -1028,6 +1040,10 @@ exports.excel6 = async (req, res, next) => {
       //Descripcion
       cast=""+row.descripcion+""
       worksheet.cell(index + 12, 7).string(cast).style(myStyle4);
+
+            //empleado
+            cast=""+row.empleado+""
+            worksheet.cell(index + 12, 8).string(cast).style(myStyle3);
     });
 
 
@@ -1046,7 +1062,7 @@ exports.excel6 = async (req, res, next) => {
 };
 
 
-//------------------------------------------------ Reporte Bienes fungibles -------------------------------------
+//------------------------------------------------ Reporte Bienes por marca -------------------------------------
 
 exports.excel7 = async (req, res, next) => {
 
@@ -1055,12 +1071,15 @@ exports.excel7 = async (req, res, next) => {
     let usuario = req.query.usuario;
     let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
     let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
-    let marca =  req.query.marca;
+    let marca =  req.query.busqueda;
     //Retornar datos del bien
 
-    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion FROM bien
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
     LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE marca.nombre LIKE '%`+marca+`%' and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo= 1 and marca.nombre LIKE '%`+marca+`%' and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
     ORDER BY fechaco;`;
     
     const result = await query(sql);
@@ -1074,7 +1093,7 @@ exports.excel7 = async (req, res, next) => {
 
     //Se crea el archivo de Excel
     const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Reporte de bienes Fungibles');
+    const worksheet = workbook.addWorksheet('Reporte de bienes por Marca');
 
   
     // Inserta la imagen en la celda A1
@@ -1162,7 +1181,7 @@ exports.excel7 = async (req, res, next) => {
     //Ancho de la columna "No."
     worksheet.column(1).setWidth(4);
 
-    worksheet.cell(5, 5).string("INVENTARIO GENERAL DE BIENES FUNGIBLES ").style(myStyle2);
+    worksheet.cell(5, 5).string("REPORTE DE BIENES POR MARCA ").style(myStyle2);
     worksheet.cell(7, 1).string("Usuario: " + result3[0].nombre);
     worksheet.cell(9, 1).string("Fecha inicio: " + req.query.fecha1);
     worksheet.cell(9, 6).string("Fecha fin: " + req.query.fecha2);
@@ -1173,6 +1192,7 @@ exports.excel7 = async (req, res, next) => {
     worksheet.cell(11, 5).string("Modelo").style(myStyle);
     worksheet.cell(11, 6).string("Serie").style(myStyle);
     worksheet.cell(11, 7).string("Descripcion").style(myStyle);
+    worksheet.cell(11, 8).string("Asignado a:").style(myStyle);
 
     //Variable para contar registros
 
@@ -1206,6 +1226,10 @@ exports.excel7 = async (req, res, next) => {
       //Descripcion
       cast=""+row.descripcion+""
       worksheet.cell(index + 12, 7).string(cast).style(myStyle4);
+
+      //Asignado a
+      cast=""+row.empleado+""
+      worksheet.cell(index + 12, 8).string(cast).style(myStyle3);
     });
 
 
@@ -1945,181 +1969,702 @@ exports.pdf3 = async (req, res, next) => {
 
 };
 
-//------------------------------------- Descargar numero de bienes por usuario --------------------------------------
 
-/*
-exports.excel5 = async (req, res, next) => {
+//------------------------------------- Reporte PDF bienes Activos --------------------------------------
 
-  try{
-
-    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) as nombre, u.nit, COUNT(bien.id) as cantidad FROM bien, tarjeta_responsabilidad t, empleado u  
-    WHERE t.id=bien.tarjeta AND bien.activo=True AND u.empleadoId=t.empleado
-    GROUP BY t.empleado;`;
-    
-    const result = await query(sql);
-
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
-
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Total de bienes por usuario").style(myStyle2);
-    worksheet.cell(6, 1).string("Nombre").style(myStyle);
-    worksheet.cell(6, 2).string("Usuario").style(myStyle);
-    worksheet.cell(6, 3).string("Bienes asignados").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.nombre+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.nit+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.cantidad+""
-      worksheet.cell(index + 7, 3).string(cast);
-    });
+exports.pdf4 = async (req, res, next) => {
 
 
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
-  }catch (error) {
-    console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
-    return;
-  }
-};
-
-*/
-//------------------------------------- Descargar bienes por ubicacion --------------------------------------
-
-/*
-exports.excel6 = async (req, res, next) => {
-
+  // Crear una instancia de PDFKit
+  const pdf = new PDFDocument({
+    layout: 'landscape',
+    size: 'LETTER'
+  });
+  // Enviar el PDF al cliente
   
+  res.setHeader('Content-Type', 'application/pdf');
+  pdf.pipe(res);
+
+  pdf.image('logo.jpg', {
+    fit: [150, 150],
+    x: 25,
+    y: 20
+  });
+
+  pdf.moveDown();
+
+  // Añadir un título al PDF
+  pdf.fontSize(20).text('INVENTARIO GENERAL DE BIENES ACTIVOS',{
+    align: 'center'
+  })
+
+  // Añadir un espacio
+  pdf.moveDown();
+
+  // Crear un arreglo con los datos de la tabla
+  const data = [
+    ['No.','IdMineco','Cantidad','Marca','Modelo','Serie','Descripcion','Asignado a:']
+  ];
+
+  // Definir el ancho y el alto de cada celda
+  let cellWidth = 90;
+  let cellHeight = 30;
+
+  // Definir el punto inicial de la tabla
+  let x = 75;
+  let y = 190;
+
+  // Recorrer el arreglo de datos
+  for (let i = 0; i < data.length; i++) {
+    // Recorrer cada fila del arreglo
+    for (let j = 0; j < data[i].length; j++) {
+      if( data[i][j]=="IdMineco" || data[i][j]=="Modelo" || data[i][j]=="Serie"){
+        cellWidth=90
+      }else if(data[i][j]=="Descripcion"){
+        cellWidth=140
+      }else{
+        cellWidth=65
+      }
+      // Añadir el texto de la celda
+      if(data[i][j]=="No."){
+        cellWidth=25
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 5, y + 10, {
+          width: cellWidth - 25,
+          align: 'center'
+        });
+      }else if(data[i][j]=="Cantidad"){
+        cellWidth=45
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 5, y + 10, {
+          width: cellWidth - 45,
+          align: 'center'
+        });
+      }else{
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
+          width: cellWidth - 20,
+          align: 'center'
+        });
+      }
+
+      // Dibujar el borde de la celda
+      pdf.rect(x, y, cellWidth, cellHeight).stroke();
+      // Mover el punto x al siguiente valor
+      x += cellWidth;
+      
+    }
+    // Restablecer el punto x al valor inicial
+    x = 75;
+    // Mover el punto y al siguiente valor
+    y += cellHeight;
+  }
+  function tamano(texto1,texto2,texto3) {
+
+    //typeof texto === 'string'
+    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
+    let texto = (calculo.length > texto3.length) ?  calculo : texto3
+    
+    if(texto2.length>texto1.length && texto2.length>texto3.length){
+      if(texto.length > 57){
+
+        cellHeight = Math.round((texto.length / 16)*18)
+        cellHeight -= Math.round(texto.length / 3)
+  
+      }else if(texto.length<13){
+  
+        cellHeight = 20;
+  
+      }else if(texto.length > 35 && texto.length < 57){
+  
+        cellHeight=50;
+  
+      }
+      else if(texto.length > 13 && texto.length < 35){
+  
+        cellHeight=30;
+  
+      }
+      return;
+    }
+
+    if(texto.length > 57){
+
+      cellHeight = Math.round((texto.length / 16)*18)
+      cellHeight -= Math.round(texto.length / 2)
+
+    }else if(texto.length<13){
+
+      cellHeight = 20;
+
+    }else if(texto.length > 35 && texto.length < 57){
+
+      cellHeight=50;
+
+    }
+    else if(texto.length > 13 && texto.length < 35){
+
+      cellHeight=30;
+
+    }
+    
+  }
+  //Funcion para agregar celdas
+  function celdas(texto) {
+    
+    // Añadir el texto de la celda
+    pdf.rect(x, y, cellWidth, cellHeight).stroke();
+
+    pdf.font('Helvetica').fontSize(8).text(texto, x + 5, y + 7, {
+      width: cellWidth - 7,
+      align: 'left'
+    });
+    // Mover el punto x al siguiente valor
+    x += cellWidth;
+
+  }
+
   try{
 
-    let sql = `SELECT u.nombre, COUNT(bien.id) as cantidad FROM bien, ubicacion u
-    WHERE bien.ubicacion=u.id AND bien.activo=True
-    GROUP BY u.nombre;`;
+    //Consulta
+  
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+    //Retornar datos del bien
+
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
     
     const result = await query(sql);
 
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
+    //Retornar datos del usuario
 
-    // titulo
+    let usuario = req.query.usuario; 
 
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
+    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM usuario
+    WHERE userId=`+usuario+`;`;
+
+    const result2 = await query(sql);
+
+
+    pdf.font('Helvetica').fontSize(11).text('Usuario: '+result2[0].nombre,75,130)
+
+    pdf.font('Helvetica').fontSize(11).text('Fecha inicio: '+req.query.fecha1,75,150)
+
+    pdf.font('Helvetica').fontSize(11).text('Fecha fin: '+req.query.fecha2,500,150)
+
+    let Ncontar=0;
+    // Recorrer cada fila del arreglo
+    for (let i = 0; i < result.length; i++) {
+
+      tamano(result[i].descripcion+"",result[i].modelo+"",result[i].serie+"")
+      
+      // Añadir el texto de la celda
+      Ncontar+=1;
+      cellWidth = 25;
+      celdas(Ncontar)
+      
+      cellWidth = 90;
+      celdas(result[i].codigo)
+      cellWidth = 45;
+      celdas(result[i].cantidad)
+      cellWidth = 65;
+      celdas(result[i].marca)
+      cellWidth = 90;
+      celdas(result[i].modelo)
+      celdas(result[i].serie)
+      cellWidth = 140;
+      celdas(result[i].descripcion)
+      cellWidth = 65;
+      celdas(result[i].empleado)
+      
+      // Restablecer el punto x al valor inicial
+      x = 75;
+      // Mover el punto y al siguiente valor
+      y += cellHeight;
+
+      if(y>400){
+        pdf.addPage();
+        y=100
       }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Total de bienes por Ubicacion").style(myStyle2);
-    worksheet.cell(6, 1).string("Ubicacion").style(myStyle);
-    worksheet.cell(6, 2).string("Bienes").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.nombre+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.cantidad+""
-      worksheet.cell(index + 7, 2).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
+    }
+    
+    // Finalizar el documento
+    pdf.end();  
+  
   }catch (error) {
     console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
+    res.json({success: false, message: "Error al obtener"});
     return;
   }
 
 };
 
-*/
-//------------------------------------- Descargar cantidad de tarjetas por usuario --------------------------------------
 
-/*
-exports.excel7 = async (req, res, next) => {
+//------------------------------------- Reporte PDF bienes Fungibles --------------------------------------
+
+exports.pdf5 = async (req, res, next) => {
+
+
+  // Crear una instancia de PDFKit
+  const pdf = new PDFDocument({
+    layout: 'landscape',
+    size: 'LETTER'
+  });
+  // Enviar el PDF al cliente
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  pdf.pipe(res);
+
+  pdf.image('logo.jpg', {
+    fit: [150, 150],
+    x: 25,
+    y: 20
+  });
+
+  pdf.moveDown();
+
+  // Añadir un título al PDF
+  pdf.fontSize(20).text('INVENTARIO GENERAL DE BIENES FUNGIBLES',{
+    align: 'center'
+  })
+
+  // Añadir un espacio
+  pdf.moveDown();
+
+  // Crear un arreglo con los datos de la tabla
+  const data = [
+    ['No.','IdMineco','Cantidad','Marca','Modelo','Serie','Descripcion','Asignado a:']
+  ];
+
+  // Definir el ancho y el alto de cada celda
+  let cellWidth = 90;
+  let cellHeight = 30;
+
+  // Definir el punto inicial de la tabla
+  let x = 75;
+  let y = 190;
+
+  // Recorrer el arreglo de datos
+  for (let i = 0; i < data.length; i++) {
+    // Recorrer cada fila del arreglo
+    for (let j = 0; j < data[i].length; j++) {
+      if( data[i][j]=="IdMineco" || data[i][j]=="Modelo" || data[i][j]=="Serie"){
+        cellWidth=90
+      }else if(data[i][j]=="Descripcion"){
+        cellWidth=140
+      }else{
+        cellWidth=65
+      }
+      // Añadir el texto de la celda
+      if(data[i][j]=="No."){
+        cellWidth=25
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 5, y + 10, {
+          width: cellWidth - 25,
+          align: 'center'
+        });
+      }else if(data[i][j]=="Cantidad"){
+        cellWidth=45
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 5, y + 10, {
+          width: cellWidth - 45,
+          align: 'center'
+        });
+      }else{
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
+          width: cellWidth - 20,
+          align: 'center'
+        });
+      }
+
+      // Dibujar el borde de la celda
+      pdf.rect(x, y, cellWidth, cellHeight).stroke();
+      // Mover el punto x al siguiente valor
+      x += cellWidth;
+      
+    }
+    // Restablecer el punto x al valor inicial
+    x = 75;
+    // Mover el punto y al siguiente valor
+    y += cellHeight;
+  }
+  function tamano(texto1,texto2,texto3) {
+
+    //typeof texto === 'string'
+    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
+    let texto = (calculo.length > texto3.length) ?  calculo : texto3
+    
+    if(texto2.length>texto1.length && texto2.length>texto3.length){
+      if(texto.length > 57){
+
+        cellHeight = Math.round((texto.length / 16)*18)
+        cellHeight -= Math.round(texto.length / 3)
+  
+      }else if(texto.length<13){
+  
+        cellHeight = 20;
+  
+      }else if(texto.length > 35 && texto.length < 57){
+  
+        cellHeight=50;
+  
+      }
+      else if(texto.length > 13 && texto.length < 35){
+  
+        cellHeight=30;
+  
+      }
+      return;
+    }
+
+    if(texto.length > 57){
+
+      cellHeight = Math.round((texto.length / 16)*18)
+      cellHeight -= Math.round(texto.length / 2)
+
+    }else if(texto.length<13){
+
+      cellHeight = 20;
+
+    }else if(texto.length > 35 && texto.length < 57){
+
+      cellHeight=50;
+
+    }
+    else if(texto.length > 13 && texto.length < 35){
+
+      cellHeight=30;
+
+    }
+    
+  }
+  //Funcion para agregar celdas
+  function celdas(texto) {
+    
+    // Añadir el texto de la celda
+    pdf.rect(x, y, cellWidth, cellHeight).stroke();
+
+    pdf.font('Helvetica').fontSize(8).text(texto, x + 5, y + 7, {
+      width: cellWidth - 7,
+      align: 'left'
+    });
+    // Mover el punto x al siguiente valor
+    x += cellWidth;
+
+  }
 
   try{
 
-    let sql = `SELECT CONCAT_WS(" ",u.nombres,u.apellidos) AS nombre, u.nit, COUNT(*) AS tarjetas  FROM empleado u, tarjeta_responsabilidad
-    WHERE u.empleadoId=tarjeta_responsabilidad.empleado
-    GROUP BY u.empleadoId;`;
+    //Consulta
+  
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+    //Retornar datos del bien
+
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and bien.categoria=2 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
     
     const result = await query(sql);
 
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
+    //Retornar datos del usuario
 
-    // titulo
+    let usuario = req.query.usuario; 
 
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
+    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM usuario
+    WHERE userId=`+usuario+`;`;
+
+    const result2 = await query(sql);
+
+
+    pdf.font('Helvetica').fontSize(11).text('Usuario: '+result2[0].nombre,75,130)
+
+    pdf.font('Helvetica').fontSize(11).text('Fecha inicio: '+req.query.fecha1,75,150)
+
+    pdf.font('Helvetica').fontSize(11).text('Fecha fin: '+req.query.fecha2,500,150)
+
+    let Ncontar=0;
+    // Recorrer cada fila del arreglo
+    for (let i = 0; i < result.length; i++) {
+
+      tamano(result[i].descripcion+"",result[i].modelo+"",result[i].serie+"")
+      
+      // Añadir el texto de la celda
+      Ncontar+=1;
+      cellWidth = 25;
+      celdas(Ncontar)
+      
+      cellWidth = 90;
+      celdas(result[i].codigo)
+      cellWidth = 45;
+      celdas(result[i].cantidad)
+      cellWidth = 65;
+      celdas(result[i].marca)
+      cellWidth = 90;
+      celdas(result[i].modelo)
+      celdas(result[i].serie)
+      cellWidth = 140;
+      celdas(result[i].descripcion)
+      cellWidth = 65;
+      celdas(result[i].empleado)
+      
+      // Restablecer el punto x al valor inicial
+      x = 75;
+      // Mover el punto y al siguiente valor
+      y += cellHeight;
+
+      if(y>400){
+        pdf.addPage();
+        y=100
       }
-    });
-    var myStyle2 = workbook.createStyle({
-      font: {
-          bold: true,
-
-          size: 16
-      }
-    });
-
-    worksheet.cell(2, 1).string("Cantidad de tarjetas por empleado").style(myStyle2);
-    worksheet.cell(6, 1).string("Nombre").style(myStyle);
-    worksheet.cell(6, 2).string("Empleado").style(myStyle);
-    worksheet.cell(6, 2).string("Tarjetas asignadas").style(myStyle);
-
-    result.forEach((row, index) => {
-      let cast=""+row.nombre+""
-      worksheet.cell(index + 7, 1).string(cast);
-      cast=""+row.nit+""
-      worksheet.cell(index + 7, 2).string(cast);
-      cast=""+row.tarjetas+""
-      worksheet.cell(index + 7, 3).string(cast);
-    });
-
-
-    workbook.writeToBuffer().then((buffer) => {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
-            res.send(buffer);
-        });
-    return;
+    }
+    
+    // Finalizar el documento
+    pdf.end();  
+  
   }catch (error) {
     console.log(error);
-    res.status(400).json({success: false, message: "Error al Descargar", error:error});
+    res.json({success: false, message: "Error al obtener"});
     return;
   }
+
 };
-*/
+
+
+//------------------------------------- Reporte PDF bienes por Marca --------------------------------------
+
+exports.pdf6 = async (req, res, next) => {
+
+
+  // Crear una instancia de PDFKit
+  const pdf = new PDFDocument({
+    layout: 'landscape',
+    size: 'LETTER'
+  });
+  // Enviar el PDF al cliente
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  pdf.pipe(res);
+
+  pdf.image('logo.jpg', {
+    fit: [150, 150],
+    x: 25,
+    y: 20
+  });
+
+  pdf.moveDown();
+
+  // Añadir un título al PDF
+  pdf.fontSize(20).text('INVENTARIO GENERAL DE BIENES ACTIVOS',{
+    align: 'center'
+  })
+
+  // Añadir un espacio
+  pdf.moveDown();
+
+  // Crear un arreglo con los datos de la tabla
+  const data = [
+    ['No.','IdMineco','Cantidad','Marca','Modelo','Serie','Descripcion','Asignado a:']
+  ];
+
+  // Definir el ancho y el alto de cada celda
+  let cellWidth = 90;
+  let cellHeight = 30;
+
+  // Definir el punto inicial de la tabla
+  let x = 75;
+  let y = 190;
+
+  // Recorrer el arreglo de datos
+  for (let i = 0; i < data.length; i++) {
+    // Recorrer cada fila del arreglo
+    for (let j = 0; j < data[i].length; j++) {
+      if( data[i][j]=="IdMineco" || data[i][j]=="Modelo" || data[i][j]=="Serie"){
+        cellWidth=90
+      }else if(data[i][j]=="Descripcion"){
+        cellWidth=140
+      }else{
+        cellWidth=65
+      }
+      // Añadir el texto de la celda
+      if(data[i][j]=="No."){
+        cellWidth=25
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 5, y + 10, {
+          width: cellWidth - 25,
+          align: 'center'
+        });
+      }else if(data[i][j]=="Cantidad"){
+        cellWidth=45
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 5, y + 10, {
+          width: cellWidth - 45,
+          align: 'center'
+        });
+      }else{
+        pdf.font('Helvetica-Bold').fontSize(8).text(data[i][j], x + 10, y + 10, {
+          width: cellWidth - 20,
+          align: 'center'
+        });
+      }
+
+      // Dibujar el borde de la celda
+      pdf.rect(x, y, cellWidth, cellHeight).stroke();
+      // Mover el punto x al siguiente valor
+      x += cellWidth;
+      
+    }
+    // Restablecer el punto x al valor inicial
+    x = 75;
+    // Mover el punto y al siguiente valor
+    y += cellHeight;
+  }
+  function tamano(texto1,texto2,texto3) {
+
+    //typeof texto === 'string'
+    let calculo =(texto1.length > texto2.length) ? texto1 : texto2
+    let texto = (calculo.length > texto3.length) ?  calculo : texto3
+    
+    if(texto2.length>texto1.length && texto2.length>texto3.length){
+      if(texto.length > 57){
+
+        cellHeight = Math.round((texto.length / 16)*18)
+        cellHeight -= Math.round(texto.length / 3)
+  
+      }else if(texto.length<13){
+  
+        cellHeight = 20;
+  
+      }else if(texto.length > 35 && texto.length < 57){
+  
+        cellHeight=50;
+  
+      }
+      else if(texto.length > 13 && texto.length < 35){
+  
+        cellHeight=30;
+  
+      }
+      return;
+    }
+
+    if(texto.length > 57){
+
+      cellHeight = Math.round((texto.length / 16)*18)
+      cellHeight -= Math.round(texto.length / 2)
+
+    }else if(texto.length<13){
+
+      cellHeight = 20;
+
+    }else if(texto.length > 35 && texto.length < 57){
+
+      cellHeight=50;
+
+    }
+    else if(texto.length > 13 && texto.length < 35){
+
+      cellHeight=30;
+
+    }
+    
+  }
+  //Funcion para agregar celdas
+  function celdas(texto) {
+    
+    // Añadir el texto de la celda
+    pdf.rect(x, y, cellWidth, cellHeight).stroke();
+
+    pdf.font('Helvetica').fontSize(8).text(texto, x + 5, y + 7, {
+      width: cellWidth - 7,
+      align: 'left'
+    });
+    // Mover el punto x al siguiente valor
+    x += cellWidth;
+
+  }
+
+  try{
+
+    //Consulta
+  
+    let fecha1=`STR_TO_DATE("`+req.query.fecha1+`","%Y-%m-%d")`;
+    let fecha2=`STR_TO_DATE("`+req.query.fecha2+`","%Y-%m-%d")`;
+    let marca =  req.query.busqueda;
+    //Retornar datos del bien
+
+    let sql = `SELECT IFNULL(fechaco,'No ingresado') AS fechaco, IFNULL(serie,'No ingresado') AS serie, IFNULL(marca.nombre,'No ingresado') AS marca, IFNULL(modelo,'No ingresado') AS modelo,IFNULL(codigo,'No ingresado') AS codigo,cantidad,descripcion,IFNULL(CONCAT(e.nombres," ",e.apellidos), "No asignado") AS empleado FROM bien
+    LEFT JOIN marca ON bien.marca = marca.marcaId
+    LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
+	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
+    LEFT JOIN empleado e ON t.empleado=e.empleadoId
+    WHERE bien.activo=1 and marca.nombre LIKE '%`+marca+`%' and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
+    ORDER BY fechaco;`;
+    
+    const result = await query(sql);
+
+    //Retornar datos del usuario
+
+    let usuario = req.query.usuario; 
+
+    sql=`SELECT userId,  CONCAT_WS(' ', nombres, apellidos) AS nombre FROM usuario
+    WHERE userId=`+usuario+`;`;
+
+    const result2 = await query(sql);
+
+
+    pdf.font('Helvetica').fontSize(11).text('Usuario: '+result2[0].nombre,75,130)
+
+    pdf.font('Helvetica').fontSize(11).text('Fecha inicio: '+req.query.fecha1,75,150)
+
+    pdf.font('Helvetica').fontSize(11).text('Fecha fin: '+req.query.fecha2,500,150)
+
+    let Ncontar=0;
+    // Recorrer cada fila del arreglo
+    for (let i = 0; i < result.length; i++) {
+
+      tamano(result[i].descripcion+"",result[i].modelo+"",result[i].serie+"")
+      
+      // Añadir el texto de la celda
+      Ncontar+=1;
+      cellWidth = 25;
+      celdas(Ncontar)
+      
+      cellWidth = 90;
+      celdas(result[i].codigo)
+      cellWidth = 45;
+      celdas(result[i].cantidad)
+      cellWidth = 65;
+      celdas(result[i].marca)
+      cellWidth = 90;
+      celdas(result[i].modelo)
+      celdas(result[i].serie)
+      cellWidth = 140;
+      celdas(result[i].descripcion)
+      cellWidth = 65;
+      celdas(result[i].empleado)
+      
+      // Restablecer el punto x al valor inicial
+      x = 75;
+      // Mover el punto y al siguiente valor
+      y += cellHeight;
+
+      if(y>400){
+        pdf.addPage();
+        y=100
+      }
+    }
+    
+    // Finalizar el documento
+    pdf.end();  
+  
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener"});
+    return;
+  }
+
+};

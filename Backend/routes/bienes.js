@@ -22,6 +22,9 @@ router.get("/DadosdeBaja", checkAuth,userController.buscarbaja);
 router.get("/BienesActivos", checkAuth,userController.BienesActivos);
 router.get("/BienesFungibles", checkAuth,userController.BienesFungibles);
 router.get("/BienesMarca", checkAuth,userController.BienesMarca);
+router.get("/ubicacion", checkAuth,userController.BienesUbicacion);
+router.get("/tipo", checkAuth,userController.BienesTipo);
+
 
 
 

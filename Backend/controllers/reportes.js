@@ -625,55 +625,105 @@ exports.excel4 = async (req, res, next) => {
     const result = await query(sql);
 
     const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Total');
+    const worksheet = workbook.addWorksheet('Bitacora');
 
+    // Inserta la imagen en la celda A1
 
+    worksheet.addImage({
+      path: 'logo.jpg',
+      type: 'picture',
+      position: {
+          type: 'twoCellAnchor',
+          from: {
+              col: 1, // Columna de la celda
+              row: 1, // Fila de la celda
+          },
+          to: {
+            col: 4, // Columna de la celda inferior derecha
+            row: 4, // Fila de la celda inferior derecha
+        },
 
-    // titulo
-
-    var myStyle = workbook.createStyle({
-      font: {
-          bold: true
-      }
+      },
+      
     });
-    var myStyle2 = workbook.createStyle({
+
+    // estilo para el titulo del reporte
+    var myStyle = workbook.createStyle({
       font: {
           bold: true,
 
-          size: 16
+          size: 20
       }
     });
 
-    worksheet.cell(2, 1).string("Bitacora").style(myStyle2);
-    worksheet.cell(6, 1).string("Fecha").style(myStyle);
-    worksheet.cell(6, 2).string("Hora").style(myStyle);
-    worksheet.cell(6, 3).string("Usuario").style(myStyle);
-    worksheet.cell(6, 4).string("Movimiento").style(myStyle);
-    worksheet.cell(6, 5).string("Objeto").style(myStyle);
-    worksheet.cell(6, 6).string("N.Usuario/B.Codigo").style(myStyle);
+    // estilo para titulos de columnas de la tabla
+
+    var myStyle2 = workbook.createStyle({
+      font: {
+          bold: true,
+          
+      },
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      },
+      alignment: {
+        horizontal: 'center',
+        shrinkToFit: true,
+        wrapText: true
+      }
+    });
+
+    // Estilo para colocar bordes
+    var myStyle3 = workbook.createStyle({
+      border: {
+        left: { style: 'thin', color: 'black' },
+        right: { style: 'thin', color: 'black' },
+        top: { style: 'thin', color: 'black' },
+        bottom: { style: 'thin', color: 'black' }
+      },
+      
+      alignment: {
+          shrinkToFit: true,
+          wrapText: true
+      }
+    });
+
+    //Ancho de la columna "Movimiento"
+    worksheet.column(4).setWidth(20);
+    
+    worksheet.cell(5, 3).string("BITACORA").style(myStyle);
+    worksheet.cell(9, 1).string("Fecha").style(myStyle2);
+    worksheet.cell(9, 2).string("Hora").style(myStyle2);
+    worksheet.cell(9, 3).string("Usuario").style(myStyle2);
+    worksheet.cell(9, 4).string("Movimiento").style(myStyle2);
+    worksheet.cell(9, 5).string("Objeto").style(myStyle2);
+    worksheet.cell(9, 6).string("N.Usuario/B.Codigo").style(myStyle2);
 
     result.forEach((row, index) => {
       let cast=""+row.fecha+""
-      worksheet.cell(index + 7, 1).string(cast);
+      worksheet.cell(index + 10, 1).string(cast).style(myStyle3);
       cast=""+row.hora+""
-      worksheet.cell(index + 7, 2).string(cast);
+      worksheet.cell(index + 10, 2).string(cast).style(myStyle3);
       cast=""+row.usuario+""
-      worksheet.cell(index + 7, 3).string(cast);
+      worksheet.cell(index + 10, 3).string(cast).style(myStyle3);
       cast=""+row.movimiento+""
-      worksheet.cell(index + 7, 4).string(cast);
+      worksheet.cell(index + 10, 4).string(cast).style(myStyle3);
       if(row.objetivo==0){
         cast="Usuario";
       }else{
         cast="Bien";
       }
-      worksheet.cell(index + 7, 5).string(cast);
+      worksheet.cell(index + 10, 5).string(cast).style(myStyle3);
       if(row.identificador){
         cast=""+row.identificador+"";
       }else{
         cast="";
       }
       
-      worksheet.cell(index + 7, 6).string(cast);
+      worksheet.cell(index + 10, 6).string(cast).style(myStyle3);
     });
 
 
@@ -709,7 +759,7 @@ exports.excel5 = async (req, res, next) => {
 	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
     LEFT JOIN empleado e ON t.empleado=e.empleadoId
     WHERE bien.activo=1 and bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
-    ORDER BY fechaco;`;
+    ORDER BY fechaco DESC;`;
     
     const result = await query(sql);
 
@@ -2135,7 +2185,7 @@ exports.pdf4 = async (req, res, next) => {
 	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
     LEFT JOIN empleado e ON t.empleado=e.empleadoId
     WHERE bien.activo=1 and bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
-    ORDER BY fechaco;`;
+    ORDER BY fechaco DESC;`;
     
     const result = await query(sql);
 

@@ -15,6 +15,7 @@ router.post("/CrearUsuario", checkAuth,userController.crear);
 router.put("/ActualizarEstado", checkAuth,userController.estado);
 router.put("/EditarUsuario", checkAuth,userController.editar);
 router.delete("/EliminarUsuario/:id", checkAuth,userController.eliminar);
+router.get("/ObtenerRoles", checkAuth,userController.Roles);
 
 
 module.exports = router;

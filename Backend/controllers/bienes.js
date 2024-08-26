@@ -316,15 +316,16 @@ exports.buscar = async (req, res, next) => {
 
   let buscar = req.query.buscar;
   let opcion = req.query.opcion;
-  let sql=""
-  switch (opcion) {
-    case  "1":
-
-      sql = `SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
+  let sql=`SELECT empleado.nit, bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,IFNULL(ubicacion.nombre, "No ingresado") as ubicacion,bien.precio FROM bien
       LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
       LEFT JOIN marca ON marca.marcaId=bien.marca 
       LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-      LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+      LEFT JOIN empleado ON t.empleado=empleado.empleadoId`
+      
+  switch (opcion) {
+    case  "1":
+
+      sql = sql+`
       WHERE bien.activo=True and codigo LIKE '%`+buscar+`%';`;
      
       try{
@@ -340,11 +341,7 @@ exports.buscar = async (req, res, next) => {
       break;
     case "2":
       buscar=buscar.toUpperCase()
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
-      LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
-      LEFT JOIN marca ON marca.marcaId=bien.marca 
-      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-      LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+      sql = sql+`
       WHERE bien.activo=True and marca.nombre LIKE '%`+buscar+`%';`;
 
       try{
@@ -359,11 +356,7 @@ exports.buscar = async (req, res, next) => {
       }
       break;
     case "3":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
-      LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
-      LEFT JOIN marca ON marca.marcaId=bien.marca 
-      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-      LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+      sql = sql+`
       WHERE bien.activo=True and modelo LIKE '%`+buscar+`%';`;
       try{
        
@@ -377,11 +370,7 @@ exports.buscar = async (req, res, next) => {
       }
       break;
     case "4":
-      sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
-      LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
-      LEFT JOIN marca ON marca.marcaId=bien.marca 
-      LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-      LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+      sql = sql+`
       WHERE bien.activo=True and serie LIKE '%`+buscar+`%';`;
       try{
        
@@ -395,11 +384,7 @@ exports.buscar = async (req, res, next) => {
       }
       break;
       case "6":
-        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
-        LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
-        LEFT JOIN marca ON marca.marcaId=bien.marca 
-        LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-        LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+        sql = sql+`
         WHERE bien.activo=True and ubicacion.nombre LIKE '%`+buscar+`%';`;
       
         try{
@@ -414,11 +399,7 @@ exports.buscar = async (req, res, next) => {
         }
         break;
       default:
-        sql = `SELECT empleado.nit,bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,codigo,marca.nombre as marca,modelo,serie,cantidad,bien.categoria,bien.ubicacion as ubicacion2,descripcion,ubicacion.nombre as ubicacion,bien.precio FROM bien
-        LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
-        LEFT JOIN marca ON marca.marcaId=bien.marca 
-        LEFT JOIN tarjeta_responsabilidad t ON t.id=bien.tarjeta
-        LEFT JOIN empleado ON t.empleado=empleado.empleadoId
+        sql = sql+`
         WHERE bien.activo=True and descripcion LIKE '%`+buscar+`%';`;
       
         try{
@@ -562,7 +543,7 @@ exports.buscarbaja = async (req, res, next) => {
       break;
     case "5":
       sql = `SELECT * FROM(
-        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(bien.precio,"No ingresado") AS precio FROM responsable_activo r
+        SELECT bien.id, DATE_FORMAT(r.fecha, '%d/%m/%Y') AS fecha,concat_ws(' ', u.nombres,u.apellidos) AS usuario,codigo,marca.nombre AS marca,modelo,serie,descripcion, bien.precio FROM responsable_activo r
             INNER JOIN tarjeta_responsabilidad t ON r.tarjeta = t.id
             INNER JOIN bien ON bien.id = r.bien
             INNER JOIN empleado u ON u.empleadoId = t.empleado
@@ -571,7 +552,7 @@ exports.buscarbaja = async (req, res, next) => {
             WHERE r.activo=0 and bien.activo=0
             GROUP BY r.bien)
         UNION
-        SELECT bien.id,"Sin empleado","Sin empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,IFNULL(precio,"No ingresado") AS precio FROM bien
+        SELECT bien.id,"Sin empleado","Sin empleado",codigo,marca.nombre AS marca,modelo,serie,descripcion,precio FROM bien
         LEFT JOIN marca ON bien.marca = marca.marcaId
         WHERE bien.activo=0 AND bien.id NOT IN (SELECT r.bien FROM responsable_activo r
             WHERE r.activo=0)) grupo
@@ -801,7 +782,8 @@ exports.sinasignar = async (req, res, next) => {
     
     let sql = `SELECT bien.id,fechaco,codigo,marca.nombre as marca,modelo,serie,descripcion,bien.precio FROM bien
     LEFT JOIN marca ON bien.marca = marca.marcaId
-    WHERE bien.tarjeta IS NULL and bien.activo=true;`;
+    WHERE bien.tarjeta IS NULL and bien.activo=true
+    ORDER BY fechaco DESC;`;
     
     const result = await query(sql);
     
@@ -855,7 +837,7 @@ exports.BienesActivos = async (req, res, next) => {
 	  LEFT JOIN responsable_activo r ON r.tarjeta=t.id and r.bien=bien.id
     LEFT JOIN empleado e ON t.empleado=e.empleadoId
     WHERE bien.activo=1 and bien.categoria=1 and ((fechaco BETWEEN `+fecha1+` and `+fecha2+`) OR fechaco is null)
-    ORDER BY fechaco;`;
+    ORDER BY fechaco DESC;`;
     
     const result = await query(sql);
     
@@ -927,4 +909,48 @@ exports.BienesMarca = async (req, res, next) => {
     res.json({success: false, message: "Error al obtener los bienes"});
     return;
   }
+};
+
+
+//------------------------------------- Obtener ubicaciones--------------------------------------
+
+
+exports.BienesUbicacion = async (req, res, next) => {
+  let sql = "SELECT id, nombre FROM ubicacion;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }else{
+      if (result.length > 0) {
+      
+        res.json({success: true, message:result});
+      } else {
+        res.status(400).json({success: false, message: "No hay ubicaciones ingresadas"});;
+      }
+    }
+  });
+};
+
+
+//------------------------------------- Obtener tipos--------------------------------------
+
+
+exports.BienesTipo = async (req, res, next) => {
+  let sql = "SELECT catId, nombre FROM categoria;";
+  
+  connection.query(sql, async function(error,result){
+    if(error){
+      console.log("Error al conectar");
+      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
+    }else{
+      if (result.length > 0) {
+      
+        res.json({success: true, message:result});
+      } else {
+        res.status(400).json({success: false, message: "No hay categorias ingresadas"});;
+      }
+    }
+  });
 };

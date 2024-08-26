@@ -88,7 +88,7 @@ function InBien() {
   const onSubmit = async (data) => {
     
     if(imageData.length<1000000){
-      if (data.categoria!=null){
+      if (data.categoria){
         try {
           const resp = await axios({
             url: url+"/InBien",
@@ -208,8 +208,8 @@ function InBien() {
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Precio</h3>
-                      <input type="number" step="0.01" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" placeholder=""
-                      {...register("precio", { required: false })}/>
+                      <input required type="number" step="0.01" className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" placeholder=""
+                      {...register("precio", { required: true })}/>
                     </div>
                     <div className="w-full md:w-1/3 px-3 mb-9 md:mb-0">
                       <h3>Ubicacion</h3>

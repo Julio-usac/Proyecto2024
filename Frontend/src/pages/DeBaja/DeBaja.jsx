@@ -3,8 +3,12 @@ import axios from "axios";
 import toast, { Toaster } from 'react-hot-toast';
 import { useState } from "react";
 import { useEffect } from "react";
-
 import useAuth from "../../auth/authStore";
+
+import DataTable from 'datatables.net-dt';
+import $ from "jquery";
+
+
 
 function DeBaja() {
 
@@ -44,7 +48,45 @@ function DeBaja() {
         },  });
         
         if(response.data.success==true){
-            setBien(response.data.message)
+          setBien(response.data.message);
+          
+          if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+            let table2=$('#myTable2').DataTable();
+            table2.destroy();
+          }
+          setTimeout(function(){
+            
+            if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+             
+            }else{
+                new DataTable('#myTable2');
+
+                const searchInput = document.querySelector('#myTable2_filter input');
+                const searchlabel = document.querySelector('#myTable2_filter label');
+                
+                
+                // Aplica las clases de Tailwind al label
+                searchlabel.classList.add(
+                    'font-bold',
+                    'text-xl'
+                );
+                
+
+                // Aplica las clases de Tailwind al cuadro de búsqueda
+                searchInput.classList.add(
+                    'font-normal',
+                    'border-2',
+                    'py-1',
+                    'mt-2',
+                    'mb-3',
+                    'mx-2',
+                    'input-primary',
+                    'border-black-400',
+                    'focus:outline-none',
+                    'focus:border-blue-500'
+                );
+            }
+          }, 1000);
         }
 
         } catch (error) {
@@ -123,6 +165,22 @@ function DeBaja() {
       console.error('Hubo un error al descargar el archivo: ', error);
     }
   };
+
+  const formatearNumero = (numero) => {
+    return numero.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+
+  const Producto = ({ precio }) => {
+    return (
+      
+      <td className="text-right px-6 py-4"> {formatearNumero(precio)}</td>
+      
+    );
+  };
 //----------------------------------------------------HTML---------------------------------------------
   return (
     <AppLayout>
@@ -169,8 +227,8 @@ function DeBaja() {
 
             </div>
 
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-96 mt-6">
-              <table className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-6  overflow-y-auto h-[500px]">
+              <table id="myTable2" className="table table-xs table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
                   <thead className="text-xm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
                           <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
@@ -195,7 +253,7 @@ function DeBaja() {
                               Descripcion
                           </th>
                           <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
-                              Saldo
+                              (Q)Saldo
                           </th>
                           <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               <span className="sr-only">Dar de baja</span>
@@ -215,7 +273,7 @@ function DeBaja() {
                                   <td className="px-6 py-4"> {item.modelo}</td>
                                   <td className="px-6 py-4"> {item.serie}</td>
                                   <td className="px-6 py-4"> {item.descripcion}</td>
-                                  <td className="px-6 py-4"> {item.precio}</td>
+                                  <Producto precio={item.precio} />  
                                   
                                   <td className="px-6 py-4 text-right">
                                         

@@ -1,10 +1,7 @@
 var bodyParser = require('body-parser');
 var jwt = require('jsonwebtoken');
 var express = require('express');
-var mysql = require('mysql');
 var cors = require('cors');
-var config = require('./database/config.js');
-const checkAuth = require('./middleware/check-auth');
 const users = require('./routes/users');
 const empleados = require('./routes/empleados');
 const reportes = require('./routes/reportes');
@@ -24,22 +21,6 @@ app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
 app.listen(port);
 
 console.log('Listening on port');
-
-var connection = mysql.createConnection(config.dbconnection);
-
-
-//------------------------------Funcion para comunicacion con la base de datos-----------------------
-function query(sql) {
-  return new Promise((resolve, reject) => {
-      connection.query(sql, function(error, result) {
-          if (error) {
-              reject(error);
-          } else {
-              resolve(result);
-          }
-      });
-  });
-}
 
 
 function getToken(datos) {
@@ -120,64 +101,4 @@ app.post('/Revalidar', async function (req, res) {
     return;
   }
  
-});
-
-//------------------------------------- OBTENER LISTA DE CATEGORIAS --------------------------------------
-
-app.get('/tipo', checkAuth, async function (req, res) {
-  let sql = "SELECT catId, nombre FROM categoria;";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-    }else{
-      if (result.length > 0) {
-      
-        res.json({success: true, message:result});
-      } else {
-        res.status(400).json({success: false, message: "No hay categorias ingresadas"});;
-      }
-    }
-  });
-});
-
-//------------------------------------- OBTENER UBICACIONES --------------------------------------
-
-app.get('/ubicacion', checkAuth, async function (req, res) {
-  let sql = "SELECT id, nombre FROM ubicacion;";
-  
-  connection.query(sql, async function(error,result){
-    if(error){
-      console.log("Error al conectar");
-      res.status(400).json({success: false, message: "No se pudo conectar con la base de datos"});
-    }else{
-      if (result.length > 0) {
-      
-        res.json({success: true, message:result});
-      } else {
-        res.status(400).json({success: false, message: "No hay ubicaciones ingresadas"});;
-      }
-    }
-  });
-});
-
-
-//------------------------------------- OBTENER Roles--------------------------------------
-
-app.get('/ObtenerRoles', checkAuth, async function (req, res) {
-  try{
-    
-    let sql = `SELECT rolId, rol from rol where activo = True;`;
-    
-    const result = await query(sql);
-    
-    res.json({success: true, message: result});
-    return;
-  }catch (error) {
-    console.log(error);
-    res.json({success: false, message: "Error al obtener los roles"});
-    return;
-  }
-  
 });

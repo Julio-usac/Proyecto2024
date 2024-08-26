@@ -10,6 +10,9 @@ import { useState } from "react";
 import { useEffect } from "react";
 import useAuth from "../../auth/authStore";
 
+import DataTable from 'datatables.net-dt';
+import $ from "jquery";
+
 function BienUsuario() {
 
 //-----------------------------------------Declaracion de estados-----------------------------------------
@@ -88,6 +91,43 @@ const handleSearchChange = (event) => {
           if (resp.data.success === true) {
             setBien(resp.data.message);
             Saldo();
+            if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+              let table2=$('#myTable2').DataTable();
+              table2.destroy();
+            }
+            setTimeout(function(){
+              
+              if ( $.fn.dataTable.isDataTable('#myTable2') ) {
+               
+              }else{
+                  new DataTable('#myTable2');
+  
+                  const searchInput = document.querySelector('#myTable2_filter input');
+                  const searchlabel = document.querySelector('#myTable2_filter label');
+                  
+                  
+                  // Aplica las clases de Tailwind al label
+                  searchlabel.classList.add(
+                      'font-bold',
+                      'text-xl'
+                  );
+                  
+  
+                  // Aplica las clases de Tailwind al cuadro de búsqueda
+                  searchInput.classList.add(
+                      'font-normal',
+                      'border-2',
+                      'py-1',
+                      'mt-2',
+                      'mb-3',
+                      'mx-2',
+                      'input-primary',
+                      'border-black-400',
+                      'focus:outline-none',
+                      'focus:border-blue-500'
+                  );
+              }
+            }, 1000);
           }else{
             toast.error(resp.data.message)
           }
@@ -235,6 +275,22 @@ const handleSearchChange = (event) => {
     }
   };
 
+  
+  const formatearNumero = (numero) => {
+    return numero.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  const Producto = ({ precio }) => {
+    return (
+      
+      <td className="text-right px-6 py-4"> {formatearNumero(precio)}</td>
+      
+    );
+  };
+
   //---------------------------------------------------HTML-----------------------------------------------------
 
   return (
@@ -292,7 +348,7 @@ const handleSearchChange = (event) => {
           <div style={{ height: '30px' }} />
 
           <div className="relative overflow-x-auto shadow-md sm:rounded-lg  overflow-y-auto h-4/6">
-              <table className="table table-sm table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
+              <table id="myTable2" className="table table-sm table-pin-rows table-pin-cols w-full text-sm text-left text-gray-500 dark:text-gray-900">
                   <thead className="text-sm text-gray-700 uppercase bg-gray-50 dark:bg-gray-400 dark:text-gray-800">
                       <tr>
                           <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
@@ -314,7 +370,7 @@ const handleSearchChange = (event) => {
                               Ubicacion
                           </th>
                           <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
-                              saldo
+                            (Q)saldo
                           </th>
                           <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                               <span className="sr-only">Edit</span>
@@ -336,7 +392,7 @@ const handleSearchChange = (event) => {
                                   <td className="px-6 py-4"> {item.cantidad}</td>
                                   <td className="px-6 py-4"> {item.descripcion}</td>
                                   <td className="px-6 py-4"> {item.ubicacion}</td>
-                                  <td className="px-6 py-4"> {item.precio}</td>
+                                  <Producto precio={item.precio} /> 
                                   <td className="px-6 py-4 text-right">
                                         <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta, item.fechaco,item.marca2,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>

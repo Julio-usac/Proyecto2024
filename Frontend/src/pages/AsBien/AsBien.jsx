@@ -331,43 +331,7 @@ const handleSearchChange = (event) => {
               
             }
             setShowButton2(bienarray);
-            /*
-            if ( $.fn.dataTable.isDataTable('#myTable2') ) {
-              let table2=$('#myTable2').DataTable();
-              table2.destroy();
-            }
-            setTimeout(function(){
-              
-              if ( $.fn.dataTable.isDataTable('#myTable2') ) {
-                
-              }else{
-                new DataTable('#myTable2');
-                  const searchInput = document.querySelector('#myTable2_filter input');
-                  const searchlabel = document.querySelector('#myTable2_filter label');
-                  
-                  
-                  // Aplica las clases de Tailwind al label
-                  searchlabel.classList.add(
-                      'font-bold',
-                      'text-xl'
-                  );
-                  
-
-                  // Aplica las clases de Tailwind al cuadro de búsqueda
-                  searchInput.classList.add(
-                      'font-normal',
-                      'border-2',
-                      'py-1',
-                      'mt-2',
-                      'mb-3',
-                      'mx-2',
-                      'input-primary',
-                      'border-black-400',
-                      'focus:outline-none',
-                      'focus:border-blue-500'
-                  );
-              }
-            }, 1000);*/
+            
           }else{
             toast.error(resp.data.message)
           }
@@ -462,6 +426,25 @@ const handleSearchChange = (event) => {
     }else{
         toast.error("Debe llenar todos los campos")
     }
+  };
+
+
+  //------------------------------- Formato del precio del bien ------------------------------------
+  
+  const formatearNumero = (numero) => {
+    return numero.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+
+  const Producto = ({ precio }) => {
+    return (
+      
+      <td className="text-right px-6 py-4"> {formatearNumero(precio)}</td>
+      
+    );
   };
 //----------------------------------------------HTML-----------------------------------------------------
 
@@ -634,7 +617,7 @@ const handleSearchChange = (event) => {
                                         </th>
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
-                                        <td className="px-6 py-4"> {item.precio}</td>
+                                        <Producto precio={item.precio} />  
                                         {showButton[item.id] && (<td className="px-6 py-4 text-right">
                                         
                                           <button  key={item.id} className="btn bg-green-500 text-white w-fit"
@@ -700,7 +683,7 @@ const handleSearchChange = (event) => {
                                         </th>
                                         <td className="px-6 py-4"> {item.marca}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
-                                        <td className="px-6 py-4"> {item.precio}</td>
+                                        <Producto precio={item.precio} />  
                                         {!showButton2[item.id] && (<td className="px-6 py-4 text-right">
                                         
                                           <button  key={item.id} className="btn bg-green-500 text-white w-fit"

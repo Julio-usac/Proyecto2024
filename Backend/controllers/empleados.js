@@ -210,9 +210,10 @@ exports.historial = async (req, res, next) => {
 
     let empleado= req.query.empleado;
     
-    let sql = `SELECT r.fecha, bien.id, bien.codigo, bien.marca, bien.modelo, bien.serie, bien.descripcion, bien.precio 
-    from empleado, bien, tarjeta_responsabilidad t, responsable_activo r
-    WHERE r.tarjeta=t.id and r.bien=bien.id and t.empleado=empleadoId and r.activo=true and empleadoId = `+empleado+`;`;
+    let sql = `SELECT r.fecha, bien.id, bien.codigo, marca.nombre as marca, bien.modelo, bien.serie, bien.descripcion, bien.precio 
+    from empleado, bien, tarjeta_responsabilidad t, responsable_activo r, marca
+    WHERE r.tarjeta=t.id and r.bien=bien.id and t.empleado=empleadoId and r.activo=true and marca.marcaId = bien.marca 
+    and empleadoId = `+empleado+`;`;
     
     const result = await query(sql);
     
@@ -286,7 +287,7 @@ exports.asignado2 = async (req, res, next) => {
   
   try{
     let empleado= req.body.empleado;
-    let sql = `SELECT bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,cuenta,marca,codigo,modelo,serie,cantidad,bien.categoria,marca.nombre as marca2,descripcion,ubicacion.nombre as ubicacion,bien.ubicacion as ubicacion2,bien.precio,imagen FROM bien
+    let sql = `SELECT bien.id,IFNULL(DATE_FORMAT(fechaco, '%d/%m/%Y'),'No ingresado') AS fechaco,IFNULL(cuenta, "Sin asignar") as cuenta,marca,codigo,modelo,serie,cantidad,bien.categoria,marca.nombre as marca2,descripcion,IFNULL(ubicacion.nombre, "Sin asignar") as ubicacion,bien.ubicacion as ubicacion2,bien.precio,imagen FROM bien
     INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
     LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
     LEFT JOIN marca ON bien.marca = marca.marcaId;`;

@@ -199,6 +199,23 @@ function Busqueda() {
         }
     }
   }
+
+
+  const formatearNumero = (numero) => {
+    return numero.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+
+  const Producto = ({ precio }) => {
+    return (
+      
+      <td className="text-right px-6 py-4"> {formatearNumero(precio)}</td>
+      
+    );
+  };
  //------------------------------------------------HTML---------------------------------------------
   return (
     <AppLayout>
@@ -277,7 +294,7 @@ function Busqueda() {
                                     Ubicacion
                                 </th>
                                 <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
-                                    Saldo
+                                (Q)Saldo
                                 </th>
                                 <th scope="col" className="px-6 py-3 dark:bg-gray-400 dark:text-gray-800">
                                     <span className="sr-only">Editar</span>
@@ -300,7 +317,7 @@ function Busqueda() {
                                         <td className="px-6 py-4"> {item.serie}</td>
                                         <td className="px-6 py-4"> {item.descripcion}</td>
                                         <td className="px-6 py-4"> {item.ubicacion}</td>
-                                        <td className="px-6 py-4"> {item.precio}</td>
+                                        <Producto precio={item.precio} />  
                                         <td className="px-6 py-4 text-right">
                                         <button  onClick={() => {Feditar(item.id,item.codigo,item.cuenta,item.fechaco,item.marca,item.modelo,item.serie,item.precio,item.cantidad,item.descripcion,item.ubicacion2,item.categoria)}} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</button>
                                   </td>

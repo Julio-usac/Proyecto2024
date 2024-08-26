@@ -90,7 +90,21 @@ const ModelHistorial = () => {
 
 
 
+const formatearNumero = (numero) => {
+  return numero.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
 
+
+const Producto = ({ precio }) => {
+  return (
+    
+    <td className="text-right px-6 py-4"> {formatearNumero(precio)}</td>
+    
+  );
+};
 
     //-------------------------------------------------------HTML---------------------------------------------------------
  
@@ -144,7 +158,7 @@ const ModelHistorial = () => {
                             Descripcion
                         </th>
                         <th scope="col" className="px-6 py-3">
-                            saldo
+                        (Q)saldo
                         </th>
                     </tr>
                 </thead>
@@ -160,7 +174,7 @@ const ModelHistorial = () => {
                                 <td className="px-6 py-4"> {item.modelo}</td>
                                 <td className="px-6 py-4"> {item.serie}</td>
                                 <td className="px-6 py-4"> {item.descripcion}</td>
-                                <td className="px-6 py-4"> {item.precio}</td>
+                                <Producto precio={item.precio} />  
                                 
                               
                             </tr>

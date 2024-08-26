@@ -291,3 +291,22 @@ exports.lista = async (req, res, next) => {
     return;
   }
 };
+
+//------------------------------------- OBTENER ROLES --------------------------------------
+
+exports.Roles = async (req, res, next) => {
+
+  try{
+    
+    let sql = `SELECT rolId, rol from rol where activo = True;`;
+    
+    const result = await query(sql);
+    
+    res.json({success: true, message: result});
+    return;
+  }catch (error) {
+    console.log(error);
+    res.json({success: false, message: "Error al obtener los roles"});
+    return;
+  }
+};

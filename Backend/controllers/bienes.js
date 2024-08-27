@@ -584,7 +584,7 @@ exports.asignar = async (req, res, next) => {
   let tarjeta = req.body.tarjeta;
   let categoria = req.body.categoria;
   let empleado = req.body.empleado;
-  let saldo = req.body.saldo;
+  let saldo = null;
   let asignar = req.body.asignar;
   let quitar = req.body.quitar;
 
@@ -650,7 +650,7 @@ exports.asignar = async (req, res, next) => {
         return;
       }
     }
-  //asignar bienes la tarjeta
+  //asignar bienes a la tarjeta
     if (asignar.length>0){ //Verificar si hay bienes por asignar
       try{
         //recuperar id de la tarjeta
@@ -681,10 +681,43 @@ exports.asignar = async (req, res, next) => {
         return;
       }
     }
+
+    //INSERTAR NUEVO SALDO TOTAL
+
+    try {
+
+      //obtener saldo total
+
+      let sql =  `SELECT SUM(precio) as precio FROM bien
+      INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
+      LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
+      LEFT JOIN marca ON bien.marca = marca.marcaId;`;
+
+      const result1 = await query(sql);
+
+      if (result1.length==1){
+
+        //insertar saldo total
+
+        saldo= result1[0].precio;
+        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
+        await query(sql);
+
+      }else{
+        res.status(400).json({success: false, message: "Error al obtener el saldo total"});
+        return;
+      }
+        
+    } catch (error) {
+      res.status(400).json({success: false, message: "Error al verificar saldo total"});
+      return;
+    }
   }else{
 
+    
+    
     //ACTUALIZAR TARJETA
-
+    
     //Actualizar datos de la tarjeta
     let tarjetaid=0;
     try{
@@ -697,8 +730,6 @@ exports.asignar = async (req, res, next) => {
       if (result1.length==1){
 
         tarjetaid= result1[0].id;
-        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
-        const result2 = await query(sql);
 
       }else{
         res.status(400).json({success: false, message: "La tarjeta no esta asociada a ese usuario o no existe"});
@@ -764,6 +795,37 @@ exports.asignar = async (req, res, next) => {
         res.status(400).json({success: false, message: "Error al asignar bienes a la tarjeta"});
         return;
       }
+    }
+
+    //INSERTAR NUEVO SALDO TOTAL
+
+    try {
+
+      //obtener saldo total
+
+      let sql =  `SELECT SUM(precio) as precio FROM bien
+      INNER JOIN tarjeta_responsabilidad ON bien.tarjeta=tarjeta_responsabilidad.id and tarjeta_responsabilidad.empleado=`+empleado+`
+      LEFT JOIN ubicacion ON bien.ubicacion = ubicacion.id
+      LEFT JOIN marca ON bien.marca = marca.marcaId;`;
+
+      const result1 = await query(sql);
+
+      if (result1.length==1){
+
+        //insertar saldo total
+
+        saldo= result1[0].precio;
+        let sql =  `UPDATE tarjeta_responsabilidad SET saldo = `+saldo+` WHERE numero_tarjeta =`+tarjeta+`;`;
+        await query(sql);
+
+      }else{
+        res.status(400).json({success: false, message: "Error al obtener el saldo total"});
+        return;
+      }
+        
+    } catch (error) {
+      res.status(400).json({success: false, message: "Error al verificar saldo total"});
+      return;
     }
 
   }

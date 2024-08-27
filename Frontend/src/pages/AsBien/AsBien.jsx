@@ -378,7 +378,6 @@ const handleSearchChange = (event) => {
               tarjeta: data.tarjeta,
               categoria: data.categoria,
               empleado: data.empleado,
-              saldo: data.saldo,
               asignar: agregar,
               quitar: quitar,
             },headers: {
@@ -470,7 +469,10 @@ const handleSearchChange = (event) => {
                   
                   <div className="grid grid-cols-2">
                   
+                  
                     <div className="flex flex-col justify-left -mx-1 mb-11">
+
+                      
                       <div className="tabs tabs-boxed w-fit">
                         <a
                           className={"tab " + (toggleTipo ? "tab-active" : "")}
@@ -551,9 +553,7 @@ const handleSearchChange = (event) => {
                       </div>
                       
                       <div className="w-fit mt-6">
-                        <h3>Saldo (Q)</h3>
-                        <input className="appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" 
-                        type="number" step="0.01" placeholder="0.00" required {...register("saldo", { required: true })}/>
+                        
                       </div>
                       <button
                     className="btn bg-blue-500 text-white w-fit mt-6 "  type="submit"
@@ -562,7 +562,9 @@ const handleSearchChange = (event) => {
                 </button>
                     </div>
                     
-                    <div className="flex flex-col justify-left items-center -mx-1 mb-11">
+                    <div className="flex flex-col justify-left items-left -mx-1 mb-11">
+
+                    
                       <div>
                     <button
                         className="btn bg-blue-500 text-white w-fit"
